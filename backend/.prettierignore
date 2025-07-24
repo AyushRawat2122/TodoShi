@@ -1,0 +1,23 @@
+# dependencies
+node_modules
+.env
+package-lock.json
+
+# build/output
+dist
+build
+logs
+
+# database/local storage
+*.sqlite
+*.db
+*.log
+
+# version control
+.git
+
+# misc
+coverage
+.vscode
+.idea
+tmp
