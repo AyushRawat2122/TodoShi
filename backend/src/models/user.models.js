@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 const userSchema = new Schema(
   {
+    clerkID: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true, min: 3, max: 20 },
     email: { type: String, required: true, unique: true },
     avatar: { type: String, default: "" },
