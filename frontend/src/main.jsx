@@ -6,7 +6,7 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { Provider } from 'react-redux';
 import { store } from './store/store.js';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import {SignIn , Workspace} from './pages/index.js';
+import { SignIn, Workspace } from './pages/index.js';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -23,12 +23,12 @@ const route = createBrowserRouter([{
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={route}>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <Provider store={store}>
-        <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+        <RouterProvider router={route}>
           <App />
-        </ClerkProvider>
+        </RouterProvider>
       </Provider>
-    </RouterProvider>
+    </ClerkProvider>
   </StrictMode>,
 )

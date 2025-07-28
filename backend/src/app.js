@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import errorHandler from "./middlewares/errorHandler.middleware";
 
 const app = express();
 
@@ -19,5 +20,13 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
   res.send("<h1>Hello SIR</h1>");
 });
+
+// Import routes
+import userRoutes from "./routes/user.routes.js";
+
+app.use("/api/v1/users", userRoutes);
+
+
+app.use(errorHandler);
 
 export default app;
