@@ -1,9 +1,13 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import errorHandler from "./middlewares/errorHandler.middleware";
+import errorHandler from "./middlewares/errorHandler.middleware.js";
+import { createSocketServer } from "./config/socket.js";
+import { createServer } from "http";
 
 const app = express();
+const server = createServer(app);
+createSocketServer(server);
 
 app.use(
   cors({
@@ -25,7 +29,6 @@ app.get("/", (req, res) => {
 import userRoutes from "./routes/user.routes.js";
 
 app.use("/api/v1/users", userRoutes);
-
 
 app.use(errorHandler);
 

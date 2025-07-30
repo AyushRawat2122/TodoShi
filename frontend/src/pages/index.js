@@ -1,4 +1,4 @@
 import SignIn from "./SignIn.jsx";
 import Workspace from "./Workspace.jsx";
-
-export { SignIn, Workspace };
+import SSOAuth from "./SSOAuth.jsx";
+export { SignIn, Workspace, SSOAuth };

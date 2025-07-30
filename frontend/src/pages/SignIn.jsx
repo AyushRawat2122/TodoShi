@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useSignIn } from '@clerk/clerk-react'
 import { google, github } from "../utils/lottie.js";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { motion } from 'framer-motion';
@@ -8,28 +7,14 @@ import { HiArrowRight } from 'react-icons/hi';
 
 const SignIn = () => {
     const [provider, setProvider] = useState("google");
-    const { signIn, isLoaded } = useSignIn();
 
     const handleSignInWithGoogle = () => {
-        signIn.authenticateWithRedirect({ strategy: 'oauth_google', redirectUrl: '/' })
-            .catch((error) => {
-                console.error('Sign-in failed:', error);
-            });
-    }
+        console.log("Google sign-in logic here");
+    };
 
     const handleSignInWithGitHub = () => {
-        signIn.authenticateWithRedirect({ strategy: 'oauth_github', redirectUrl: '/' }).catch((error) => {
-            console.error('Sign-in failed:', error);
-        })
-    }
-
-    const setGoogle = () => {
-        setProvider("google");
-    }
-
-    const setGithub = () => {
-        setProvider("github");
-    }
+        console.log("GitHub sign-in logic here");
+    };
 
     const handleSignIn = () => {
         if (provider === "google") {
@@ -37,11 +22,7 @@ const SignIn = () => {
         } else {
             handleSignInWithGitHub();
         }
-    }
-    
-    if (!isLoaded) {
-        return <div>Loading...</div>;
-    }
+    };
 
     return (
         <div className='min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center items-center p-4'>
@@ -60,7 +41,7 @@ const SignIn = () => {
                 {/* Provider Selection */}
                 <div className='flex gap-2 p-1 bg-gray-100 rounded-lg'>
                     <button
-                        onClick={setGoogle}
+                        onClick={() => setProvider("google")}
                         className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${provider === "google"
                             ? 'bg-white text-gray-900 shadow-sm'
                             : 'text-gray-600 hover:text-gray-900'
@@ -70,7 +51,7 @@ const SignIn = () => {
                         Google
                     </button>
                     <button
-                        onClick={setGithub}
+                        onClick={() => setProvider("github")}
                         className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${provider === "github"
                             ? 'bg-white text-gray-900 shadow-sm'
                             : 'text-gray-600 hover:text-gray-900'
@@ -125,9 +106,6 @@ const SignIn = () => {
                 {/* Footer */}
                 <div className='text-center pt-4 border-t border-gray-200'>
                     <p className='text-xs text-gray-500 mb-1'>
-                        Authentication powered by Clerk
-                    </p>
-                    <p className='text-xs text-gray-500'>
                         By signing in, you agree to our{' '}
                         <a href="/terms" className='text-blue-600 hover:text-blue-700 underline cursor-pointer'>
                             Terms of Service
@@ -141,6 +119,6 @@ const SignIn = () => {
             </motion.div>
         </div>
     );
-}
+};
 
 export default SignIn;
