@@ -1,71 +1,108 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { RiFirebaseFill } from 'react-icons/ri';
+import { Oauth } from '../components/index.js';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import useIsLargeScreen from '../hooks/useIsLargeScreen'; // Import custom hook
 
 const SignIn = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
+    const [showPassword, setShowPassword] = useState(false);
+    const isLargeScreen = useIsLargeScreen(); // Use custom hook
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     const onSubmit = (data) => {
         console.log(data);
     };
 
     return (
-        <div className='h-screen flex items-center justify-center'>
+        <div className='h-screen w-full flex items-center justify-center bg-gray-100'>
             <motion.div
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.7, ease: 'easeInOut' }}
-                className='bg-white p-8 rounded-lg shadow-lg w-96'
+                className={`bg-white rounded-lg shadow-lg ${isLargeScreen ? 'w-[80%]' : 'w-full'} h-full flex flex-col md:flex-row gap-10 overflow-hidden`}
             >
-                <h2 className='text-2xl font-bold mb-4'>Sign In</h2>
-                <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+                {isLargeScreen && (
                     <div>
-                        <label className='block text-sm font-medium mb-1'>Email</label>
-                        <input
-                            type='email'
-                            {...register('email', {
-                                required: 'Email is required',
-                                pattern: {
-                                    value: /^[a-zA-Z0-9._%+-]+@gmail\.com$/,
-                                    message: 'Email must end with @gmail.com'
-                                }
-                            })}
-                            className='w-full p-2 border rounded'
-                        />
-                        {errors.email && <p className='text-red-500 text-sm'>{errors.email.message}</p>}
+                        <img src="/Todoshi.png" alt="todoshi" className='w-full h-full object-cover' />
                     </div>
-                    <div>
-                        <label className='block text-sm font-medium mb-1'>Password</label>
-                        <input
-                            type='password'
-                            {...register('password', {
-                                required: 'Password is required',
-                                minLength: {
-                                    value: 8,
-                                    message: 'Password must be at least 8 characters long'
-                                }
-                            })}
-                            className='w-full p-2 border rounded'
-                        />
-                        {errors.password && <p className='text-red-500 text-sm'>{errors.password.message}</p>}
+                )}
+                <div className={`p-10 ${isLargeScreen ? 'w-[40%]' : 'w-full'}`}>
+                    <div className={`flex flex-col ${!isLargeScreen ? 'items-center' : ''}`}>
+                    <img src="/todoshi-branding.png" alt="todoshi-name" className='h-[80px] max-w-[200px]' />
+                        <h2 className='text-3xl mt-4 font-bold mb-2 text-center md:text-left text-[#4c1f8e]'>
+                            Welcome Back!
+                        </h2>
+                        <p className='text-lg text-gray-700 mb-6 text-center md:text-left'>
+                            Sign in to your account
+                        </p>
                     </div>
-                    <button
-                        type='submit'
-                        className='w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600'
-                    >
-                        Sign In
-                    </button>
-                </form>
-                <p className='text-center text-sm text-gray-500 mt-4'>
-                    Don't have an account?{' '}
-                    <a href='/sign-up' className='text-blue-500 underline hover:text-blue-600'>
-                        Create one here
-                    </a>.
-                </p>
-                <div className='flex items-center justify-center mt-6'>
-                    <RiFirebaseFill className='text-gray-500 text-2xl mr-2' />
-                    <p className='text-gray-500 text-sm'>Powered by Firebase</p>
+                    <form onSubmit={handleSubmit(onSubmit)} className='space-y-4 flex flex-col items-center'>
+                        <div className='w-full max-w-96'>
+                            <label className='block text-sm font-medium mb-1'>Email</label>
+                            <input
+                                type='email'
+                                {...register('email', {
+                                    required: 'Email is required',
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9._%+-]+@gmail\.com$/,
+                                        message: 'Email must end with @gmail.com'
+                                    }
+                                })}
+                                className='w-full p-2 border rounded'
+                            />
+                            {errors.email && <p className='text-red-500 text-sm'>{errors.email.message}</p>}
+                        </div>
+                        <div className='w-full max-w-96'>
+                            <label className='block text-sm font-medium mb-1'>Password</label>
+                            <div className='relative'>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    {...register('password', {
+                                        required: 'Password is required',
+                                        minLength: {
+                                            value: 8,
+                                            message: 'Password must be at least 8 characters long'
+                                        }
+                                    })}
+                                    className='w-full p-2 border rounded pr-10'
+                                />
+                                <button
+                                    type='button'
+                                    onClick={togglePasswordVisibility}
+                                    className='absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700 focus:outline-none'
+                                >
+                                    {showPassword ? <AiOutlineEyeInvisible className='text-2xl' /> : <AiOutlineEye className='text-2xl' />}
+                                </button>
+                            </div>
+                            {errors.password && <p className='text-red-500 text-sm mt-1'>{errors.password.message}</p>}
+                        </div>
+                        <button
+                            type='submit'
+                            className='w-full bg-[#8236ec] max-w-96 text-white py-2 rounded hover:bg-[#6229b3]'
+                        >
+                            Sign In
+                        </button>
+                    </form>
+                    <p className='text-center text-sm text-gray-500 mt-4'>
+                        Don't have an account?{' '}
+                        <a href='/sign-up' className='text-[#8236ec] underline hover:text-[#6229b3]'>
+                            Create one here
+                        </a>.
+                    </p>
+                    <hr className='my-4 border-gray-300' />
+                    <div className='mt-4 text-center text-sm text-gray-500'>
+                        <Oauth />
+                    </div>
+                    <div className='flex items-center justify-center mt-6'>
+                        <RiFirebaseFill className='text-gray-500 text-2xl mr-2' />
+                        <p className='text-gray-500 text-sm'>Powered by Firebase</p>
+                    </div>
                 </div>
             </motion.div>
         </div>
