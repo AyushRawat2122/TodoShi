@@ -5,19 +5,31 @@ import { RiFirebaseFill } from 'react-icons/ri';
 import { Oauth } from '../components/index.js';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import useIsLargeScreen from '../hooks/useIsLargeScreen'; // Import custom hook
-
+import { registerWithEmail } from '../firebase/auth.js';
+import Loader from '../components/Loader'; // Import Loader component
 
 const SignUp = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [showPassword, setShowPassword] = useState(false);
-    const isLargeScreen = useIsLargeScreen(); // Use custom hook
+    const isLargeScreen = useIsLargeScreen();
+    const [loading, setLoading] = useState(false);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
 
-    const onSubmit = (data) => {
-        console.log(data);
+    const onSubmit = async (data) => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            // Creating user
+            const userCredential = await registerWithEmail(data.email, data.password);
+            console.log("User registered:", userCredential.user);
+        } catch (error) {
+            console.error("Error registering user:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -96,17 +108,13 @@ const SignUp = () => {
                         {errors.terms && <p className='text-red-500 text-sm'>{errors.terms.message}</p>}
                         <button
                             type='submit'
-                            className='w-full bg-[#8236ec] max-w-96 text-white py-2 rounded hover:bg-[#6229b3]'
+                            className='w-full bg-[#8236ec] max-w-96 text-white py-2 rounded hover:bg-[#6229b3] flex items-center justify-center'
+                            disabled={loading}
                         >
+                            {loading && <Loader className='mr-2' />}
                             Sign Up
                         </button>
                     </form>
-                    <p className='text-center text-sm text-gray-500 mt-4'>
-                        Already have an account?{' '}
-                        <a href='/sign-in' className='text-[#8236ec] underline hover:text-[#6229b3]'>
-                            Sign in here
-                        </a>.
-                    </p>
                     <hr className='my-4 border-gray-300' />
                     <div className='mt-4 text-center text-sm text-gray-500'>
                         <Oauth />
@@ -120,5 +128,4 @@ const SignUp = () => {
         </div>
     );
 };
-
 export default SignUp;

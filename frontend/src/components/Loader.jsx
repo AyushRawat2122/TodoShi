@@ -1,16 +1,10 @@
 import React from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-const Loader = () => {
+import { PiSpinnerLight } from "react-icons/pi";
+
+const Loader = ({ className }) => {
     return (
-        <div className='h-screen w-screen flex items-center justify-center'>
-            <DotLottieReact
-                autoplay
-                loop
-                src='/path/to/loader.lottie'
-                style={{ width: '100px', height: '100px' }}
-            />
-        </div>
+        <PiSpinnerLight className={`animate-spin text-blue-500 ${className}`} />
     );
-}
+};
 
 export default Loader;

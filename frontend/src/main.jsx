@@ -5,15 +5,20 @@ import App from './App.jsx'
 import { Provider } from 'react-redux';
 import { store } from './store/store.js';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { SignIn, Workspace, SignUp } from './pages/index.js';
+import { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide } from './pages/index.js';
 
 const route = createBrowserRouter([{
   element: <App />,
   path: '/',
   children: [
+    { path: '/', element: <Home /> },
     { path: 'sign-in', element: <SignIn /> },
+    { path: 'sign-up', element: <SignUp /> },
     { path: 'workspace', element: <Workspace /> },
-    { path: 'sign-up', element: <SignUp /> } 
+    { path: 'dashboard', element: <Dashboard /> },
+    { path: 'about', element: <About /> },
+    { path: 'contact', element: <Contact /> },
+    { path: 'guide', element: <Guide /> }
   ]
 }]);
 
