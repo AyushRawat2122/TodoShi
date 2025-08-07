@@ -23,6 +23,7 @@ const SignUp = () => {
         setLoading(true);
         try {
             // Creating user
+            localStorage.setItem("lastSignInMethod", "password");
             const userCredential = await registerWithEmail(data.email, data.password);
             console.log("User registered:", userCredential.user);
         } catch (error) {
@@ -111,7 +112,7 @@ const SignUp = () => {
                             className='w-full bg-[#8236ec] max-w-96 text-white py-2 rounded hover:bg-[#6229b3] flex items-center justify-center'
                             disabled={loading}
                         >
-                            {loading && <Loader className='mr-2' />}
+                            {loading && <Loader className='mr-2 text-white'/>}
                             Sign Up
                         </button>
                     </form>

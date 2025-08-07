@@ -4,8 +4,8 @@ import './index.css'
 import App from './App.jsx'
 import { Provider } from 'react-redux';
 import { store } from './store/store.js';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide } from './pages/index.js';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide, Verify } from './pages/index.js';
 
 const route = createBrowserRouter([{
   element: <App />,
@@ -18,7 +18,13 @@ const route = createBrowserRouter([{
     { path: 'dashboard', element: <Dashboard /> },
     { path: 'about', element: <About /> },
     { path: 'contact', element: <Contact /> },
-    { path: 'guide', element: <Guide /> }
+    { path: 'guide', element: <Guide /> },
+    {
+      path: 'verify', children: [
+        { index: true, element: <Navigate to={"/sign-in"} replace /> },
+        { path: ":UID/:emailID", element: <Verify /> }
+      ]
+    }
   ]
 }]);
 

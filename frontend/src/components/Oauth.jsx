@@ -9,10 +9,12 @@ const Oauth = () => {
         if(loading) return; // Prevent multiple clicks
         try {
             setLoading(true);
+            localStorage.setItem("lastSignInMethod", "oauth");
             await signInWithGitHub();
         } catch (error) {
             const errorCode = error.code;
             const errorMessage = error.message;
+            localStorage.removeItem("lastSignInMethod");
             console.error("GitHub Sign-In Error:", errorCode, errorMessage);
         } finally {
             setLoading(false);
@@ -23,10 +25,12 @@ const Oauth = () => {
         if(loading) return; // Prevent multiple clicks
         try {
             setLoading(true);
+            localStorage.setItem("lastSignInMethod", "oauth");
             await signInWithGoogle();
         } catch (error) {
             const errorCode = error.code;
             const errorMessage = error.message;
+            localStorage.removeItemItem("lastSignInMethod");
             console.error("Google Sign-In Error:", errorCode, errorMessage);
         } finally {
             setLoading(false);
