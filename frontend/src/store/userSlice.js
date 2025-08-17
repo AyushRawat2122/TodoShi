@@ -16,11 +16,11 @@ const userSlice = createSlice({
       state.data = null;
       1;
     },
-    setLoading: (state, action) => {
-      state.isLoading = action.payload;
-    },
     setServerReady: (state, action) => {
       state.isServerReady = action.payload;
+    },
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
     },
     setSignInStatus: (state, action) => {
       state.isSignedIn = action.payload;

@@ -1,10 +1,29 @@
 import mongoose, { Schema } from "mongoose";
 const userSchema = new Schema(
   {
-    clerkID: { type: String, required: true, unique: true },
+    firebaseUID: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true, min: 3, max: 20 },
-    email: { type: String, required: true, unique: true },
-    avatar: { type: String, default: "" },
+    role: { type: String, required: true, default: "student" },
+    avatar: {
+      public_id: { type: String, default: "" },
+      url: { type: String, default: "" },
+    },
+    banner: {
+      public_id: { type: String, default: "" },
+      url: { type: String, default: "" },
+    },
+    skills: { type: [String], default: [] },
+    about: {
+      type: Object,
+      default: {
+        description: "",
+        github: "",
+        linkedIn: "",
+        location: "",
+        x: "",
+        portfolio: "",
+      },
+    },
   },
   { timestamps: true }
 );

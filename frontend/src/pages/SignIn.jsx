@@ -5,18 +5,32 @@ import { RiFirebaseFill } from 'react-icons/ri';
 import { Oauth } from '../components/index.js';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import useIsLargeScreen from '../hooks/useIsLargeScreen'; // Import custom hook
+import { loginWithEmail } from "../firebase/auth.js"
 
 const SignIn = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
     const isLargeScreen = useIsLargeScreen(); // Use custom hook
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
 
-    const onSubmit = (data) => {
-        console.log(data);
+    const onSubmit = async (data) => {
+        const { email, password } = data;
+        if (loading) return;
+        try {
+            localStorage.setItem("lastSignInMethod", "password");
+            console.log("Attempting to log in with email:", email);
+            setLoading(true);
+            await loginWithEmail(email, password);
+            console.log("logging in user");
+        } catch (error) {
+            console.log("Error logging in user:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -34,7 +48,7 @@ const SignIn = () => {
                 )}
                 <div className={`p-10 ${isLargeScreen ? 'w-[40%]' : 'w-full'}`}>
                     <div className={`flex flex-col ${!isLargeScreen ? 'items-center' : ''}`}>
-                    <img src="/todoshi-branding.png" alt="todoshi-name" className='h-[80px] max-w-[200px]' />
+                        <img src="/todoshi-branding.png" alt="todoshi-name" className='h-[80px] max-w-[200px]' />
                         <h2 className='text-3xl mt-4 font-bold mb-2 text-center md:text-left text-[#4c1f8e]'>
                             Welcome Back!
                         </h2>

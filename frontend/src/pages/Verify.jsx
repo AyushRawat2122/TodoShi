@@ -26,7 +26,7 @@ const Verify = () => {
 
     } catch (error) {
     };
-      console.error('Error sending verification email:', error);
+      console.log('Error sending verification email:', error);
       // Handle error appropriately, e.g., show a notification
     }
 
@@ -92,7 +92,7 @@ const Verify = () => {
         </TimedButton>
 
         <motion.button
-          onClick={() => navigate('/signin')}
+          onClick={() => navigate('/sign-in')}
           className="w-full mt-4 px-5 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium flex items-center justify-center hover:bg-gray-200 transition-all"
           type="button"
           whileHover={{ scale: 1.01 }}
