@@ -1,9 +1,20 @@
 import { Router } from "express";
-import { getUserDetails } from "../controllers/user.controller.js";
+import {
+  getUserDetails,
+  updateAbout,
+  updateBasicInfo,
+  updateSkills,
+  updateAvatar,
+  updateBanner,
+} from "../controllers/user.controller.js";
+import uploader from "../middlewares/multer.js";
+
 const router = Router();
-
-console.log("getUserDetails typeof:", typeof getUserDetails); // temporary debug
-
 router.route("/userDetails/:firebaseUID").get(getUserDetails);
+router.route("/updateAbout/:firebaseUID").patch(updateAbout);
+router.route("/updateBasicInfo/:firebaseUID").patch(updateBasicInfo);
+router.route("/updateSkills/:firebaseUID").patch(updateSkills);
+router.route("/updateAvatar/:firebaseUID").patch(uploader.fields([{ name: "avatar", maxCount: 1 }]), updateAvatar);
+router.route("/updateBanner/:firebaseUID").patch(uploader.fields([{ name: "banner", maxCount: 1 }]), updateBanner);
 
 export default router;

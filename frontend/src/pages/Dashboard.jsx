@@ -8,9 +8,10 @@ import { motion } from 'framer-motion';
 import { signOutUser } from "../firebase/auth.js"
 import { useNavigate } from 'react-router-dom';
 import { useAuthStatus } from '../hooks/useAuthStatus.js';
-import { useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
+import serverRequest from '../utils/axios.js';
 import useIsLargeScreen from '../hooks/useIsLargeScreen';
+import useUser from '../hooks/useUser';
 
 const Popup = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
@@ -53,8 +54,9 @@ const Popup = ({ isOpen, onClose, children }) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isSignedIn, isServerReady } = useAuthStatus();
-  const user = useSelector((state) => state.user.data);
+  const { isSignedIn, isServerReady, isLoading } = useAuthStatus();
+  const { user: userState } = useUser();
+  const user = userState?.data;
 
   // No demo defaults: derive from server user, keep empty when not available
   const [basicInfo, setBasicInfo] = useState({
@@ -104,6 +106,13 @@ const Dashboard = () => {
     setPopupContent(null);
   };
 
+  // Central handler for all popup form submissions. Replace with your global update.
+  const handlePopupSubmit = (type) => (payload) => {
+    console.log("Popup submit:", type, payload);
+    // TODO: update global store/server here; useEffect([user]) will re-map into view state.
+    closePopup();
+  };
+
   const getStatusClass = (status) => {
     return status === 'active'
       ? "bg-[#8236ec] bg-opacity-20 text-[white] border border-[#a15ef3]"
@@ -142,6 +151,11 @@ const Dashboard = () => {
     });
   }, [user]);
 
+  if (isLoading) {
+    return <div>
+      loading
+    </div>
+  }
   if (!isServerReady || !isSignedIn) {
     return <div>
       <h1 className="text-center text-2xl font-bold mt-10">cant enter</h1>
@@ -173,7 +187,16 @@ const Dashboard = () => {
           >
             <button
               className="absolute left-4 top-4 bg-white/20 p-2 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm"
-              onClick={() => openPopup(<EditBanner basicInfo={basicInfo} setBasicInfo={setBasicInfo} onClose={closePopup} />)}
+              onClick={() =>
+                openPopup(
+                  <EditBanner
+                    initialValues={basicInfo}
+                    onClose={closePopup}
+                    onSubmit={handlePopupSubmit('banner')}
+                    user={user}
+                  />
+                )
+              }
             >
               <FaPencilAlt className="text-white text-sm" />
             </button>
@@ -190,7 +213,16 @@ const Dashboard = () => {
               )}
               <button
                 className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-gray-100"
-                onClick={() => openPopup(<EditProfileImage basicInfo={basicInfo} setBasicInfo={setBasicInfo} onClose={closePopup} />)}
+                onClick={() =>
+                  openPopup(
+                    <EditProfileImage
+                      initialValues={basicInfo}
+                      onClose={closePopup}
+                      onSubmit={handlePopupSubmit('avatar')}
+                      user={user}
+                    />
+                  )
+                }
               >
                 <FaPencilAlt className="text-[#4c1f8e] text-sm" />
               </button>
@@ -200,7 +232,16 @@ const Dashboard = () => {
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-800">{basicInfo.name}</h1>
                 <button
                   className="text-gray-400 hover:text-[#4c1f8e] transition-colors"
-                  onClick={() => openPopup(<EditProfile basicInfo={basicInfo} setBasicInfo={setBasicInfo} onClose={closePopup} />)}
+                  onClick={() =>
+                    openPopup(
+                      <EditProfile
+                        initialValues={basicInfo}
+                        onClose={closePopup}
+                        onSubmit={handlePopupSubmit('basicInfo')}
+                        user={user}
+                      />
+                    )
+                  }
                 >
                   <FaPencilAlt className="text-sm" />
                 </button>
@@ -234,7 +275,16 @@ const Dashboard = () => {
                 <h2 className="text-lg font-bold text-gray-800">Skills</h2>
                 <button
                   className="text-[#8236ec] text-sm font-medium hover:text-[#4c1f8e] transition-colors flex items-center"
-                  onClick={() => openPopup(<EditSkills skills={skills} setSkills={setSkills} onClose={closePopup} />)}
+                  onClick={() =>
+                    openPopup(
+                      <EditSkills
+                        initialValues={{ skills }}
+                        onClose={closePopup}
+                        onSubmit={handlePopupSubmit('skills')}
+                        user={user}
+                      />
+                    )
+                  }
                 >
                   <span className="mr-1">+</span> Add Skill
                 </button>
@@ -257,7 +307,16 @@ const Dashboard = () => {
                 <h2 className="text-lg font-bold text-gray-800">About</h2>
                 <button
                   className="text-[#8236ec] text-sm font-medium hover:text-[#4c1f8e] transition-colors"
-                  onClick={() => openPopup(<EditAbout about={about} setAbout={setAbout} onClose={closePopup} />)}
+                  onClick={() =>
+                    openPopup(
+                      <EditAbout
+                        initialValues={about}
+                        onClose={closePopup}
+                        onSubmit={handlePopupSubmit('about')}
+                        user={user}
+                      />
+                    )
+                  }
                 >
                   Edit
                 </button>
@@ -338,9 +397,10 @@ const Dashboard = () => {
                   onClick={() =>
                     openPopup(
                       <ManageAccounts
-                        authConnections={authConnections}
-                        setAuthConnections={setAuthConnections}
+                        initialValues={authConnections}
                         onClose={closePopup}
+                        onSubmit={handlePopupSubmit('authConnections')}
+                        user={user}
                       />
                     )
                   }
@@ -413,10 +473,11 @@ const Dashboard = () => {
 };
 
 // Sub-components for editing
-const EditProfileImage = ({ basicInfo, setBasicInfo, onClose }) => {
+const EditProfileImage = ({ initialValues, onClose, onSubmit, user }) => {
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
   const file = watch('image')?.[0];
-  const [previewUrl, setPreviewUrl] = useState(basicInfo.avatarUrl || "");
+  const [previewUrl, setPreviewUrl] = useState(initialValues?.avatarUrl || "");
+  const { updateUser } = useUser();
 
   useEffect(() => {
     if (file) {
@@ -424,19 +485,30 @@ const EditProfileImage = ({ basicInfo, setBasicInfo, onClose }) => {
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
     } else {
-      setPreviewUrl(basicInfo.avatarUrl || "");
+      setPreviewUrl(initialValues?.avatarUrl || "");
     }
-  }, [file, basicInfo.avatarUrl]);
+  }, [file, initialValues?.avatarUrl]);
 
-  const onSubmit = () => {
-    if (file && previewUrl) {
-      setBasicInfo(prev => ({ ...prev, avatarUrl: previewUrl }));
+  const onFormSubmit = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const { data } = await serverRequest.patch(`/users/updateAvatar/${user.firebaseUID}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      updateUser(data?.data);
+      onClose();
+      console.log("Avatar updated successfully:", data);
+
+    } catch (error) {
+      console.error("Error updating avatar:", error);
     }
-    onClose?.();
   };
 
   return (
-    <div>
+    <form onSubmit={handleSubmit(onFormSubmit)}>
       <h2 className="text-lg font-bold mb-2">Update Avatar</h2>
       <p className="text-sm text-gray-500 mb-4">Choose an image file (max 1MB). Preview updates instantly.</p>
       <div className="mb-4 flex justify-center">
@@ -446,35 +518,34 @@ const EditProfileImage = ({ basicInfo, setBasicInfo, onClose }) => {
           <div className="w-32 h-32 rounded-full border-4 border-white shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]" />
         )}
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select image</label>
-          <input
-            type="file"
-            accept="image/*"
-            {...register('image', {
-              validate: {
-                size: (files) => !files?.[0] || files[0].size <= 1024 * 1024 || "Image must be 1MB or less",
-                type: (files) => !files?.[0] || files[0].type.startsWith('image/') || "Only image files are allowed",
-              },
-            })}
-            className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
-          />
-          {errors.image && <p className="text-xs text-red-600 mt-1">{errors.image.message}</p>}
-        </div>
-        <div className="mt-3 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-          <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
-        </div>
-      </form>
-    </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Select image</label>
+        <input
+          type="file"
+          accept="image/*"
+          {...register('image', {
+            validate: {
+              size: (files) => !files?.[0] || files[0].size <= 1024 * 1024 || "Image must be 1MB or less",
+              type: (files) => !files?.[0] || files[0].type.startsWith('image/') || "Only image files are allowed",
+            },
+          })}
+          className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
+        />
+        {errors.image && <p className="text-xs text-red-600 mt-1">{errors.image.message}</p>}
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
+      </div>
+    </form>
   );
 };
 
-const EditBanner = ({ basicInfo, setBasicInfo, onClose }) => {
+const EditBanner = ({ initialValues, onClose, onSubmit, user }) => {
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
   const file = watch('image')?.[0];
-  const [previewUrl, setPreviewUrl] = useState(basicInfo.bannerUrl || "");
+  const [previewUrl, setPreviewUrl] = useState(initialValues?.bannerUrl || "");
+  const { updateUser } = useUser();
 
   useEffect(() => {
     if (file) {
@@ -482,61 +553,71 @@ const EditBanner = ({ basicInfo, setBasicInfo, onClose }) => {
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
     } else {
-      setPreviewUrl(basicInfo.bannerUrl || "");
+      setPreviewUrl(initialValues?.bannerUrl || "");
     }
-  }, [file, basicInfo.bannerUrl]);
+  }, [file, initialValues?.bannerUrl]);
 
-  const onSubmit = () => {
-    if (file && previewUrl) {
-      setBasicInfo(prev => ({ ...prev, bannerUrl: previewUrl }));
+  const onFormSubmit = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('banner', file);
+      const { data } = await serverRequest.patch(`/users/updateBanner/${user.firebaseUID}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      updateUser(data?.data);
+      onClose();
+      console.log("Banner updated successfully:", data);
+    } catch (error) {
+      console.error("Error updating banner:", error);
     }
-    onClose?.();
   };
 
   return (
-    <div>
+    <form onSubmit={handleSubmit(onFormSubmit)}>
       <h2 className="text-lg font-bold mb-2">Update Banner</h2>
       <p className="text-sm text-gray-500 mb-4">Pick a wide image (max 1MB). Preview shown below.</p>
       <div
         className={`w-full h-28 rounded-lg border border-gray-200 mb-4 ${previewUrl ? "" : "bg-gradient-to-r from-[#5b21b6] via-[#7c3aed] to-[#0ea5e9]"}`}
         style={previewUrl ? { backgroundImage: `url(${previewUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       />
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select image</label>
-          <input
-            type="file"
-            accept="image/*"
-            {...register('image', {
-              validate: {
-                size: (files) => !files?.[0] || files[0].size <= 1024 * 1024 || "Image must be 1MB or less",
-                type: (files) => !files?.[0] || files[0].type.startsWith('image/') || "Only image files are allowed",
-              },
-            })}
-            className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
-          />
-          {errors.image && <p className="text-xs text-red-600 mt-1">{errors.image.message}</p>}
-        </div>
-        <div className="mt-3 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-          <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
-        </div>
-      </form>
-    </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Select image</label>
+        <input
+          type="file"
+          accept="image/*"
+          {...register('image', {
+            validate: {
+              size: (files) => !files?.[0] || files[0].size <= 1024 * 1024 || "Image must be 1MB or less",
+              type: (files) => !files?.[0] || files[0].type.startsWith('image/') || "Only image files are allowed",
+            },
+          })}
+          className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
+        />
+        {errors.image && <p className="text-xs text-red-600 mt-1">{errors.image.message}</p>}
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
+      </div>
+    </form>
   );
 };
 
-const EditProfile = ({ basicInfo, setBasicInfo, onClose }) => {
-  const [name, setName] = useState(basicInfo.name || "");
-  const [title, setTitle] = useState(basicInfo.title || "");
-  const [location, setLocation] = useState(basicInfo.location || "");
+const EditProfile = ({ initialValues, onClose, onSubmit, user }) => {
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+    defaultValues: {
+      name: initialValues?.name || "",
+      title: initialValues?.title || "",
+      location: initialValues?.location || "",
+    }
+  });
 
-  const handleSave = () => {
-    setBasicInfo((prev) => ({ ...prev, name, title, location }));
+  const onFormSubmit = (data) => {
+    onSubmit?.(data);
   };
 
   return (
-    <div>
+    <form onSubmit={handleSubmit(onFormSubmit)}>
       <h2 className="text-lg font-bold mb-2">Edit Profile</h2>
       <p className="text-sm text-gray-500 mb-4">Update your public profile details.</p>
       <div className="space-y-3">
@@ -544,8 +625,7 @@ const EditProfile = ({ basicInfo, setBasicInfo, onClose }) => {
           <label className="block text-sm font-medium text-gray-700">Name</label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            {...register('name')}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
             placeholder="Jane Doe"
           />
@@ -554,8 +634,7 @@ const EditProfile = ({ basicInfo, setBasicInfo, onClose }) => {
           <label className="block text-sm font-medium text-gray-700">Title</label>
           <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            {...register('title')}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
             placeholder="Full-Stack Developer"
           />
@@ -564,31 +643,40 @@ const EditProfile = ({ basicInfo, setBasicInfo, onClose }) => {
           <label className="block text-sm font-medium text-gray-700">Location</label>
           <input
             type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            {...register('location')}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
             placeholder="Berlin, Germany"
           />
         </div>
         <div className="mt-3 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-          <button onClick={handleSave} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
+          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+          <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 
-const EditSkills = ({ skills, setSkills, onClose }) => {
-  const [localSkills, setLocalSkills] = useState(skills || []);
+const EditSkills = ({ initialValues, onClose, onSubmit, user }) => {
+  const [localSkills, setLocalSkills] = useState(initialValues?.skills || []);
   const [input, setInput] = useState("");
-  const addSkill = () => { const s = input.trim(); if (!s) return; if (!localSkills.includes(s)) setLocalSkills([...localSkills, s]); setInput(""); };
+  const { handleSubmit, formState: { isSubmitting } } = useForm();
+
+  const addSkill = () => {
+    const s = input.trim();
+    if (!s) return;
+    if (!localSkills.includes(s)) setLocalSkills([...localSkills, s]);
+    setInput("");
+  };
   const removeSkill = (s) => setLocalSkills(localSkills.filter(x => x !== s));
   const clearAll = () => setLocalSkills([]);
-  const handleSave = () => setSkills(localSkills);
+
+  const onFormSubmit = () => {
+    onSubmit?.({ skills: localSkills });
+  };
 
   return (
-    <div>
+    <form onSubmit={handleSubmit(onFormSubmit)}>
       <h2 className="text-lg font-bold mb-2">Edit Skills</h2>
       <p className="text-sm text-gray-500 mb-4">Add or remove your top skills.</p>
       <div className="flex items-center justify-between mb-3">
@@ -596,48 +684,51 @@ const EditSkills = ({ skills, setSkills, onClose }) => {
           {localSkills.map((s, i) => (
             <span key={i} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#c2a7fb]/20 text-[#4c1f8e] text-sm">
               {s}
-              <button onClick={() => removeSkill(s)} className="text-gray-500 hover:text-red-500" title="Remove">✕</button>
+              <button type="button" onClick={() => removeSkill(s)} className="text-gray-500 hover:text-red-500" title="Remove">✕</button>
             </span>
           ))}
           {localSkills.length === 0 && <span className="text-sm text-gray-500">No skills yet</span>}
         </div>
         {localSkills.length > 0 && (
-          <button onClick={clearAll} className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Clear all</button>
+          <button type="button" onClick={clearAll} className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Clear all</button>
         )}
       </div>
       <div className="flex items-center gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && addSkill()}
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
           placeholder="Add a skill and press Enter"
           className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
         />
-        <button onClick={addSkill} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] transition">Add</button>
+        <button type="button" onClick={addSkill} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] transition">Add</button>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-        <button onClick={handleSave} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
+        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
       </div>
-    </div>
+    </form>
   );
 };
 
-const EditAbout = ({ about, setAbout, onClose }) => {
-  const [localAbout, setLocalAbout] = useState({
-    description: about?.description || "",
-    github: about?.github || "",
-    linkedIn: about?.linkedIn || "",
-    location: about?.location || "",
-    x: about?.x || "",
-    portfolio: about?.portfolio || "",
+const EditAbout = ({ initialValues, onClose, onSubmit, user }) => {
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+    defaultValues: {
+      description: initialValues?.description || "",
+      github: initialValues?.github || "",
+      linkedIn: initialValues?.linkedIn || "",
+      location: initialValues?.location || "",
+      x: initialValues?.x || "",
+      portfolio: initialValues?.portfolio || "",
+    }
   });
 
-  const handleChange = (key) => (e) => setLocalAbout({ ...localAbout, [key]: e.target.value });
-  const handleSave = () => setAbout(localAbout);
+  const onFormSubmit = (data) => {
+    onSubmit?.(data);
+  };
 
   return (
-    <div>
+    <form onSubmit={handleSubmit(onFormSubmit)}>
       <h2 className="text-lg font-bold mb-2">Edit About</h2>
       <p className="text-sm text-gray-500 mb-4">Only filled fields will be shown on your profile.</p>
       <div className="space-y-3">
@@ -645,8 +736,7 @@ const EditAbout = ({ about, setAbout, onClose }) => {
           <label className="block text-sm font-medium text-gray-700">Description</label>
           <textarea
             rows={4}
-            value={localAbout.description}
-            onChange={handleChange("description")}
+            {...register("description")}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
             placeholder="Tell the world about you..."
           />
@@ -656,8 +746,7 @@ const EditAbout = ({ about, setAbout, onClose }) => {
             <label className="block text-sm font-medium text-gray-700">Location</label>
             <input
               type="text"
-              value={localAbout.location}
-              onChange={handleChange("location")}
+              {...register("location")}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="City, Country"
             />
@@ -666,8 +755,7 @@ const EditAbout = ({ about, setAbout, onClose }) => {
             <label className="block text-sm font-medium text-gray-700">Portfolio</label>
             <input
               type="text"
-              value={localAbout.portfolio}
-              onChange={handleChange("portfolio")}
+              {...register("portfolio")}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://your-site.com"
             />
@@ -676,8 +764,7 @@ const EditAbout = ({ about, setAbout, onClose }) => {
             <label className="block text-sm font-medium text-gray-700">LinkedIn</label>
             <input
               type="text"
-              value={localAbout.linkedIn}
-              onChange={handleChange("linkedIn")}
+              {...register("linkedIn")}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://linkedin.com/in/username"
             />
@@ -686,8 +773,7 @@ const EditAbout = ({ about, setAbout, onClose }) => {
             <label className="block text-sm font-medium text-gray-700">X (Twitter)</label>
             <input
               type="text"
-              value={localAbout.x}
-              onChange={handleChange("x")}
+              {...register("x")}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://x.com/handle"
             />
@@ -696,87 +782,88 @@ const EditAbout = ({ about, setAbout, onClose }) => {
             <label className="block text-sm font-medium text-gray-700">GitHub</label>
             <input
               type="text"
-              value={localAbout.github}
-              onChange={handleChange("github")}
+              {...register("github")}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://github.com/username"
             />
           </div>
         </div>
         <div className="mt-3 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-          <button onClick={handleSave} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
+          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+          <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 
-const ManageAccounts = ({ authConnections, setAuthConnections, onClose }) => {
-  const toggleConnection = (account) => {
-    setAuthConnections((prev) => ({ ...prev, [account]: !prev[account] }));
+const ManageAccounts = ({ initialValues, onClose, onSubmit, user }) => {
+  const { register, handleSubmit, formState: { isSubmitting }, watch } = useForm({
+    defaultValues: {
+      google: !!initialValues?.google,
+      github: !!initialValues?.github,
+      emailPass: !!initialValues?.emailPass,
+    }
+  });
+
+  const onFormSubmit = (data) => {
+    onSubmit?.(data);
   };
 
+  const google = watch('google');
+  const github = watch('github');
+  const emailPass = watch('emailPass');
+
   return (
-    <div>
+    <form onSubmit={handleSubmit(onFormSubmit)}>
       <h2 className="text-lg font-bold mb-4">Manage Connected Accounts</h2>
       <div className="space-y-4">
-        {/* Google */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <FcGoogle className="w-6 h-6 mr-3" />
             <p className="text-gray-800 font-medium">Google</p>
           </div>
-          <button
-            onClick={() => toggleConnection("google")}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${authConnections.google
-              ? "bg-red-500 text-white hover:bg-red-600"
-              : "bg-green-500 text-white hover:bg-green-600"
-              } transition-all`}
-          >
-            {authConnections.google ? "Unlink" : "Link"}
-          </button>
+          <label className="inline-flex items-center gap-2">
+            <input type="checkbox" {...register('google')} className="h-4 w-4" />
+            <span className={`px-3 py-1 rounded-md text-xs font-medium ${google ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}>
+              {google ? "Unlink" : "Link"}
+            </span>
+          </label>
         </div>
 
-        {/* GitHub */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <FaGithub className="w-6 h-6 mr-3 text-black" />
             <p className="text-gray-800 font-medium">GitHub</p>
           </div>
-          <button
-            onClick={() => toggleConnection("github")}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${authConnections.github
-              ? "bg-red-500 text-white hover:bg-red-600"
-              : "bg-green-500 text-white hover:bg-green-600"
-              } transition-all`}
-          >
-            {authConnections.github ? "Unlink" : "Link"}
-          </button>
+          <label className="inline-flex items-center gap-2">
+            <input type="checkbox" {...register('github')} className="h-4 w-4" />
+            <span className={`px-3 py-1 rounded-md text-xs font-medium ${github ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}>
+              {github ? "Unlink" : "Link"}
+            </span>
+          </label>
         </div>
 
-        {/* Email and Password */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <FaEnvelope className="w-6 h-6 mr-3 text-[#4c1f8e]" />
             <p className="text-gray-800 font-medium">Email and Password</p>
           </div>
-          <button
-            onClick={() => toggleConnection("emailPass")}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${authConnections.emailPass
-              ? "bg-red-500 text-white hover:bg-red-600"
-              : "bg-green-500 text-white hover:bg-green-600"
-              } transition-all`}
-          >
-            {authConnections.emailPass ? "Unlink" : "Link"}
-          </button>
+          <label className="inline-flex items-center gap-2">
+            <input type="checkbox" {...register('emailPass')} className="h-4 w-4" />
+            <span className={`px-3 py-1 rounded-md text-xs font-medium ${emailPass ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}>
+              {emailPass ? "Unlink" : "Link"}
+            </span>
+          </label>
         </div>
       </div>
-      <div className="mt-6 flex justify-end">
-        <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Close</button>
+      <div className="mt-6 flex justify-end gap-2">
+        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Close</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
       </div>
-    </div>
+    </form>
   );
 };
 
 export default Dashboard;
+

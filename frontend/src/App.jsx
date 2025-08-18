@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from './firebase/config';
@@ -6,9 +6,8 @@ import { VerticalNav } from './components';
 import { getLastSignInMethod } from './utils/getLastSignInMethod';
 import { signOutUser } from './firebase/auth';
 import serverRequest from './utils/axios';
-import { useDispatch } from "react-redux";
 import useIsLargeScreen from './hooks/useIsLargeScreen';
-import { set } from 'react-hook-form';
+import useUser from './hooks/useUser';
 
 function App() {
   const location = useLocation();
@@ -16,11 +15,12 @@ function App() {
   const isAuthPage = authPages.includes(location.pathname) || location.pathname.startsWith('/verify');
   const isSecuredRoutes = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/workspace') || location.pathname.startsWith('/contact');
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const { updateUser, updateLoading, updateServerReady, updateSignInStatus } = useUser();
   const isLarge = useIsLargeScreen();
 
   useEffect(() => {
     const auth = getAuth(app);
+    updateLoading(true); // start loading immediately on mount
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
@@ -48,23 +48,17 @@ function App() {
 
           console.log('User is signed in and has a valid last sign-in method.');
           navigate('/dashboard', { replace: true });
-          const { setUser, setLoading, setServerReady, setSignInStatus } = await import('./store/userSlice.js');
-          dispatch(setLoading(true));
-          const serverUserInstance = await serverRequest.get(`/users/userDetails/${user.uid}`);
-          dispatch(setUser(serverUserInstance?.data?.data));
-          dispatch(setServerReady(true));
-          dispatch(setSignInStatus(true));
-          console.log('✅ User data fetched from server and state updated.');
-          dispatch(setLoading(false));
 
-          // now everything is fine just update our global state with the user data
+          // fetch server user
+          const serverUserInstance = await serverRequest.get(`/users/userDetails/${user.uid}`);
+          updateUser(serverUserInstance?.data?.data);
+          updateServerReady(true);
+          updateSignInStatus(true);
+          console.log('✅ User data fetched from server and state updated.');
         } else {
-          // if user is not Signed In that means he cant access any of this page this is an event based but i ll make sure this check to the respective pages too :3
-          const { setUser, setServerReady, setSignInStatus, setLoading } = await import('./store/userSlice.js');
-          dispatch(setUser(null));
-          dispatch(setServerReady(false));
-          dispatch(setSignInStatus(false));
-          dispatch(setLoading(false));
+          updateUser(null);
+          updateServerReady(false);
+          updateSignInStatus(false);
           if (isSecuredRoutes) {
             navigate('/sign-in', { replace: true });
           }
@@ -72,8 +66,8 @@ function App() {
         }
       } catch (error) {
         console.error('Error during authentication state change:', error);
-        const { setLoading } = await import('./store/userSlice.js');
-        dispatch(setLoading(false));
+      } finally {
+        updateLoading(false); // end loading for both branches
       }
     });
     return () => unsubscribe();
@@ -93,3 +87,4 @@ function App() {
 }
 
 export default App;
+

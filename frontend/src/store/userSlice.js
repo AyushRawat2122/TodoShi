@@ -5,7 +5,7 @@ const userSlice = createSlice({
   initialState: {
     data: null,
     isSignedIn: false,
-    isLoading: false,
+    isLoading: true, 
     isServerReady: false,
   },
   reducers: {
@@ -14,7 +14,6 @@ const userSlice = createSlice({
     },
     removeUser: (state) => {
       state.data = null;
-      1;
     },
     setServerReady: (state, action) => {
       state.isServerReady = action.payload;
