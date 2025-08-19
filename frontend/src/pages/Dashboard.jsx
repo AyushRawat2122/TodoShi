@@ -12,16 +12,19 @@ import { useForm } from 'react-hook-form';
 import serverRequest from '../utils/axios.js';
 import useIsLargeScreen from '../hooks/useIsLargeScreen';
 import useUser from '../hooks/useUser';
+import { FiExternalLink } from 'react-icons/fi';
+import Loader from '../components/Loader.jsx';
 
 const Popup = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
-
-  // Close on ESC
+  // Always call hooks; guard the effect body with isOpen
   useEffect(() => {
+    if (!isOpen) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -106,13 +109,6 @@ const Dashboard = () => {
     setPopupContent(null);
   };
 
-  // Central handler for all popup form submissions. Replace with your global update.
-  const handlePopupSubmit = (type) => (payload) => {
-    console.log("Popup submit:", type, payload);
-    // TODO: update global store/server here; useEffect([user]) will re-map into view state.
-    closePopup();
-  };
-
   const getStatusClass = (status) => {
     return status === 'active'
       ? "bg-[#8236ec] bg-opacity-20 text-[white] border border-[#a15ef3]"
@@ -133,6 +129,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Map server user -> UI state
+    console.log(user);
     setSkills(user?.skills || []);
     setAbout({
       description: user?.about?.description || "",
@@ -192,7 +189,6 @@ const Dashboard = () => {
                   <EditBanner
                     initialValues={basicInfo}
                     onClose={closePopup}
-                    onSubmit={handlePopupSubmit('banner')}
                     user={user}
                   />
                 )
@@ -212,13 +208,12 @@ const Dashboard = () => {
                 <div className="w-32 h-32 rounded-full border-4 border-white shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]" />
               )}
               <button
-                className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-gray-100"
+                className={`absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:bg-gray-100 ${!isLarge ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 onClick={() =>
                   openPopup(
                     <EditProfileImage
                       initialValues={basicInfo}
                       onClose={closePopup}
-                      onSubmit={handlePopupSubmit('avatar')}
                       user={user}
                     />
                   )
@@ -237,7 +232,6 @@ const Dashboard = () => {
                       <EditProfile
                         initialValues={basicInfo}
                         onClose={closePopup}
-                        onSubmit={handlePopupSubmit('basicInfo')}
                         user={user}
                       />
                     )
@@ -280,7 +274,6 @@ const Dashboard = () => {
                       <EditSkills
                         initialValues={{ skills }}
                         onClose={closePopup}
-                        onSubmit={handlePopupSubmit('skills')}
                         user={user}
                       />
                     )
@@ -312,7 +305,6 @@ const Dashboard = () => {
                       <EditAbout
                         initialValues={about}
                         onClose={closePopup}
-                        onSubmit={handlePopupSubmit('about')}
                         user={user}
                       />
                     )
@@ -322,37 +314,67 @@ const Dashboard = () => {
                 </button>
               </div>
               {!!about.description && (
-                <p className="text-gray-700 text-sm mb-5 leading-relaxed">{about.description}</p>
+                <p className="text-gray-700 text-sm mb-5 leading-relaxed">{about?.description}</p>
               )}
               <div className="space-y-3.5">
                 {!!about.location && (
                   <div className="flex items-center">
                     <FaMapMarkerAlt className="text-gray-500 mr-3 w-5" />
-                    <span className="text-gray-700">{about.location}</span>
+                    <span className="text-gray-700">
+                      {about.location.length > 20 ? `${about.location.slice(0, 20)}...` : about.location}
+                    </span>
                   </div>
                 )}
                 {!!about.portfolio && (
                   <div className="flex items-center">
                     <div className="text-gray-500 mr-3 w-5">🌐</div>
-                    <span className="text-gray-700">{about.portfolio}</span>
+                    <a
+                      href={about.portfolio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                    >
+                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                    </a>
                   </div>
                 )}
                 {!!about.linkedIn && (
                   <div className="flex items-center">
                     <FaLinkedin className="text-[#0077b5] mr-3 w-5" />
-                    <span className="text-gray-700">{about.linkedIn}</span>
+                    <a
+                      href={about.linkedIn}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                    >
+                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                    </a>
                   </div>
                 )}
                 {!!about.x && (
                   <div className="flex items-center">
                     <FaTwitter className="text-[#1DA1F2] mr-3 w-5" />
-                    <span className="text-gray-700">{about.x}</span>
+                    <a
+                      href={about.x}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                    >
+                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                    </a>
                   </div>
                 )}
                 {!!about.github && (
                   <div className="flex items-center">
                     <FaGithub className="text-[#333] mr-3 w-5" />
-                    <span className="text-gray-700">{about.github}</span>
+                    <a
+                      href={about.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                    >
+                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                    </a>
                   </div>
                 )}
               </div>
@@ -399,7 +421,6 @@ const Dashboard = () => {
                       <ManageAccounts
                         initialValues={authConnections}
                         onClose={closePopup}
-                        onSubmit={handlePopupSubmit('authConnections')}
                         user={user}
                       />
                     )
@@ -473,7 +494,7 @@ const Dashboard = () => {
 };
 
 // Sub-components for editing
-const EditProfileImage = ({ initialValues, onClose, onSubmit, user }) => {
+const EditProfileImage = ({ initialValues, onClose, user }) => {
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
   const file = watch('image')?.[0];
   const [previewUrl, setPreviewUrl] = useState(initialValues?.avatarUrl || "");
@@ -499,7 +520,7 @@ const EditProfileImage = ({ initialValues, onClose, onSubmit, user }) => {
         },
       });
       updateUser(data?.data);
-      onClose();
+      onClose?.();
       console.log("Avatar updated successfully:", data);
 
     } catch (error) {
@@ -509,6 +530,7 @@ const EditProfileImage = ({ initialValues, onClose, onSubmit, user }) => {
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
+      {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
       <h2 className="text-lg font-bold mb-2">Update Avatar</h2>
       <p className="text-sm text-gray-500 mb-4">Choose an image file (max 1MB). Preview updates instantly.</p>
       <div className="mb-4 flex justify-center">
@@ -541,7 +563,7 @@ const EditProfileImage = ({ initialValues, onClose, onSubmit, user }) => {
   );
 };
 
-const EditBanner = ({ initialValues, onClose, onSubmit, user }) => {
+const EditBanner = ({ initialValues, onClose, user }) => {
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
   const file = watch('image')?.[0];
   const [previewUrl, setPreviewUrl] = useState(initialValues?.bannerUrl || "");
@@ -565,7 +587,7 @@ const EditBanner = ({ initialValues, onClose, onSubmit, user }) => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       updateUser(data?.data);
-      onClose();
+      onClose?.();
       console.log("Banner updated successfully:", data);
     } catch (error) {
       console.error("Error updating banner:", error);
@@ -574,6 +596,7 @@ const EditBanner = ({ initialValues, onClose, onSubmit, user }) => {
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
+      {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
       <h2 className="text-lg font-bold mb-2">Update Banner</h2>
       <p className="text-sm text-gray-500 mb-4">Pick a wide image (max 1MB). Preview shown below.</p>
       <div
@@ -603,21 +626,39 @@ const EditBanner = ({ initialValues, onClose, onSubmit, user }) => {
   );
 };
 
-const EditProfile = ({ initialValues, onClose, onSubmit, user }) => {
+const EditProfile = ({ initialValues, onClose, user }) => {
   const { register, handleSubmit, formState: { isSubmitting } } = useForm({
     defaultValues: {
       name: initialValues?.name || "",
       title: initialValues?.title || "",
-      location: initialValues?.location || "",
+      // removed location from default values
     }
   });
+  const { updateUser } = useUser();
 
-  const onFormSubmit = (data) => {
-    onSubmit?.(data);
+  const onFormSubmit = async (formdata) => {
+    // trim inputs (no location here)
+    const cleaned = {
+      name: (formdata?.name || "").trim(),
+      title: (formdata?.title || "").trim(),
+    };
+    try {
+      const { data } = await serverRequest.patch(
+        `/users/updateBasicInfo/${user.firebaseUID}`,
+        { username: cleaned.name, role: cleaned.title },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      updateUser(data?.data);
+      onClose?.();
+      console.log("Profile updated successfully:", data);
+    } catch (error) {
+      console.log("Error updating profile:", error);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
+      {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
       <h2 className="text-lg font-bold mb-2">Edit Profile</h2>
       <p className="text-sm text-gray-500 mb-4">Update your public profile details.</p>
       <div className="space-y-3">
@@ -639,15 +680,7 @@ const EditProfile = ({ initialValues, onClose, onSubmit, user }) => {
             placeholder="Full-Stack Developer"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Location</label>
-          <input
-            type="text"
-            {...register('location')}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
-            placeholder="Berlin, Germany"
-          />
-        </div>
+        {/* removed Location field from the profile edit popup */}
         <div className="mt-3 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
           <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
@@ -657,11 +690,11 @@ const EditProfile = ({ initialValues, onClose, onSubmit, user }) => {
   );
 };
 
-const EditSkills = ({ initialValues, onClose, onSubmit, user }) => {
+const EditSkills = ({ initialValues, onClose, user }) => {
   const [localSkills, setLocalSkills] = useState(initialValues?.skills || []);
   const [input, setInput] = useState("");
   const { handleSubmit, formState: { isSubmitting } } = useForm();
-
+  const { updateUser } = useUser();
   const addSkill = () => {
     const s = input.trim();
     if (!s) return;
@@ -671,12 +704,29 @@ const EditSkills = ({ initialValues, onClose, onSubmit, user }) => {
   const removeSkill = (s) => setLocalSkills(localSkills.filter(x => x !== s));
   const clearAll = () => setLocalSkills([]);
 
-  const onFormSubmit = () => {
-    onSubmit?.({ skills: localSkills });
+  const onFormSubmit = async () => {
+    try {
+      // trim, remove empties, de-duplicate
+      const cleanedSkills = [...new Set(localSkills.map(s => (s || "").trim()).filter(Boolean))];
+      if (cleanedSkills.length === 0) {
+        throw new Error("Please add at least one skill.");
+      }
+      const { data } = await serverRequest.patch(
+        `/users/updateSkills/${user.firebaseUID}`,
+        { skills: cleanedSkills },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      updateUser(data?.data);
+      console.log("Skills updated successfully:", data);
+      onClose?.();
+    } catch (error) {
+      console.log("Error saving skills:", error);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
+      {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
       <h2 className="text-lg font-bold mb-2">Edit Skills</h2>
       <p className="text-sm text-gray-500 mb-4">Add or remove your top skills.</p>
       <div className="flex items-center justify-between mb-3">
@@ -711,8 +761,8 @@ const EditSkills = ({ initialValues, onClose, onSubmit, user }) => {
   );
 };
 
-const EditAbout = ({ initialValues, onClose, onSubmit, user }) => {
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+const EditAbout = ({ initialValues, onClose, user }) => {
+  const { register, handleSubmit, formState: { isSubmitting, errors } } = useForm({
     defaultValues: {
       description: initialValues?.description || "",
       github: initialValues?.github || "",
@@ -722,13 +772,41 @@ const EditAbout = ({ initialValues, onClose, onSubmit, user }) => {
       portfolio: initialValues?.portfolio || "",
     }
   });
+  const { updateUser } = useUser();
 
-  const onFormSubmit = (data) => {
-    onSubmit?.(data);
+  // trim first, then validate https
+  const httpsValidator = (v) => {
+    const val = (v || "").trim();
+    return !val || /^https:\/\//i.test(val) || "Must start with https://";
+  };
+
+  const onFormSubmit = async (data) => {
+    const cleaned = {
+      description: (data.description || "").trim(),
+      github: (data.github || "").trim(),
+      linkedIn: (data.linkedIn || "").trim(),
+      location: (data.location || "").trim(),
+      x: (data.x || "").trim(),
+      portfolio: (data.portfolio || "").trim(),
+    };
+    console.log("Cleaned About:", cleaned);
+    try {
+      const { data } = await serverRequest.patch(
+        `/users/updateAbout/${user?.firebaseUID}`,
+        { data: cleaned },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      updateUser(data?.data);
+      console.log(data?.data);
+    } catch (error) {
+      console.log("Error updating the about section:", error);
+    }
+    onClose?.();
   };
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
+      {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
       <h2 className="text-lg font-bold mb-2">Edit About</h2>
       <p className="text-sm text-gray-500 mb-4">Only filled fields will be shown on your profile.</p>
       <div className="space-y-3">
@@ -755,37 +833,41 @@ const EditAbout = ({ initialValues, onClose, onSubmit, user }) => {
             <label className="block text-sm font-medium text-gray-700">Portfolio</label>
             <input
               type="text"
-              {...register("portfolio")}
+              {...register("portfolio", { validate: httpsValidator })}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://your-site.com"
             />
+            {errors.portfolio && <p className="text-xs text-red-600 mt-1">{errors.portfolio.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">LinkedIn</label>
             <input
               type="text"
-              {...register("linkedIn")}
+              {...register("linkedIn", { validate: httpsValidator })}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://linkedin.com/in/username"
             />
+            {errors.linkedIn && <p className="text-xs text-red-600 mt-1">{errors.linkedIn.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">X (Twitter)</label>
             <input
               type="text"
-              {...register("x")}
+              {...register("x", { validate: httpsValidator })}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://x.com/handle"
             />
+            {errors.x && <p className="text-xs text-red-600 mt-1">{errors.x.message}</p>}
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">GitHub</label>
             <input
               type="text"
-              {...register("github")}
+              {...register("github", { validate: httpsValidator })}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
               placeholder="https://github.com/username"
             />
+            {errors.github && <p className="text-xs text-red-600 mt-1">{errors.github.message}</p>}
           </div>
         </div>
         <div className="mt-3 flex justify-end gap-2">
@@ -797,7 +879,7 @@ const EditAbout = ({ initialValues, onClose, onSubmit, user }) => {
   );
 };
 
-const ManageAccounts = ({ initialValues, onClose, onSubmit, user }) => {
+const ManageAccounts = ({ initialValues, onClose, user }) => {
   const { register, handleSubmit, formState: { isSubmitting }, watch } = useForm({
     defaultValues: {
       google: !!initialValues?.google,
@@ -807,7 +889,7 @@ const ManageAccounts = ({ initialValues, onClose, onSubmit, user }) => {
   });
 
   const onFormSubmit = (data) => {
-    onSubmit?.(data);
+    onClose?.();
   };
 
   const google = watch('google');
@@ -816,6 +898,7 @@ const ManageAccounts = ({ initialValues, onClose, onSubmit, user }) => {
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
+      {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
       <h2 className="text-lg font-bold mb-4">Manage Connected Accounts</h2>
       <div className="space-y-4">
         <div className="flex items-center justify-between">

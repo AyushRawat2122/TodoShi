@@ -22,18 +22,79 @@ export const getUserDetails = asyncHandller(async (req, res, next) => {
 });
 
 export const updateAbout = asyncHandller(async (req, res, next) => {
-  const userId = req?.params?.firebaseUID; // extract user ID from request parameters
-  const { about } = req.body; // extract about information from request body
+  const userId = req?.params?.firebaseUID;
+  const aboutPayload = req?.body?.data; // frontend sends { data: cleaned }
+
+  if (!userId) {
+    return next(new ApiError(400, "User ID is required"));
+  }
+  if (!aboutPayload || typeof aboutPayload !== "object") {
+    return next(new ApiError(400, "Invalid about information"));
+  }
+
+  // Sanitize/trim only known keys
+  const allowedKeys = ["description", "github", "linkedIn", "location", "x", "portfolio"];
+  const sanitized = {};
+  for (const key of allowedKeys) {
+    const val = aboutPayload[key];
+    if (typeof val === "string") sanitized[key] = val.trim();
+    else if (val !== undefined) sanitized[key] = val;
+  }
+
+  const updatedUser = await User.findOneAndUpdate(
+    { firebaseUID: userId },
+    { about: sanitized },
+    { new: true }
+  );
+
+  if (!updatedUser) {
+    return next(new ApiError(500, "Failed to update user about information"));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "user about updated successfully", updatedUser));
 });
 
 export const updateBasicInfo = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID; // extract user ID from request parameters
   const { username, role } = req.body; // extract username and role from request body
+  if (!username || !role) {
+    return next(new ApiError(400, "Username and role are required"));
+  }
+  if (!userId) {
+    return next(new ApiError(400, "User ID is required"));
+  }
+  const updatedUser = await User.findOneAndUpdate(
+    { firebaseUID: userId },
+    { username, role },
+    { new: true }
+  );
+  if (!updatedUser) {
+    return next(new ApiError(500, "Failed to update user basic info"));
+  }
+  return res.status(200).json(new ApiResponse(200, "Basic info updated successfully", updatedUser));
 });
 
 export const updateSkills = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID; // extract user ID from request parameters
   const { skills } = req.body; // extract skills from request body
+  console.log(skills, userId);
+  if (!skills || !Array.isArray(skills)) {
+    return next(new ApiError(400, "Skills must be an array"));
+  }
+  if (!userId) {
+    return next(new ApiError(400, "User ID is required"));
+  }
+  const updatedUser = await User.findOneAndUpdate(
+    { firebaseUID: userId },
+    { skills },
+    { new: true }
+  );
+  if (!updatedUser) {
+    return next(new ApiError(500, "Failed to update user skills"));
+  }
+  return res.status(200).json(new ApiResponse(200, "Skills updated successfully", updatedUser));
 });
 
 export const updateAvatar = asyncHandller(async (req, res, next) => {

@@ -20,8 +20,9 @@ function App() {
 
   useEffect(() => {
     const auth = getAuth(app);
-    updateLoading(true); // start loading immediately on mount
+    updateLoading(true); 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      updateLoading(true); // ensure loading is true for every auth state change cycle
       try {
         if (user) {
           const lastSignInMethod = getLastSignInMethod();
@@ -79,7 +80,7 @@ function App() {
       {!isAuthPage && <VerticalNav />}
 
       {/* Main content with dynamic bottom padding for mobile bottom bar */}
-      <div className={`flex-1 transition-all h-screen p-2 ${isLarge ? 'pb-2' : 'pb-20'} overflow-y-scroll duration-300`}>
+      <div className={`flex-1 transition-all h-screen p-1 ${isLarge ? 'pb-2' : 'pb-20'} overflow-y-scroll duration-300`}>
         <Outlet />
       </div>
     </div>
