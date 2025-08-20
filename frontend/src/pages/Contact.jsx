@@ -57,20 +57,20 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-[#0c0a1a]">
       {/* Hero Section */}
-      <section className="py-16 md:py-20 px-4 bg-gray-50">
+      <section className="py-16 md:py-20 px-4 bg-gray-50 dark:bg-[#0c0a1a]">
         <div className="max-w-6xl mx-auto text-center">
           <motion.h1 
-            className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
+            className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-purple-100 mb-4"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            We'd Love to Hear From <span className="text-[#6229b3]">You</span>
+            We'd Love to Hear From <span className="text-[#6229b3] dark:text-[#c2a7fb]">You</span>
           </motion.h1>
           <motion.p 
-            className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto"
+            className="text-lg text-gray-600 dark:text-purple-200/80 mb-6 max-w-3xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -82,7 +82,7 @@ const Contact = () => {
       </section>
 
       {/* Contact Form Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 dark:bg-[#0c0a1a]">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
             {/* Contact Information */}
@@ -92,7 +92,7 @@ const Contact = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="bg-gradient-to-br  from-gray-900 to-[#4c1f8e] rounded-xl p-8 text-white h-full">
+              <div className="bg-gradient-to-br from-gray-900 to-[#4c1f8e] rounded-xl p-8 text-white h-full">
                 <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
                 <p className="mb-8 text-gray-100">
                   Have questions or need assistance? Reach out to us using any of the methods below:
@@ -130,19 +130,19 @@ const Contact = () => {
               </div>
             </motion.div>
             
-            {/* Feedback Form */}
+            {/* Feedback Form - Update background gradient */}
             <motion.div 
               className="md:col-span-2"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100">
-                <h2 className="text-2xl font-bold mb-6">Send Us Your Feedback</h2>
+              <div className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/20 dark:to-transparent rounded-xl p-8 border border-gray-100 dark:border-[#c2a7fb]/20">
+                <h2 className="text-2xl font-bold mb-6 dark:text-purple-100">Send Us Your Feedback</h2>
                 
                 {submitted ? (
                   <motion.div 
-                    className="bg-green-50 text-green-700 p-4 rounded-lg text-center"
+                    className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 p-4 rounded-lg text-center"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                   >
@@ -153,7 +153,7 @@ const Contact = () => {
                   <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div>
-                        <label htmlFor="name" className="block text-gray-700 font-medium mb-2">Your Name</label>
+                        <label htmlFor="name" className="block text-gray-700 dark:text-purple-200 font-medium mb-2">Your Name</label>
                         <input
                           type="text"
                           id="name"
@@ -161,13 +161,13 @@ const Contact = () => {
                           value={formData.name}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6229b3] focus:border-transparent transition-colors"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-[#2a283a] dark:bg-[#13111d] dark:text-purple-100 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6229b3] focus:border-transparent transition-colors"
                           placeholder="John Doe"
                         />
                       </div>
                       
                       <div>
-                        <label htmlFor="email" className="block text-gray-700 font-medium mb-2">Email Address</label>
+                        <label htmlFor="email" className="block text-gray-700 dark:text-purple-200 font-medium mb-2">Email Address</label>
                         <input
                           type="email"
                           id="email"
@@ -175,14 +175,14 @@ const Contact = () => {
                           value={formData.email}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6229b3] focus:border-transparent transition-colors"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-[#2a283a] dark:bg-[#13111d] dark:text-purple-100 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6229b3] focus:border-transparent transition-colors"
                           placeholder="your@email.com"
                         />
                       </div>
                     </div>
                     
                     <div className="mb-6">
-                      <label htmlFor="subject" className="block text-gray-700 font-medium mb-2">Subject</label>
+                      <label htmlFor="subject" className="block text-gray-700 dark:text-purple-200 font-medium mb-2">Subject</label>
                       <input
                         type="text"
                         id="subject"
@@ -190,13 +190,13 @@ const Contact = () => {
                         value={formData.subject}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6229b3] focus:border-transparent transition-colors"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-[#2a283a] dark:bg-[#13111d] dark:text-purple-100 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6229b3] focus:border-transparent transition-colors"
                         placeholder="What are you contacting us about?"
                       />
                     </div>
                     
                     <div className="mb-6">
-                      <label htmlFor="message" className="block text-gray-700 font-medium mb-2">Your Message</label>
+                      <label htmlFor="message" className="block text-gray-700 dark:text-purple-200 font-medium mb-2">Your Message</label>
                       <textarea
                         id="message"
                         name="message"
@@ -204,13 +204,13 @@ const Contact = () => {
                         onChange={handleChange}
                         required
                         rows={5}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6229b3] focus:border-transparent transition-colors resize-none"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-[#2a283a] dark:bg-[#13111d] dark:text-purple-100 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6229b3] focus:border-transparent transition-colors resize-none"
                         placeholder="Please provide your feedback or questions here..."
                       ></textarea>
                     </div>
                     
                     <div className="mb-6">
-                      <label className="block text-gray-700 font-medium mb-2">Rate Your Experience</label>
+                      <label className="block text-gray-700 dark:text-purple-200 font-medium mb-2">Rate Your Experience</label>
                       <div className="flex items-center">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
@@ -230,7 +230,7 @@ const Contact = () => {
                             />
                           </button>
                         ))}
-                        <span className="ml-2 text-gray-500">
+                        <span className="ml-2 text-gray-500 dark:text-gray-300">
                           {formData.rating > 0 ? `${formData.rating}/5` : "Select a rating"}
                         </span>
                       </div>
@@ -239,7 +239,7 @@ const Contact = () => {
                     <div>
                       <button
                         type="submit"
-                        className="px-6 py-3 bg-gradient-to-r from-[#4c1f8e] to-[#6229b3] text-white rounded-md hover:from-[#6229b3] hover:to-[#8236ec] transition-all font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6229b3]"
+                        className="px-6 py-3 bg-[#6229b3] text-white rounded-md hover:bg-[#6229b3]/90 transition-all font-medium focus:outline-none focus:ring-2 focus:ring-[#6229b3]/50"
                       >
                         Submit Feedback
                       </button>
@@ -252,25 +252,25 @@ const Contact = () => {
         </div>
       </section>
       
-      {/* FAQ or Additional Information Section */}
-      <section className="py-16 px-4 bg-gray-50">
+      {/* FAQ Section - Update background */}
+      <section className="py-16 px-4 bg-gray-50 dark:bg-[#0c0a1a]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-8">Frequently Asked Questions</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 dark:text-purple-100">Frequently Asked Questions</h2>
           
           <div className="grid gap-6 text-left">
-            <div className="bg-white p-6 rounded-xl shadow-sm">
-              <h3 className="font-bold text-lg mb-2">How quickly will I receive a response?</h3>
-              <p className="text-gray-600">We typically respond to all inquiries within 24-48 business hours. For urgent matters, please indicate so in your message subject.</p>
+            <div className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/20 dark:to-transparent p-6 rounded-xl border border-gray-100 dark:border-[#c2a7fb]/20">
+              <h3 className="font-bold text-lg mb-2 dark:text-purple-100">How quickly will I receive a response?</h3>
+              <p className="text-gray-600 dark:text-purple-200/70">We typically respond to all inquiries within 24-48 business hours. For urgent matters, please indicate so in your message subject.</p>
             </div>
             
-            <div className="bg-white p-6 rounded-xl shadow-sm">
-              <h3 className="font-bold text-lg mb-2">Do you offer technical support?</h3>
-              <p className="text-gray-600">Yes! Our technical support team is available Monday through Friday, 9 AM to 5 PM EST. Please provide as much detail as possible about your issue.</p>
+            <div className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/20 dark:to-transparent p-6 rounded-xl border border-gray-100 dark:border-[#c2a7fb]/20">
+              <h3 className="font-bold text-lg mb-2 dark:text-purple-100">Do you offer technical support?</h3>
+              <p className="text-gray-600 dark:text-purple-200/70">Yes! Our technical support team is available Monday through Friday, 9 AM to 5 PM EST. Please provide as much detail as possible about your issue.</p>
             </div>
             
-            <div className="bg-white p-6 rounded-xl shadow-sm">
-              <h3 className="font-bold text-lg mb-2">Can I request a specific feature?</h3>
-              <p className="text-gray-600">Absolutely! We love hearing feature requests from our users. Please describe your idea in detail in the feedback form above.</p>
+            <div className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/20 dark:to-transparent p-6 rounded-xl border border-gray-100 dark:border-[#c2a7fb]/20">
+              <h3 className="font-bold text-lg mb-2 dark:text-purple-100">Can I request a specific feature?</h3>
+              <p className="text-gray-600 dark:text-purple-200/70">Absolutely! We love hearing feature requests from our users. Please describe your idea in detail in the feedback form above.</p>
             </div>
           </div>
         </div>

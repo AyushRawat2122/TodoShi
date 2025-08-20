@@ -8,7 +8,7 @@ import { signOutUser } from './firebase/auth';
 import serverRequest from './utils/axios';
 import useIsLargeScreen from './hooks/useIsLargeScreen';
 import useUser from './hooks/useUser';
-
+import useConnections from './hooks/useConnections';
 function App() {
   const location = useLocation();
   const authPages = ['/sign-in', '/sign-up'];
@@ -17,10 +17,10 @@ function App() {
   const navigate = useNavigate();
   const { updateUser, updateLoading, updateServerReady, updateSignInStatus } = useUser();
   const isLarge = useIsLargeScreen();
-
+  const { setGithubConnection, setGoogleConnection } = useConnections();
   useEffect(() => {
     const auth = getAuth(app);
-    updateLoading(true); 
+    updateLoading(true);
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       updateLoading(true); // ensure loading is true for every auth state change cycle
       try {
@@ -35,27 +35,39 @@ function App() {
             navigate('/sign-in', { replace: true });
           }
           // If the last sign-in method is "oauth" then a little check before access that the user has this provider linked to their account.
-          if (lastSignInMethod === 'oauth' && !user.providerData.some((provider) => ["google.com", "github.com"].includes(provider.providerId))) {
+          else if (lastSignInMethod === 'oauth' && !user.providerData.some((provider) => ["google.com", "github.com"].includes(provider.providerId))) {
             console.log('User does not have OAuth provider linked, signing out.');
             await signOutUser();
             localStorage.removeItem("lastSignInMethod");
             navigate('/sign-in', { replace: true });
           }
           // If the last sign-in method is "password" then a little check before access that the user has verified email to their account.
-          if (lastSignInMethod === 'password' && !user.emailVerified) {
+          else if (lastSignInMethod === 'password' && !user.emailVerified) {
             localStorage.removeItem("lastSignInMethod");
             navigate(`/verify/${user.uid}/${user.email}`, { replace: true });
           }
+          else {
+            // set available connections
+            user.providerData.forEach((provider) => {
+              if (provider.providerId === "google.com") {
+                setGoogleConnection(true);
+              }
+              if (provider.providerId === "github.com") {
+                setGithubConnection(true);
+              }
+            });
 
-          console.log('User is signed in and has a valid last sign-in method.');
-          navigate('/dashboard', { replace: true });
+            // fetch server user
+            updateSignInStatus(true);
+            const serverUserInstance = await serverRequest.get(`/users/userDetails/${user.uid}`);
+            updateUser(serverUserInstance?.data?.data);
+            updateServerReady(true);
 
-          // fetch server user
-          const serverUserInstance = await serverRequest.get(`/users/userDetails/${user.uid}`);
-          updateUser(serverUserInstance?.data?.data);
-          updateServerReady(true);
-          updateSignInStatus(true);
-          console.log('✅ User data fetched from server and state updated.');
+            console.log('User is signed in and has a valid last sign-in method.');
+            navigate('/dashboard', { replace: true });
+
+            console.log('✅ User data fetched from server and state updated.');
+          }
         } else {
           updateUser(null);
           updateServerReady(false);
@@ -75,12 +87,12 @@ function App() {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen bg-gray-50 overflow-hidden">
+    <div className={`${isLarge ? "p-1" : ""} flex dark:bg-[#0c0a1a] h-screen w-screen bg-gray-50 overflow-hidden1`}>
       {/* Single nav instance; it renders sidebar on large and bottom bar on small */}
       {!isAuthPage && <VerticalNav />}
 
       {/* Main content with dynamic bottom padding for mobile bottom bar */}
-      <div className={`flex-1 transition-all h-screen p-1 ${isLarge ? 'pb-2' : 'pb-20'} overflow-y-scroll duration-300`}>
+      <div className={`flex-1 h-full ${isLarge ? 'px-10' : 'pb-20'} dark:bg-[#0c0a1a] overflow-y-scroll`}>
         <Outlet />
       </div>
     </div>

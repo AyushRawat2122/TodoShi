@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-  FaMapMarkerAlt, FaLinkedin, FaTwitter, FaGithub, FaPencilAlt, FaEnvelope, FaUnlink
+  FaMapMarkerAlt, FaLinkedin, FaTwitter, FaGithub, FaPencilAlt, FaEnvelope, FaUnlink, FaInfoCircle, FaCheckCircle
 } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { PiSignOut } from "react-icons/pi";
 import { motion } from 'framer-motion';
 import { signOutUser } from "../firebase/auth.js"
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuthStatus } from '../hooks/useAuthStatus.js';
 import { useForm } from 'react-hook-form';
 import serverRequest from '../utils/axios.js';
@@ -14,6 +14,10 @@ import useIsLargeScreen from '../hooks/useIsLargeScreen';
 import useUser from '../hooks/useUser';
 import { FiExternalLink } from 'react-icons/fi';
 import Loader from '../components/Loader.jsx';
+import useConnections from '../hooks/useConnections.js';
+import LoadingPage from '../components/LoadingPage.jsx';
+import ServerResponsePage from '../components/ServerResponsePage.jsx';
+
 
 const Popup = ({ isOpen, onClose, children }) => {
   // Always call hooks; guard the effect body with isOpen
@@ -24,9 +28,10 @@ const Popup = ({ isOpen, onClose, children }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
 
+  if (!isOpen) return null;
   return (
+
     <div
       className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4"
       onClick={onClose}
@@ -36,13 +41,14 @@ const Popup = ({ isOpen, onClose, children }) => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="relative bg-white w-full max-w-xl rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden"
+        className="relative bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 w-full max-w-xl rounded-2xl shadow-2xl ring-1 ring-black/5 dark:ring-[#c2a7fb]/20 overflow-hidden dark:border dark:border-[#c2a7fb]/20"
         onClick={(e) => e.stopPropagation()}
+
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#5b21b6] via-[#7c3aed] to-[#0ea5e9]" />
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 h-9 w-9 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-gray-700 shadow-sm border border-white/60 backdrop-blur transition"
+          className="absolute top-3 right-3 h-9 w-9 flex items-center justify-center rounded-full bg-white/80 dark:bg-[#0c0a1a]/50 hover:bg-white dark:hover:bg-[#c2a7fb]/10 text-gray-700 dark:text-purple-200 shadow-sm border border-white/60 dark:border-[#c2a7fb]/20 backdrop-blur transition"
           aria-label="Close"
         >
           ✕
@@ -59,9 +65,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { isSignedIn, isServerReady, isLoading } = useAuthStatus();
   const { user: userState } = useUser();
+  const { getConnectionDetails } = useConnections();
+
   const user = userState?.data;
 
+  const connections = getConnectionDetails();
+
   // No demo defaults: derive from server user, keep empty when not available
+
   const [basicInfo, setBasicInfo] = useState({
     name: "",
     title: "",
@@ -69,7 +80,6 @@ const Dashboard = () => {
     avatarUrl: "",
     bannerUrl: "",
   });
-
   const [skills, setSkills] = useState([]);
   const [about, setAbout] = useState({
     description: "",
@@ -81,6 +91,7 @@ const Dashboard = () => {
   });
 
   // Keep these as-is per your note
+
   const [projects, setProjects] = useState([
     { id: 1, name: "E-commerce Platform", status: "active", lastUpdated: "2 hours ago" },
     { id: 2, name: "Portfolio Website", status: "completed", lastUpdated: "1 day ago" },
@@ -88,16 +99,18 @@ const Dashboard = () => {
     { id: 4, name: "Weather Dashboard", status: "completed", lastUpdated: "1 week ago" },
   ]);
 
+
+
   const [authConnections, setAuthConnections] = useState({
-    google: true,
-    github: true,
-    emailPass: true,
+    google: false,
+    github: false,
   });
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const isLarge = useIsLargeScreen();
+
 
   const openPopup = (content) => {
     setPopupContent(content);
@@ -127,10 +140,15 @@ const Dashboard = () => {
     }
   }
 
+
+
   useEffect(() => {
     // Map server user -> UI state
+
     console.log(user);
+
     setSkills(user?.skills || []);
+
     setAbout({
       description: user?.about?.description || "",
       github: user?.about?.github || "",
@@ -142,26 +160,39 @@ const Dashboard = () => {
     setBasicInfo({
       name: user?.username || "",
       title: user?.role || "",
+      _id: user?._id || "",
       location: user?.about?.location || "",
       avatarUrl: user?.avatar?.url || "",
       bannerUrl: user?.banner?.url || "",
     });
   }, [user]);
 
+  useEffect(() => {
+    console.log("SSO Connections :", connections);
+
+    setAuthConnections({
+      google: connections.google || false,
+      github: connections.github || false,
+    });
+  }, [connections]);
+
+
+
   if (isLoading) {
-    return <div>
-      loading
-    </div>
+    return <LoadingPage />;
   }
-  if (!isServerReady || !isSignedIn) {
-    return <div>
-      <h1 className="text-center text-2xl font-bold mt-10">cant enter</h1>
-    </div>
+
+  if (!isSignedIn) {
+    return <Navigate to='/sign-in' replace />;
+  }
+
+  if (!isServerReady) {
+    return <ServerResponsePage />;
   }
 
   return (
     <motion.div
-      className={`min-h-screen ${isLarge ? 'p-8' : 'p-0'}`}
+      className={`min-h-screen bg-white dark:bg-[#0c0a1a] ${isLarge ? 'px-8' : 'p-0'}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -169,7 +200,7 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto">
         {/* Profile Banner */}
         <motion.div
-          className="bg-white rounded-xl shadow-md overflow-hidden"
+          className="bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 overflow-hidden dark:border dark:border-[#c2a7fb]/20"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
@@ -201,14 +232,14 @@ const Dashboard = () => {
             </button>
           </div>
           <div className={`relative ${isLarge ? 'px-6 py-5' : 'px-4 py-4'}`}>
-            <div className="absolute -top-16 left-6 group">
+            <div className={`absolute ${isLarge ? "-top-16 left-6" : "-top-8 left-4"} group`}>
               {basicInfo.avatarUrl ? (
-                <img src={basicInfo.avatarUrl} alt="Profile" className="w-32 h-32 rounded-full border-4 bg-purple-200 border-white shadow-md object-cover" />
+                <img src={basicInfo.avatarUrl} alt="Profile" className="w-32 h-32 rounded-full border-4 bg-purple-200 dark:bg-[#c2a7fb]/20 border-white dark:border-[#c2a7fb]/60 shadow-md object-cover" />
               ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-white shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]" />
+                <div className="w-32 h-32 rounded-full border-4 border-white dark:border-[#c2a7fb]/60 shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]" />
               )}
               <button
-                className={`absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:bg-gray-100 ${!isLarge ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                className={`absolute bottom-2 right-2 bg-white dark:bg-[#0c0a1a]/50 p-2 rounded-full shadow-md dark:shadow-[#c2a7fb]/10 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#c2a7fb]/10 ${!isLarge ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 onClick={() =>
                   openPopup(
                     <EditProfileImage
@@ -219,14 +250,14 @@ const Dashboard = () => {
                   )
                 }
               >
-                <FaPencilAlt className="text-[#4c1f8e] text-sm" />
+                <FaPencilAlt className="text-[#4c1f8e] dark:text-[#c2a7fb] text-sm" />
               </button>
             </div>
             <div className="ml-36 mt-2">
               <div className="flex items-center gap-4">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-800">{basicInfo.name}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-purple-50">{basicInfo.name}</h1>
                 <button
-                  className="text-gray-400 hover:text-[#4c1f8e] transition-colors"
+                  className="text-gray-400 dark:text-purple-300/60 hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb] transition-colors"
                   onClick={() =>
                     openPopup(
                       <EditProfile
@@ -240,14 +271,16 @@ const Dashboard = () => {
                   <FaPencilAlt className="text-sm" />
                 </button>
               </div>
-              <p className="text-gray-600 text-lg mt-1">{basicInfo.title}</p>
-              <div className="flex items-center mt-1 text-gray-500">
+              <p className="text-gray-500 dark:text-purple-300/60 text-sm">#ID : {basicInfo._id}</p>
+              <p className="text-gray-600 dark:text-purple-200/80 text-lg mt-1">{basicInfo.title}</p>
+              <div className="flex items-center mt-1 text-gray-500 dark:text-purple-300/60">
                 {!!basicInfo.location && <FaMapMarkerAlt className="mr-1" />}
                 {!!basicInfo.location && <span>{basicInfo.location}</span>}
               </div>
             </div>
           </div>
         </motion.div>
+
 
         {/* Content Grid */}
         <motion.div
@@ -264,11 +297,11 @@ const Dashboard = () => {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {/* Skills */}
-            <div className={`bg-white rounded-xl shadow-md ${isLarge ? 'p-6' : 'p-4'}`}>
+            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 dark:border-[#c2a7fb]/10 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
               <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-800">Skills</h2>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Skills</h2>
                 <button
-                  className="text-[#8236ec] text-sm font-medium hover:text-[#4c1f8e] transition-colors flex items-center"
+                  className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors flex items-center"
                   onClick={() =>
                     openPopup(
                       <EditSkills
@@ -284,22 +317,21 @@ const Dashboard = () => {
               </div>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-                  <span key={index} className="px-4 py-1.5 bg-[#c2a7fb] bg-opacity-20 text-[#4c1f8e] rounded-full text-sm font-medium hover:bg-opacity-30 transition-all cursor-default">
+                  <span key={index} className="px-4 py-1.5 bg-[#c2a7fb] bg-opacity-20 dark:bg-[#c2a7fb]/30 text-[#4c1f8e] dark:text-white rounded-full text-sm font-medium hover:bg-opacity-30 dark:hover:bg-[#c2a7fb]/40 transition-all cursor-default">
                     {skill}
                   </span>
                 ))}
                 {skills.length === 0 && (
-                  <span className="text-sm text-gray-500">No skills added yet</span>
+                  <span className="text-sm text-gray-500 dark:text-purple-300/60">No skills added yet</span>
                 )}
               </div>
             </div>
-
             {/* About */}
-            <div className={`bg-white rounded-xl shadow-md ${isLarge ? 'p-6' : 'p-4'}`}>
+            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 dark:border-[#c2a7fb]/10 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
               <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-800">About</h2>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">About</h2>
                 <button
-                  className="text-[#8236ec] text-sm font-medium hover:text-[#4c1f8e] transition-colors"
+                  className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors"
                   onClick={() =>
                     openPopup(
                       <EditAbout
@@ -313,26 +345,33 @@ const Dashboard = () => {
                   Edit
                 </button>
               </div>
+
               {!!about.description && (
-                <p className="text-gray-700 text-sm mb-5 leading-relaxed">{about?.description}</p>
+                <p className="text-gray-700 dark:text-purple-200/80 text-sm mb-5 leading-relaxed">{about?.description}</p>
               )}
+
               <div className="space-y-3.5">
                 {!!about.location && (
+
                   <div className="flex items-center">
-                    <FaMapMarkerAlt className="text-gray-500 mr-3 w-5" />
-                    <span className="text-gray-700">
+                    <FaMapMarkerAlt className="text-gray-500 dark:text-purple-300/60 mr-3 w-5" />
+                    <span className="text-gray-700 dark:text-purple-200/80">
                       {about.location.length > 20 ? `${about.location.slice(0, 20)}...` : about.location}
                     </span>
                   </div>
+
                 )}
+
                 {!!about.portfolio && (
+
                   <div className="flex items-center">
-                    <div className="text-gray-500 mr-3 w-5">🌐</div>
+
+                    <div className="text-gray-500 dark:text-purple-300/60 mr-3 w-5">🌐</div>
                     <a
                       href={about.portfolio}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
                     >
                       Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
                     </a>
@@ -340,38 +379,40 @@ const Dashboard = () => {
                 )}
                 {!!about.linkedIn && (
                   <div className="flex items-center">
-                    <FaLinkedin className="text-[#0077b5] mr-3 w-5" />
+                    <FaLinkedin className="text-[#0077b5] dark:text-[#0077b5]/80 mr-3 w-5" />
                     <a
                       href={about.linkedIn}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
                     >
                       Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
                     </a>
                   </div>
                 )}
+
                 {!!about.x && (
                   <div className="flex items-center">
-                    <FaTwitter className="text-[#1DA1F2] mr-3 w-5" />
+                    <FaTwitter className="text-[#1DA1F2] dark:text-[#1DA1F2]/80 mr-3 w-5" />
                     <a
                       href={about.x}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
                     >
                       Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
                     </a>
                   </div>
                 )}
+
                 {!!about.github && (
                   <div className="flex items-center">
-                    <FaGithub className="text-[#333] mr-3 w-5" />
+                    <FaGithub className="text-[#333] dark:text-white mr-3 w-5" />
                     <a
                       href={about.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] hover:underline"
+                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
                     >
                       Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
                     </a>
@@ -381,25 +422,32 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
+
+
           {/* Right Column */}
+
           <motion.div
             className="lg:col-span-2 space-y-6"
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
+
             {/* Projects */}
-            <div className={`bg-white rounded-xl shadow-md ${isLarge ? 'p-6' : 'p-4'}`}>
+
+            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-bold text-gray-800">Projects</h2>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Projects</h2>
               </div>
+
               <div className="space-y-5">
+
                 {projects.map(project => (
-                  <div key={project.id} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0 hover:bg-gray-50 p-3 rounded-lg transition-colors">
+                  <div key={project.id} className="border-b border-gray-200 dark:border-[#c2a7fb]/20 pb-4 last:border-0 last:pb-0 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 p-3 rounded-lg transition-colors">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-medium text-gray-800">{project.name}</h3>
-                        <p className="text-xs text-gray-500 mt-1">Updated {project.lastUpdated}</p>
+                        <h3 className="font-medium text-gray-800 dark:text-purple-100">{project.name}</h3>
+                        <p className="text-xs text-gray-500 dark:text-purple-300/60 mt-1">Updated {project.lastUpdated}</p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(project.status)}`}>
                         {project.status}
@@ -410,12 +458,15 @@ const Dashboard = () => {
               </div>
             </div>
 
+
+
             {/* Connected Accounts */}
-            <div className={`bg-white rounded-xl shadow-md ${isLarge ? 'p-6' : 'p-4'}`}>
+
+            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
               <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-800">Connected Accounts</h2>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Connected Accounts</h2>
                 <button
-                  className="text-[#8236ec] text-sm font-medium hover:text-[#4c1f8e] transition-colors"
+                  className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors"
                   onClick={() =>
                     openPopup(
                       <ManageAccounts
@@ -430,66 +481,51 @@ const Dashboard = () => {
                 </button>
               </div>
 
+
+
               <div className="space-y-5">
+
                 {/* Google */}
-                <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-all">
+
+                {authConnections.google && (<div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
                       <FcGoogle className="w-5 h-5" />
                     </div>
                     <div className="ml-3">
-                      <p className="text-gray-800 font-medium">Google</p>
-                      <p className="text-sm text-gray-500">Access with Google account</p>
+                      <p className="text-gray-800 dark:text-purple-100 font-medium">Google</p>
+                      <p className="text-sm text-gray-500 dark:text-purple-300/60">Access with Google account</p>
                     </div>
                   </div>
-                  <button className="text-gray-500 hover:text-red-500 transition-colors">
-                    <FaUnlink className="text-lg" />
-                  </button>
-                </div>
+                </div>)}
 
-                {/* GitHub */}
-                <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-all">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center">
-                      <FaGithub className="text-black text-xl" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-gray-800 font-medium">GitHub</p>
-                      <p className="text-sm text-gray-500">Access with GitHub account</p>
-                    </div>
-                  </div>
-                  <button className="text-gray-500 hover:text-red-500 transition-colors">
-                    <FaUnlink className="text-lg" />
-                  </button>
-                </div>
 
-                {/* Email and Password */}
-                <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-all">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center">
-                      <FaEnvelope className="text-[#4c1f8e] text-xl" />
+
+                {authConnections.github && (
+                  < div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
+                        <FaGithub className="text-black dark:text-white text-xl" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-gray-800 dark:text-purple-100 font-medium">GitHub</p>
+                        <p className="text-sm text-gray-500 dark:text-purple-300/60">Access with GitHub account</p>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <p className="text-gray-800 font-medium">Email and Password</p>
-                      <p className="text-sm text-gray-500">Access with your email and password</p>
-                    </div>
-                  </div>
-                  <button className="text-gray-500 hover:text-red-500 transition-colors">
-                    <FaUnlink className="text-lg" />
-                  </button>
-                </div>
+                  </div>)}
+
               </div>
             </div>
 
           </motion.div>
         </motion.div>
-      </div>
+      </div >
 
       {/* Popup Component */}
-      <Popup isOpen={isPopupOpen} onClose={closePopup}>
+      < Popup isOpen={isPopupOpen} onClose={closePopup} >
         {popupContent}
-      </Popup>
-    </motion.div>
+      </Popup >
+    </motion.div >
   );
 };
 
@@ -510,6 +546,8 @@ const EditProfileImage = ({ initialValues, onClose, user }) => {
     }
   }, [file, initialValues?.avatarUrl]);
 
+
+
   const onFormSubmit = async () => {
     try {
       const formData = new FormData();
@@ -518,6 +556,7 @@ const EditProfileImage = ({ initialValues, onClose, user }) => {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+
       });
       updateUser(data?.data);
       onClose?.();
@@ -528,20 +567,21 @@ const EditProfileImage = ({ initialValues, onClose, user }) => {
     }
   };
 
+
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
       {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
-      <h2 className="text-lg font-bold mb-2">Update Avatar</h2>
-      <p className="text-sm text-gray-500 mb-4">Choose an image file (max 1MB). Preview updates instantly.</p>
+      <h2 className="text-lg font-bold mb-2 dark:text-purple-100">Update Avatar</h2>
+      <p className="text-sm text-gray-500 dark:text-purple-200/80 mb-4">Choose an image file (max 1MB). Preview updates instantly.</p>
       <div className="mb-4 flex justify-center">
         {previewUrl ? (
-          <img src={previewUrl} alt="Avatar preview" className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover ring-2 ring-purple-200" />
+          <img src={previewUrl} alt="Avatar preview" className="w-32 h-32 rounded-full border-4 border-white dark:border-[#c2a7fb]/30 shadow-md object-cover ring-2 ring-purple-200 dark:ring-[#c2a7fb]/20" />
         ) : (
-          <div className="w-32 h-32 rounded-full border-4 border-white shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]" />
+          <div className="w-32 h-32 rounded-full border-4 border-white dark:border-[#c2a7fb]/30 shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]" />
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Select image</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-purple-200 mb-1">Select image</label>
         <input
           type="file"
           accept="image/*"
@@ -551,13 +591,13 @@ const EditProfileImage = ({ initialValues, onClose, user }) => {
               type: (files) => !files?.[0] || files[0].type.startsWith('image/') || "Only image files are allowed",
             },
           })}
-          className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
+          className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 dark:file:bg-[#c2a7fb]/10 file:text-gray-700 dark:file:text-purple-200 hover:file:bg-gray-200 dark:hover:file:bg-[#c2a7fb]/20 border border-gray-200 dark:border-[#c2a7fb]/20 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 dark:focus:ring-[#c2a7fb]/20 focus:border-purple-400 dark:focus:border-[#c2a7fb]/40 dark:bg-[#0c0a1a]/30"
         />
-        {errors.image && <p className="text-xs text-red-600 mt-1">{errors.image.message}</p>}
+        {errors.image && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.image.message}</p>}
       </div>
       <div className="mt-3 flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
+        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 bg-white dark:bg-[#0c0a1a]/50 text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">Cancel</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] dark:bg-[#6229b3]/40 hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
       </div>
     </form>
   );
@@ -597,14 +637,14 @@ const EditBanner = ({ initialValues, onClose, user }) => {
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
       {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
-      <h2 className="text-lg font-bold mb-2">Update Banner</h2>
-      <p className="text-sm text-gray-500 mb-4">Pick a wide image (max 1MB). Preview shown below.</p>
+      <h2 className="text-lg font-bold mb-2 dark:text-purple-100">Update Banner</h2>
+      <p className="text-sm text-gray-500 dark:text-purple-200/80 mb-4">Pick a wide image (max 1MB). Preview shown below.</p>
       <div
-        className={`w-full h-28 rounded-lg border border-gray-200 mb-4 ${previewUrl ? "" : "bg-gradient-to-r from-[#5b21b6] via-[#7c3aed] to-[#0ea5e9]"}`}
+        className={`w-full h-28 rounded-lg border border-gray-200 dark:border-[#c2a7fb]/20 mb-4 ${previewUrl ? "" : "bg-gradient-to-r from-[#5b21b6] via-[#7c3aed] to-[#0ea5e9]"}`}
         style={previewUrl ? { backgroundImage: `url(${previewUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       />
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Select image</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-purple-200 mb-1">Select image</label>
         <input
           type="file"
           accept="image/*"
@@ -614,13 +654,13 @@ const EditBanner = ({ initialValues, onClose, user }) => {
               type: (files) => !files?.[0] || files[0].type.startsWith('image/') || "Only image files are allowed",
             },
           })}
-          className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
+          className="w-full file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-gray-100 dark:file:bg-[#c2a7fb]/10 file:text-gray-700 dark:file:text-purple-200 hover:file:bg-gray-200 dark:hover:file:bg-[#c2a7fb]/20 border border-gray-200 dark:border-[#c2a7fb]/20 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 dark:focus:ring-[#c2a7fb]/20 focus:border-purple-400 dark:focus:border-[#c2a7fb]/40 dark:bg-[#0c0a1a]/30"
         />
-        {errors.image && <p className="text-xs text-red-600 mt-1">{errors.image.message}</p>}
+        {errors.image && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.image.message}</p>}
       </div>
       <div className="mt-3 flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
+        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 bg-white dark:bg-[#0c0a1a]/50 text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">Cancel</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] dark:bg-[#6229b3]/40 hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition">Save</button>
       </div>
     </form>
   );
@@ -636,9 +676,11 @@ const EditProfile = ({ initialValues, onClose, user }) => {
   });
   const { updateUser } = useUser();
 
+
   const onFormSubmit = async (formdata) => {
     // trim inputs (no location here)
     const cleaned = {
+
       name: (formdata?.name || "").trim(),
       title: (formdata?.title || "").trim(),
     };
@@ -656,34 +698,35 @@ const EditProfile = ({ initialValues, onClose, user }) => {
     }
   };
 
+
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
       {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
-      <h2 className="text-lg font-bold mb-2">Edit Profile</h2>
-      <p className="text-sm text-gray-500 mb-4">Update your public profile details.</p>
+      <h2 className="text-lg font-bold mb-2 dark:text-purple-100">Edit Profile</h2>
+      <p className="text-sm text-gray-500 dark:text-purple-200/80 mb-4">Update your public profile details.</p>
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-purple-200">Name</label>
           <input
             type="text"
             {...register('name')}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
+            className="w-full px-4 py-2 border border-gray-200 dark:border-[#c2a7fb]/20 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 dark:focus:ring-[#c2a7fb]/20 focus:border-purple-400 dark:focus:border-[#c2a7fb]/40 dark:bg-[#0c0a1a]/30 dark:text-purple-100"
             placeholder="Jane Doe"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Title</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-purple-200">Title</label>
           <input
             type="text"
             {...register('title')}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
+            className="w-full px-4 py-2 border border-gray-200 dark:border-[#c2a7fb]/20 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 dark:focus:ring-[#c2a7fb]/20 focus:border-purple-400 dark:focus:border-[#c2a7fb]/40 dark:bg-[#0c0a1a]/30 dark:text-purple-100"
             placeholder="Full-Stack Developer"
           />
         </div>
         {/* removed Location field from the profile edit popup */}
         <div className="mt-3 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-          <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
+          <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 bg-white dark:bg-[#0c0a1a]/50 text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">Cancel</button>
+          <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] dark:bg-[#6229b3]/40 hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 shadow-sm transition">Save</button>
         </div>
       </div>
     </form>
@@ -723,24 +766,23 @@ const EditSkills = ({ initialValues, onClose, user }) => {
       console.log("Error saving skills:", error);
     }
   };
-
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
       {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
-      <h2 className="text-lg font-bold mb-2">Edit Skills</h2>
-      <p className="text-sm text-gray-500 mb-4">Add or remove your top skills.</p>
+      <h2 className="text-lg font-bold mb-2 dark:text-purple-100">Edit Skills</h2>
+      <p className="text-sm text-gray-500 dark:text-purple-200/80 mb-4">Add or remove your top skills.</p>
       <div className="flex items-center justify-between mb-3">
         <div className="flex flex-wrap gap-2">
           {localSkills.map((s, i) => (
-            <span key={i} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#c2a7fb]/20 text-[#4c1f8e] text-sm">
+            <span key={i} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#c2a7fb]/20 dark:bg-[#c2a7fb]/30 text-[#4c1f8e] dark:text-white text-sm">
               {s}
-              <button type="button" onClick={() => removeSkill(s)} className="text-gray-500 hover:text-red-500" title="Remove">✕</button>
+              <button type="button" onClick={() => removeSkill(s)} className="text-gray-500 dark:text-purple-300/60 hover:text-red-500 dark:hover:text-red-400" title="Remove">✕</button>
             </span>
           ))}
-          {localSkills.length === 0 && <span className="text-sm text-gray-500">No skills yet</span>}
+          {localSkills.length === 0 && <span className="text-sm text-gray-500 dark:text-purple-300/60">No skills yet</span>}
         </div>
         {localSkills.length > 0 && (
-          <button type="button" onClick={clearAll} className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Clear all</button>
+          <button type="button" onClick={clearAll} className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#c2a7fb]/20 text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10">Clear all</button>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -749,13 +791,13 @@ const EditSkills = ({ initialValues, onClose, user }) => {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
           placeholder="Add a skill and press Enter"
-          className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400"
+          className="flex-1 px-4 py-2 border border-gray-200 dark:border-[#c2a7fb]/20 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-100 dark:focus:ring-[#c2a7fb]/20 focus:border-purple-400 dark:focus:border-[#c2a7fb]/40 dark:bg-[#0c0a1a]/30 dark:text-purple-100"
         />
-        <button type="button" onClick={addSkill} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] transition">Add</button>
+        <button type="button" onClick={addSkill} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] dark:bg-[#6229b3]/40 hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 transition">Add</button>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
+        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 bg-white dark:bg-[#0c0a1a]/50 text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">Cancel</button>
+        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] dark:bg-[#6229b3]/40 hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 shadow-sm transition">Save</button>
       </div>
     </form>
   );
@@ -774,8 +816,10 @@ const EditAbout = ({ initialValues, onClose, user }) => {
   });
   const { updateUser } = useUser();
 
+
   // trim first, then validate https
   const httpsValidator = (v) => {
+
     const val = (v || "").trim();
     return !val || /^https:\/\//i.test(val) || "Must start with https://";
   };
@@ -879,72 +923,143 @@ const EditAbout = ({ initialValues, onClose, user }) => {
   );
 };
 
-const ManageAccounts = ({ initialValues, onClose, user }) => {
-  const { register, handleSubmit, formState: { isSubmitting }, watch } = useForm({
-    defaultValues: {
-      google: !!initialValues?.google,
-      github: !!initialValues?.github,
-      emailPass: !!initialValues?.emailPass,
-    }
-  });
 
-  const onFormSubmit = (data) => {
-    onClose?.();
+const ManageAccounts = ({ initialValues, onClose, user }) => {
+  const [linking, setLinking] = useState(false);
+
+  // current connection state from props
+
+  const linked = {
+    google: !!initialValues?.google,
+    github: !!initialValues?.github,
   };
 
-  const google = watch('google');
-  const github = watch('github');
-  const emailPass = watch('emailPass');
+
+  // TODO: implement provider linking (Firebase) here
+
+  const linkWithGoogle = async () => {
+    // implement Google linking
+  };
+
+
+  const linkWithGithub = async () => {
+    // implement GitHub linking
+  };
+
+
+  const handleLink = async (provider) => {
+
+    setLinking(true);
+
+    try {
+      if (provider === 'google') {
+        await linkWithGoogle();
+      } else if (provider === 'github') {
+        await linkWithGithub();
+      }
+      onClose?.(); // close after successful link
+    } catch (e) {
+      console.error(`Failed to link ${provider}:`, e);
+    } finally {
+      setLinking(false);
+    }
+
+  };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)}>
-      {isSubmitting && <div className="flex justify-center mb-2"><Loader className="w-5 h-5" /></div>}
-      <h2 className="text-lg font-bold mb-4">Manage Connected Accounts</h2>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+    <div>
+      {linking && (
+        <div className="flex justify-center mb-2">
+          <Loader className="w-5 h-5" />
+        </div>
+      )}
+
+
+      <h2 className="text-lg font-bold mb-2 dark:text-purple-100">Manage Connected Accounts</h2>
+      <p className="text-sm text-gray-500 dark:text-purple-200/80 mb-4">Connect a provider to sign in faster.</p>
+
+
+      <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+        <FaInfoCircle className="mt-0.5 text-amber-600" />
+        <p className="text-sm text-amber-800">
+          Note: Initial version links only one account per provider and does not support unlinking.
+          You can’t add multiple IDs for the same provider, and there’s no unlink facility. Choose wisely.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+
+        {/* Google */}
+
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">
+
           <div className="flex items-center">
-            <FcGoogle className="w-6 h-6 mr-3" />
-            <p className="text-gray-800 font-medium">Google</p>
+            <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
+              <FcGoogle className="w-5 h-5" />
+            </div>
+            <div className="ml-3">
+              <p className="text-gray-800 dark:text-purple-100 font-medium">Google</p>
+              <p className="text-xs text-gray-500 dark:text-purple-300/60">Use your Google account</p>
+            </div>
           </div>
-          <label className="inline-flex items-center gap-2">
-            <input type="checkbox" {...register('google')} className="h-4 w-4" />
-            <span className={`px-3 py-1 rounded-md text-xs font-medium ${google ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}>
-              {google ? "Unlink" : "Link"}
+
+          {linked.google ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+              <FaCheckCircle className="text-green-600" /> Linked
             </span>
-          </label>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleLink('google')}
+              disabled={linking}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#4c1f8e] text-white hover:bg-[#6229b3] shadow disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {linking ? 'Linking…' : 'Link'}
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <FaGithub className="w-6 h-6 mr-3 text-black" />
-            <p className="text-gray-800 font-medium">GitHub</p>
-          </div>
-          <label className="inline-flex items-center gap-2">
-            <input type="checkbox" {...register('github')} className="h-4 w-4" />
-            <span className={`px-3 py-1 rounded-md text-xs font-medium ${github ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}>
-              {github ? "Unlink" : "Link"}
-            </span>
-          </label>
-        </div>
 
-        <div className="flex items-center justify-between">
+        {/* GitHub */}
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">
+
           <div className="flex items-center">
-            <FaEnvelope className="w-6 h-6 mr-3 text-[#4c1f8e]" />
-            <p className="text-gray-800 font-medium">Email and Password</p>
+            <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
+              <FaGithub className="text-black dark:text-white text-xl" />
+            </div>
+            <div className="ml-3">
+              <p className="text-gray-800 dark:text-purple-100 font-medium">GitHub</p>
+              <p className="text-xs text-gray-500 dark:text-purple-300/60">Use your GitHub account</p>
+            </div>
           </div>
-          <label className="inline-flex items-center gap-2">
-            <input type="checkbox" {...register('emailPass')} className="h-4 w-4" />
-            <span className={`px-3 py-1 rounded-md text-xs font-medium ${emailPass ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}>
-              {emailPass ? "Unlink" : "Link"}
+
+          {linked.github ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+              <FaCheckCircle className="text-green-600" /> Linked
             </span>
-          </label>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleLink('github')}
+              disabled={linking}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#4c1f8e] text-white hover:bg-[#6229b3] shadow disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {linking ? 'Linking…' : 'Link'}
+            </button>
+          )}
         </div>
       </div>
-      <div className="mt-6 flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition">Close</button>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-white bg-[#4c1f8e] hover:bg-[#6229b3] shadow-sm transition">Save</button>
+
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition"
+        >
+          Close
+        </button>
       </div>
-    </form>
+    </div>
   );
 };
 

@@ -7,6 +7,10 @@ const userSlice = createSlice({
     isSignedIn: false,
     isLoading: true, 
     isServerReady: false,
+    providers:{
+      google: false,
+      github: false,
+    }
   },
   reducers: {
     setUser: (state, action) => {
@@ -24,9 +28,15 @@ const userSlice = createSlice({
     setSignInStatus: (state, action) => {
       state.isSignedIn = action.payload;
     },
+    setGoogleProvider: (state, action) => {
+      state.providers = { ...state.providers, google: action.payload };
+    },
+    setGithubProvider: (state, action) => {
+      state.providers = { ...state.providers, github: action.payload };
+    },
   },
 });
 
-export const { setUser, removeUser, setLoading, setServerReady, setSignInStatus } =
+export const { setUser, removeUser, setLoading, setServerReady, setSignInStatus, setGoogleProvider, setGithubProvider } =
   userSlice.actions;
 export default userSlice.reducer;

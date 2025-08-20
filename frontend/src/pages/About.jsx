@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaTasks, FaComments, FaUsers, FaChartLine, FaPalette, FaVideo, FaDesktop, FaCalendarAlt } from 'react-icons/fa';
+import { PointerHighlight } from '../components/PointerHighLight';
 
 const About = () => {
   const teamMembers = [
@@ -13,31 +14,36 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-[#0c0a1a]">
       {/* Hero Section */}
-      <section className="py-16 md:py-20 px-4 bg-gray-50">
+      <section className="py-16 md:py-20 px-4 bg-gray-50 dark:bg-transparent">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-              About Todoshi: <br /> <span className="text-[#6229b3]">Your Real-time Collaboration Hub</span>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-purple-100 mb-4 leading-tight">
+              About Todoshi: <br /> 
+              <span className="text-[#6229b3] dark:text-[#c2a7fb]">
+                <PointerHighlight rectangleClassName="border-[#4c1f8e]/30 dark:border-[#c2a7fb]/30">
+                  Your Real-time Collaboration Hub
+                </PointerHighlight>
+              </span>
             </h1>
-            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+            <p className="text-lg text-gray-600 dark:text-purple-200/80 mb-6 leading-relaxed">
               Todoshi is a powerful real-time team collaboration platform designed to streamline project management workflows that foster discussion and enable file sharing. We focus on managing daily work goals, project documents, and ensuring clear progress visibility, all without the complexity of technical jargon.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link 
                 to="/sign-up"
-                className="px-6 py-3 bg-[#4c1f8e] text-white rounded-md hover:bg-[#6229b3] transition-colors font-medium"
+                className="px-6 py-3 bg-[#4c1f8e] dark:bg-[#6229b3]/40 text-white rounded-md hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 transition-colors font-medium"
               >
                 Get Started
               </Link>
               <Link 
                 to="/contact"
-                className="px-6 py-3 bg-white text-[#4c1f8e] border border-[#4c1f8e] rounded-md hover:bg-gray-50 transition-colors font-medium"
+                className="px-6 py-3 bg-white dark:bg-[#0c0a1a]/50 text-[#4c1f8e] dark:text-purple-200 border border-[#4c1f8e] dark:border-[#c2a7fb]/20 rounded-md hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition-colors font-medium"
               >
                 Contact Us
               </Link>
@@ -48,9 +54,9 @@ const About = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="bg-gray-100 rounded-lg h-[300px] flex items-center justify-center"
+            className="bg-gray-100 dark:bg-[#0c0a1a]/30 dark:border dark:border-[#c2a7fb]/10 rounded-lg h-[300px] flex items-center justify-center"
           >
-            <div className="text-gray-400 text-2xl">Platform Preview</div>
+            <div className="text-gray-400 dark:text-purple-300/60 text-2xl">Platform Preview</div>
           </motion.div>
         </div>
       </section>
@@ -62,13 +68,13 @@ const About = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-white to-purple-50 rounded-2xl overflow-hidden shadow-xl border border-purple-100"
+            className="bg-gradient-to-br from-white to-purple-50 dark:from-[#0c0a1a]/80 dark:to-[#0c0a1a]/60 rounded-2xl overflow-hidden shadow-xl border border-purple-100 dark:border-[#c2a7fb]/20"
           >
-            <div className="bg-gradient-to-r from-purple-100 to-transparent py-10 px-6 border-b border-purple-100">
-              <h2 className="text-3xl font-bold text-center mb-2">
-                Key <span className="text-[#6229b3]">Features</span> We Offer
+            <div className="bg-gradient-to-r from-purple-100 to-transparent dark:from-[#c2a7fb]/10 dark:to-transparent py-10 px-6 border-b border-purple-100 dark:border-[#c2a7fb]/20">
+              <h2 className="text-3xl font-bold text-center mb-2 dark:text-purple-100">
+                Key <span className="text-[#6229b3] dark:text-[#c2a7fb]">Features</span> We Offer
               </h2>
-              <p className="text-center text-gray-600 max-w-3xl mx-auto">Designed to streamline your workflow and enhance productivity</p>
+              <p className="text-center text-gray-600 dark:text-purple-200/80 max-w-3xl mx-auto">Designed to streamline your workflow and enhance productivity</p>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 p-8">
@@ -76,13 +82,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4">
-                  <FaTasks className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4">
+                  <FaTasks className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Comprehensive Task Management</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">Comprehensive Task Management</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Create and assign daily TODOs, mark tasks as completed, and receive notifications for important deadlines.
                 </p>
               </motion.div>
@@ -91,13 +97,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4">
-                  <FaComments className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4">
+                  <FaComments className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Real-time Group Chat & Media Sharing</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">Real-time Group Chat & Media Sharing</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Communicate instantly with your team via real-time group chat and easily share images, documents, and other media files.
                 </p>
               </motion.div>
@@ -106,13 +112,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4">
-                  <FaUsers className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4">
+                  <FaUsers className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Collaborator & Project Management</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">Collaborator & Project Management</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Add collaborators to your projects, manage project roles, and handle team permissions with ease.
                 </p>
               </motion.div>
@@ -121,13 +127,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4">
-                  <FaChartLine className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4">
+                  <FaChartLine className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Daily Progress Logging</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">Daily Progress Logging</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Log your daily progress directly within the app to create a permanent record of your work and achievements.
                 </p>
               </motion.div>
@@ -136,13 +142,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4">
-                  <FaPalette className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4">
+                  <FaPalette className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Flexible Theme Options</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">Flexible Theme Options</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Switch easily between light and dark themes or create custom color schemes to match your brand.
                 </p>
               </motion.div>
@@ -158,13 +164,13 @@ const About = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-white to-purple-50 rounded-2xl overflow-hidden shadow-xl border border-purple-100"
+            className="bg-gradient-to-br from-white to-purple-50 dark:from-[#0c0a1a]/80 dark:to-[#0c0a1a]/60 rounded-2xl overflow-hidden shadow-xl border border-purple-100 dark:border-[#c2a7fb]/20"
           >
-            <div className="bg-gradient-to-r from-purple-100 to-transparent py-10 px-6 border-b border-purple-100">
-              <h2 className="text-3xl font-bold text-center mb-2">
-                Our Next <span className="text-[#6229b3]">Promise</span>: What's Coming to Todoshi
+            <div className="bg-gradient-to-r from-purple-100 to-transparent dark:from-[#c2a7fb]/10 dark:to-transparent py-10 px-6 border-b border-purple-100 dark:border-[#c2a7fb]/20">
+              <h2 className="text-3xl font-bold text-center mb-2 dark:text-purple-100">
+                Our Next <span className="text-[#6229b3] dark:text-[#c2a7fb]">Promise</span>: What's Coming to Todoshi
               </h2>
-              <p className="text-center text-gray-600 text-lg mb-2 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-center text-gray-600 dark:text-purple-200/80 text-lg mb-2 max-w-3xl mx-auto leading-relaxed">
                 We are continuously evolving Todoshi to meet your growing needs and enhance your productivity. Here's a glimpse of the exciting features we're working on:
               </p>
             </div>
@@ -174,13 +180,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20 text-center"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4 mx-auto">
-                  <FaVideo className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <FaVideo className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Group Video & Video Calls</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">Group Video & Video Calls</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Connect with your team members using our integrated video conferencing solution.
                 </p>
               </motion.div>
@@ -189,13 +195,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20 text-center"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4 mx-auto">
-                  <FaDesktop className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <FaDesktop className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">Screen Sharing</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">Screen Sharing</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Share your screen with team members during video calls for better collaboration and training.
                 </p>
               </motion.div>
@@ -204,13 +210,13 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center"
+                className="bg-white dark:bg-[#0c0a1a]/50 p-6 rounded-lg shadow-md border border-gray-200 dark:border-[#c2a7fb]/20 text-center"
               >
-                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 rounded-full flex items-center justify-center mb-4 mx-auto">
-                  <FaCalendarAlt className="text-xl text-[#4c1f8e]" />
+                <div className="w-12 h-12 bg-[#c2a7fb] bg-opacity-30 dark:bg-[#c2a7fb]/10 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <FaCalendarAlt className="text-xl text-[#4c1f8e] dark:text-[#c2a7fb]" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">In-app Scheduling</h3>
-                <p className="text-base leading-relaxed text-gray-600">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-purple-100 mb-3">In-app Scheduling</h3>
+                <p className="text-base leading-relaxed text-gray-600 dark:text-purple-200/70">
                   Manage your calendar and book meetings directly within the Todoshi platform.
                 </p>
               </motion.div>
@@ -222,8 +228,8 @@ const About = () => {
       {/* Team Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
-          <div className="flex flex-col md:flex-row items-center justify-center bg-gradient-to-r from-gray-50 to-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 max-w-3xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12 dark:text-purple-100">Meet Our Team</h2>
+          <div className="flex flex-col md:flex-row items-center justify-center bg-gradient-to-r from-gray-50 to-white dark:from-gray-50/5 dark:to-white/5 dark:backdrop-blur-md p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 max-w-3xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -237,16 +243,16 @@ const About = () => {
               />
             </motion.div>
             <div className="mt-6 md:mt-0 md:ml-8 flex flex-col items-center md:items-start text-center md:text-left">
-              <h3 className="font-bold text-gray-800 text-xl mb-1">{teamMembers[0].name}</h3>
-              <p className="text-md text-purple-700 font-medium mb-5">{teamMembers[0].title}</p>
-              <p className="text-md text-gray-700 mb-4 bg-yellow-50 p-2 rounded-md">
+              <h3 className="font-bold text-gray-800 dark:text-purple-100 text-xl mb-1">{teamMembers[0].name}</h3>
+              <p className="text-md text-purple-700 dark:text-[#c2a7fb] font-medium mb-5">{teamMembers[0].title}</p>
+              <p className="text-md text-gray-700 dark:text-purple-300 mb-4 bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded-md">
                 ⭐ This hard work deserves a star!
               </p>
               <Link
                 to="https://github.com/your-github-profile"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-gradient-to-r from-[#4c1f8e] to-[#6229b3] text-white rounded-md hover:bg-gradient-to-r hover:from-[#6229b3] hover:to-[#8236ec] transition-colors font-medium flex items-center shadow-md"
+                className="px-6 py-3 bg-gradient-to-r from-[#4c1f8e] to-[#6229b3] dark:from-[#6229b3]/50 dark:to-[#4c1f8e]/40 text-white rounded-md hover:bg-gradient-to-r hover:from-[#6229b3] hover:to-[#8236ec] dark:hover:from-[#6229b3]/60 dark:hover:to-[#4c1f8e]/50 transition-colors font-medium flex items-center shadow-md"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -263,16 +269,16 @@ const About = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section - already has gradient */}
       <section className="py-16 px-4 rounded-lg bg-gradient-to-b from-gray-900 to-[#4c1f8e] text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Workflow?</h2>
-          <p className="text-lg mb-8 text-gray-300 leading-relaxed">
+          <p className="text-lg mb-8 text-gray-300 dark:text-purple-200/90 leading-relaxed">
             Discover how Todoshi can streamline your projects and boost your team's efficiency.
           </p>
           <Link
             to="/features"
-            className="inline-block px-8 py-3 bg-gradient-to-r from-[#8236ec] to-[#6229b3] text-white rounded-md hover:opacity-90 transition-opacity font-medium shadow-lg"
+            className="inline-block px-8 py-3 bg-gradient-to-r from-[#8236ec] to-[#6229b3] dark:from-[#c2a7fb]/40 dark:to-[#6229b3]/40 text-white rounded-md hover:opacity-90 transition-opacity font-medium shadow-lg"
           >
             Explore Features
           </Link>

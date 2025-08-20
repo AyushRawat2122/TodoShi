@@ -1,4 +1,24 @@
 @import "tailwindcss";
+
+/* Use class-based dark mode: activates when <html class="dark"> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Keep project base styles */
+* {
+  scroll-behavior: smooth;
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+button {
+  cursor: pointer;
+}
+
+:root { color-scheme: light; }
+html.dark { color-scheme: dark; }
+:root { color-scheme: light; }
+html.dark { color-scheme: dark; }
+
 * {
   scroll-behavior: smooth;
   font-family: "Inter", sans-serif;

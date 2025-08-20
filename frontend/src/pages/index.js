@@ -7,5 +7,6 @@ import About from "./About.jsx";
 import Contact from "./Contact.jsx";
 import Guide from "./Guide.jsx";
 import Verify from "./Verify.jsx";
+import { PointerHighlight } from "../components/PointerHighLight.jsx";
 
-export { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide , Verify };
+export { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide , Verify, PointerHighlight };
