@@ -6,6 +6,7 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
+  linkWithPopup,
 } from "firebase/auth";
 import { app } from "./config.js";
 // Initialize Firebase Auth
@@ -37,6 +38,14 @@ const signOutUser = () => {
   return signOut(auth);
 };
 
+const linkGoogle = () => {
+  return linkWithPopup(auth.currentUser, GoogleProvider);
+};
+
+const linkGitHub = () => {
+  return linkWithPopup(auth.currentUser, GithubProvider);
+};
+
 export {
   loginWithEmail,
   registerWithEmail,
@@ -45,4 +54,6 @@ export {
   signOutUser,
   GoogleProvider,
   GithubProvider,
+  linkGitHub,
+  linkGoogle
 };

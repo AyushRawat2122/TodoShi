@@ -17,7 +17,7 @@ function App() {
   const navigate = useNavigate();
   const { updateUser, updateLoading, updateServerReady, updateSignInStatus } = useUser();
   const isLarge = useIsLargeScreen();
-  const { setGithubConnection, setGoogleConnection } = useConnections();
+  const { setGithubConnection, setGoogleConnection , resetConnectionDetails } = useConnections();
   useEffect(() => {
     const auth = getAuth(app);
     updateLoading(true);
@@ -50,10 +50,10 @@ function App() {
             // set available connections
             user.providerData.forEach((provider) => {
               if (provider.providerId === "google.com") {
-                setGoogleConnection(true);
+                setGoogleConnection({ isLinked: true, email: provider.email });
               }
               if (provider.providerId === "github.com") {
-                setGithubConnection(true);
+                setGithubConnection({ isLinked: true, email: provider.email });
               }
             });
 
@@ -72,6 +72,7 @@ function App() {
           updateUser(null);
           updateServerReady(false);
           updateSignInStatus(false);
+          resetConnectionDetails();
           if (isSecuredRoutes) {
             navigate('/sign-in', { replace: true });
           }

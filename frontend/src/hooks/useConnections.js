@@ -1,5 +1,5 @@
 import { useDispatch , useSelector } from "react-redux";
-import { setGithubProvider, setGoogleProvider } from "../store/userSlice";
+import { setGithubProvider, setGoogleProvider , resetConnections } from "../store/userSlice";
 function useConnections() {
   const dispatch = useDispatch();
   const setGoogleConnection = (status) => {
@@ -11,11 +11,15 @@ function useConnections() {
   const getConnectionDetails = () => {
     return useSelector((state) => state.user.providers);
   };
+  const resetConnectionDetails = () => {
+    dispatch(resetConnections());
+  };
 
   return {
     setGoogleConnection,
     setGithubConnection,
     getConnectionDetails,
+    resetConnectionDetails
   };
 }
 

@@ -17,7 +17,8 @@ import Loader from '../components/Loader.jsx';
 import useConnections from '../hooks/useConnections.js';
 import LoadingPage from '../components/LoadingPage.jsx';
 import ServerResponsePage from '../components/ServerResponsePage.jsx';
-
+import { linkGitHub, linkGoogle } from "../firebase/auth.js"
+import { GithubAuthProvider, GoogleAuthProvider } from 'firebase/auth';
 
 const Popup = ({ isOpen, onClose, children }) => {
   // Always call hooks; guard the effect body with isOpen
@@ -102,8 +103,8 @@ const Dashboard = () => {
 
 
   const [authConnections, setAuthConnections] = useState({
-    google: false,
-    github: false,
+    google: { isLinked: false, email: "" },
+    github: { isLinked: false, email: "" },
   });
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -168,8 +169,7 @@ const Dashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log("SSO Connections :", connections);
-
+    console.log("Triggered SSO Connections :", connections);
     setAuthConnections({
       google: connections.google || false,
       github: connections.github || false,
@@ -236,10 +236,10 @@ const Dashboard = () => {
               {basicInfo.avatarUrl ? (
                 <img src={basicInfo.avatarUrl} alt="Profile" className="w-32 h-32 rounded-full border-4 bg-purple-200 dark:bg-[#c2a7fb]/20 border-white dark:border-[#c2a7fb]/60 shadow-md object-cover" />
               ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-white dark:border-[#c2a7fb]/60 shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]" />
+                <div className="w-32 h-32 flex items-center justify-center rounded-full border-4 border-white dark:border-[#c2a7fb]/60 shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]"><span className='font-serif text-7xl font-[800]'>G</span></div>
               )}
               <button
-                className={`absolute bottom-2 right-2 bg-white dark:bg-[#0c0a1a]/50 p-2 rounded-full shadow-md dark:shadow-[#c2a7fb]/10 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#c2a7fb]/10 ${!isLarge ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                className={`absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:bg-gray-100 ${!isLarge ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 onClick={() =>
                   openPopup(
                     <EditProfileImage
@@ -250,7 +250,7 @@ const Dashboard = () => {
                   )
                 }
               >
-                <FaPencilAlt className="text-[#4c1f8e] dark:text-[#c2a7fb] text-sm" />
+                <FaPencilAlt className="text-[#4c1f8e] dark:text-[#0f0030] text-sm" />
               </button>
             </div>
             <div className="ml-36 mt-2">
@@ -461,7 +461,6 @@ const Dashboard = () => {
 
 
             {/* Connected Accounts */}
-
             <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Connected Accounts</h2>
@@ -481,39 +480,44 @@ const Dashboard = () => {
                 </button>
               </div>
 
-
-
               <div className="space-y-5">
-
                 {/* Google */}
-
-                {authConnections.google && (<div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
-                      <FcGoogle className="w-5 h-5" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-gray-800 dark:text-purple-100 font-medium">Google</p>
-                      <p className="text-sm text-gray-500 dark:text-purple-300/60">Access with Google account</p>
+                {authConnections.google.isLinked && (
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
+                        <FcGoogle className="w-5 h-5" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-gray-800 dark:text-purple-100 font-medium">Google</p>
+                        <p className="text-sm text-gray-500 dark:text-purple-300/60">
+                          {authConnections.google.email ? `Linked as ${authConnections.google.email}` : "Access with Google account"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>)}
+                )}
 
-
-
-                {authConnections.github && (
-                  < div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
+                {/* GitHub */}
+                {authConnections.github.isLinked && (
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
                     <div className="flex items-center">
                       <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
                         <FaGithub className="text-black dark:text-white text-xl" />
                       </div>
                       <div className="ml-3">
                         <p className="text-gray-800 dark:text-purple-100 font-medium">GitHub</p>
-                        <p className="text-sm text-gray-500 dark:text-purple-300/60">Access with GitHub account</p>
+                        <p className="text-sm text-gray-500 dark:text-purple-300/60">
+                          {authConnections.github.email ? `GitHub primary email address: ${authConnections.github.email}` : "Access with GitHub account"}
+                        </p>
                       </div>
                     </div>
-                  </div>)}
+                  </div>
+                )}
 
+                {!authConnections.google.isLinked && !authConnections.github.isLinked && (
+                  <p className="text-sm text-gray-500 dark:text-purple-300/60 p-3">No accounts connected. Click "Manage" to add a provider.</p>
+                )}
               </div>
             </div>
 
@@ -930,20 +934,37 @@ const ManageAccounts = ({ initialValues, onClose, user }) => {
   // current connection state from props
 
   const linked = {
-    google: !!initialValues?.google,
-    github: !!initialValues?.github,
+    google: !!initialValues?.google?.isLinked || false,
+    github: !!initialValues?.github?.isLinked || false,
   };
 
-
-  // TODO: implement provider linking (Firebase) here
+  const emails = {
+    google: initialValues?.google?.email || "",
+    github: initialValues?.github?.email || "",
+  };
+  const { setGithubConnection, setGoogleConnection } = useConnections()
 
   const linkWithGoogle = async () => {
-    // implement Google linking
+    try {
+      const result = await linkGoogle();
+      const googleCredentials = result?.user?.providerData.find(p => p.providerId === 'google.com');
+      setGoogleConnection({ isLinked: googleCredentials?.email ? true : false, email: googleCredentials?.email || "" });
+      console.log("Google linked successfully:", result?.user);
+    } catch (error) {
+      throw error;
+    }
   };
 
 
   const linkWithGithub = async () => {
-    // implement GitHub linking
+    try {
+      const result = await linkGitHub();
+      const githubCredentials = result?.user?.providerData.find(p => p.providerId === 'github.com');
+      setGithubConnection({ isLinked: githubCredentials?.email ? true : false, email: githubCredentials?.email || "" });
+      console.log("GitHub linked successfully:", result?.user);
+    } catch (error) {
+      throw error;
+    }
   };
 
 
@@ -990,16 +1011,16 @@ const ManageAccounts = ({ initialValues, onClose, user }) => {
       <div className="space-y-3">
 
         {/* Google */}
-
         <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">
-
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
               <FcGoogle className="w-5 h-5" />
             </div>
             <div className="ml-3">
               <p className="text-gray-800 dark:text-purple-100 font-medium">Google</p>
-              <p className="text-xs text-gray-500 dark:text-purple-300/60">Use your Google account</p>
+              <p className="text-xs text-gray-500 dark:text-purple-300/60">
+                {emails.google ? `Linked as ${emails.google}` : "Use your Google account"}
+              </p>
             </div>
           </div>
 
@@ -1019,17 +1040,17 @@ const ManageAccounts = ({ initialValues, onClose, user }) => {
           )}
         </div>
 
-
         {/* GitHub */}
         <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-[#c2a7fb]/20 p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition">
-
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
               <FaGithub className="text-black dark:text-white text-xl" />
             </div>
             <div className="ml-3">
               <p className="text-gray-800 dark:text-purple-100 font-medium">GitHub</p>
-              <p className="text-xs text-gray-500 dark:text-purple-300/60">Use your GitHub account</p>
+              <p className="text-xs text-gray-500 dark:text-purple-300/60">
+                {emails.github ? `Linked as ${emails.github}` : "Use your GitHub account"}
+              </p>
             </div>
           </div>
 
@@ -1048,16 +1069,16 @@ const ManageAccounts = ({ initialValues, onClose, user }) => {
             </button>
           )}
         </div>
-      </div>
 
-      <div className="mt-6 flex justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition"
-        >
-          Close
-        </button>
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
