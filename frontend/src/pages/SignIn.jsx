@@ -6,12 +6,14 @@ import { Oauth } from '../components/index.js';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import useIsLargeScreen from '../hooks/useIsLargeScreen';
 import { loginWithEmail } from "../firebase/auth.js"
+import useTheme from '../hooks/useTheme';
 
 const SignIn = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const isLargeScreen = useIsLargeScreen();
+    const { isDark } = useTheme();
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -49,7 +51,11 @@ const SignIn = () => {
                 )}
                 <div className={`p-10 ${isLargeScreen ? 'w-[40%]' : 'w-full'} dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent`}>
                     <div className={`flex flex-col ${!isLargeScreen ? 'items-center' : ''}`}>
-                        <img src="/todoshi-branding.png" alt="todoshi-name" className='h-[80px] max-w-[200px]' />
+                        <img 
+                            src={isDark ? "/todoshi-branding-light.png" : "/todoshi-branding-dark.png"}
+                            alt="todoshi-name" 
+                            className='h-[80px] max-w-[200px]' 
+                        />
                         <h2 className='text-3xl mt-4 font-bold mb-2 text-center md:text-left text-[#4c1f8e] dark:text-purple-100'>
                             Welcome Back!
                         </h2>

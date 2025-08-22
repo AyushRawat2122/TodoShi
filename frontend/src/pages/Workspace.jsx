@@ -1,13 +1,17 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
-const Workspace = () => {
-    return (
-        <div>
-            <h1>Welcome to the Workspace</h1>
-            <Outlet />
-        </div>
-    );
-}
+import { Outlet, useParams } from 'react-router-dom';
+import WorkspaceNav from '../components/WorkspaceNav';
 
-export default Workspace;
+export default function Workspace() {
+  const { projectId } = useParams();
+  return (
+    <div className="h-full flex">
+      <div className="">
+        <WorkspaceNav projectId={projectId} />
+      </div>
+      <main className="flex-1 p-6">
+        <Outlet />
+      </main>
+    </div>
+  );
+}

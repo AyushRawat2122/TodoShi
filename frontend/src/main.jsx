@@ -5,7 +5,10 @@ import App from './App.jsx'
 import { Provider } from 'react-redux';
 import { store } from './store/store.js';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
-import { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide, Verify } from './pages/index.js';
+import {
+  SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide, Verify,
+  Projects, ProjectInfo, Chat, Collaborators, Todos, Logs
+} from './pages/index.js';
 
 const route = createBrowserRouter([{
   element: <App />,
@@ -14,7 +17,26 @@ const route = createBrowserRouter([{
     { path: '/', element: <Home /> },
     { path: 'sign-in', element: <SignIn /> },
     { path: 'sign-up', element: <SignUp /> },
-    { path: 'workspace', element: <Workspace /> },
+    {
+      path: 'projects', children: [
+        { index: true, element: <Navigate to={"/"} replace /> },
+        { path: ':projectId', element: <Projects /> }
+      ]
+    },
+    {
+      path: 'workspace', children: [
+        { index: true, element: <Navigate to={"/"} replace /> },
+        {
+          path: ':projectId', element: <Workspace />, children: [
+            { index: true, element: <ProjectInfo /> },
+            { path: "chat", element: <Chat /> },
+            { path: "collaborators", element: <Collaborators /> },
+            { path: "todos", element: <Todos /> },
+            { path: "logs", element: <Logs /> }
+          ]
+        }
+      ]
+    },
     { path: 'dashboard', element: <Dashboard /> },
     { path: 'about', element: <About /> },
     { path: 'contact', element: <Contact /> },

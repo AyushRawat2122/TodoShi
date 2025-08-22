@@ -7,11 +7,13 @@ import ThemeSwitch from './ThemeSwitch';
 import useUser from '../hooks/useUser';
 import { useEffect } from 'react';
 import { useAuthStatus } from '../hooks/useAuthStatus';
+import useTheme from '../hooks/useTheme';
 
 const VerticalNav = () => {
 	const [collapsed, setCollapsed] = useState(false);
 	const isLarge = useIsLargeScreen();
 	const { user } = useUser(); 
+	const { isDark } = useTheme();
 	const [url , setUrl] = useState('');
 	const [userName , setUserName] = useState('');
 	const navigate = useNavigate(); // added
@@ -40,7 +42,11 @@ const VerticalNav = () => {
 					{/* Header */}
 					<div className={`flex ${collapsed ? 'justify-center' : 'justify-between'} p-4 border-b border-[#6229b3]/10  dark:border-[#c2a7fb]/20`}>
 						{!collapsed && (
-							<img src="/todoshi-branding.png" alt="todoshi" className='h-10' />
+							<img 
+								src={isDark ? "/todoshi-branding-light.png" : "/todoshi-branding-dark.png"}
+								alt="todoshi"
+								className='h-10'
+							/>
 						)}
 						<button
 							className="w-8 h-8 flex items-center justify-center text-[#4c1f8e]/80 dark:text-purple-200/80 hover:text-white hover:bg-[#6229b3] rounded-full transition-colors"
@@ -140,7 +146,7 @@ const VerticalNav = () => {
 									<NavLink
 										to={item.path}
 										className={({ isActive }) =>
-											`flex-1 flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-xs transition ${
+											`flex-1 flex flex-col items-center justify-center gap-1 rounded-t-xl py-2 text-xs transition ${
 												isActive
 													? 'text-[#4c1f8e] dark:text-purple-200 bg-[#6229b3]/15 dark:bg-gradient-to-r dark:from-[#6229b3]/30 dark:to-[#4c1f8e]/20'
 													: 'text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10'

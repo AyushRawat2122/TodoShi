@@ -13,16 +13,21 @@ function App() {
   const location = useLocation();
   const authPages = ['/sign-in', '/sign-up'];
   const isAuthPage = authPages.includes(location.pathname) || location.pathname.startsWith('/verify');
-  const isSecuredRoutes = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/workspace') || location.pathname.startsWith('/contact');
+  const isSecuredRoutes = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/workspace') || location.pathname.startsWith('/contact') || location.pathname.startsWith('/projects');
   const navigate = useNavigate();
-  const { updateUser, updateLoading, updateServerReady, updateSignInStatus } = useUser();
+  const { updateUser, updateLoading, updateServerReady, updateSignInStatus, user: globalStateUser } = useUser();
   const isLarge = useIsLargeScreen();
-  const { setGithubConnection, setGoogleConnection , resetConnectionDetails } = useConnections();
+  const { setGithubConnection, setGoogleConnection, resetConnectionDetails } = useConnections();
+  const isglobalNavDisabled = location.pathname.startsWith('/workspace') || location.pathname.startsWith('/projects');
+
+  const contentXPadding = !isglobalNavDisabled && isLarge ? 'px-10' : '';
+
   useEffect(() => {
     const auth = getAuth(app);
     updateLoading(true);
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       updateLoading(true); // ensure loading is true for every auth state change cycle
+
       try {
         if (user) {
           const lastSignInMethod = getLastSignInMethod();
@@ -64,7 +69,7 @@ function App() {
             updateServerReady(true);
 
             console.log('User is signed in and has a valid last sign-in method.');
-            navigate('/dashboard', { replace: true });
+            if (isAuthPage) { navigate('/dashboard', { replace: true }); }
 
             console.log('✅ User data fetched from server and state updated.');
           }
@@ -88,12 +93,12 @@ function App() {
   }, []);
 
   return (
-    <div className={`${isLarge ? "p-1" : ""} flex dark:bg-[#0c0a1a] h-screen w-screen bg-gray-50 overflow-hidden1`}>
+    <div className={`p-1 flex dark:bg-[#0c0a1a] h-screen w-screen bg-gray-50 overflow-hidden1`}>
       {/* Single nav instance; it renders sidebar on large and bottom bar on small */}
-      {!isAuthPage && <VerticalNav />}
+      {(!isAuthPage && !isglobalNavDisabled) && <VerticalNav />}
 
       {/* Main content with dynamic bottom padding for mobile bottom bar */}
-      <div className={`flex-1 h-full ${isLarge ? 'px-10' : 'pb-20'} dark:bg-[#0c0a1a] overflow-y-scroll`}>
+      <div className={`flex-1 h-full ${contentXPadding} ${isLarge ? '' : 'pb-20'} dark:bg-[#0c0a1a] overflow-y-scroll`} >
         <Outlet />
       </div>
     </div>
