@@ -6,7 +6,7 @@ import ThemeSwitch from "./ThemeSwitch.jsx";
 import { PointerHighlight } from "./PointerHighLight.jsx";
 import LoadingPage from "./LoadingPage.jsx";
 import ServerResponsePage from "./ServerResponsePage.jsx";
-
+import UtilityHeader from "./UtilityHeader.jsx";
 export {
   Loader,
   Oauth,
@@ -15,5 +15,6 @@ export {
   ThemeSwitch,
   PointerHighlight,
   LoadingPage,
-  ServerResponsePage
+  ServerResponsePage,
+  UtilityHeader
 };

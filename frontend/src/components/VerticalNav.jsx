@@ -14,8 +14,6 @@ const VerticalNav = () => {
 	const isLarge = useIsLargeScreen();
 	const { user } = useUser(); 
 	const { isDark } = useTheme();
-	const [url , setUrl] = useState('');
-	const [userName , setUserName] = useState('');
 	const navigate = useNavigate(); // added
 	const {isSignedIn} = useAuthStatus();
 	const navItems = [

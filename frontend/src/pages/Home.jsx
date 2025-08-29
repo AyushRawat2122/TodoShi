@@ -1,12 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaRegFileAlt, FaUsers, FaChartBar } from 'react-icons/fa';
 import { PointerHighlight } from '../components/PointerHighLight';
+import { useAuthStatus } from '../hooks/useAuthStatus';
+import useUser from '../hooks/useUser';
 
 const Home = () => {
+
+  const { isSignedIn } = useAuthStatus();
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const routeToProjects = () => {
+    if (isSignedIn && user?.data?._id) {
+      navigate(`/projects/${user.data._id}`);
+    }else{
+      navigate('/sign-up');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0c0a1a]">
+    <div className="min-h-screen dark:bg-[#0c0a1a]">
       {/* Hero Section */}
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center">
@@ -22,12 +36,12 @@ const Home = () => {
               Todoshi empowers teams to efficiently organize, track, and execute tasks in a collaborative and intuitive environment.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link
-                to="/sign-up"
+              <button
+                onClick={routeToProjects}
                 className="px-6 py-3 bg-[#4c1f8e] dark:bg-[#6229b3]/40 text-white rounded-md hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 transition-colors font-medium"
               >
                 Get Started
-              </Link>
+              </button>
               <Link
                 to="/guide"
                 className="px-6 py-3 bg-white dark:bg-[#0c0a1a]/50 text-gray-700 dark:text-purple-200 border border-gray-300 dark:border-[#c2a7fb]/20 rounded-md hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition-colors font-medium"

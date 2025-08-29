@@ -28,3 +28,102 @@ html.dark { color-scheme: dark; }
 button {
   cursor: pointer;
 }
+
+.react-datepicker {
+  font-family: inherit !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+}
+
+.react-datepicker__month-container {
+  width: 100% !important;
+  padding: 0.25rem !important;
+}
+
+.react-datepicker__header {
+  background-color: transparent !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.dark .react-datepicker__header {
+  border-color: #2a283a !important;
+}
+
+.react-datepicker__day-name {
+  margin: 0.25rem !important;
+  width: 2rem !important;
+  color: #6229b3 !important;
+}
+
+.dark .react-datepicker__day-name {
+  color: #c2a7fb !important;
+}
+
+.react-datepicker__day {
+  margin: 0.25rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  line-height: 2rem !important;
+  border-radius: 9999px !important;
+  transition: all 0.2s !important;
+  color: #374151 !important;
+}
+
+.dark .react-datepicker__day {
+  color: #e5e7eb !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #f3e8ff !important;
+  color: #6229b3 !important;
+}
+
+.dark .react-datepicker__day:hover {
+  background-color: rgba(98, 41, 179, 0.3) !important;
+  color: white !important;
+}
+
+.react-datepicker__day--keyboard-selected, 
+.react-datepicker__day--selected {
+  background-color: #6229b3 !important;
+  color: white !important;
+}
+
+.react-datepicker__day--disabled {
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+.dark .react-datepicker__day--disabled {
+  color: #4b5563 !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: #9ca3af !important;
+  visibility: hidden !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+/* Remove these lines to allow popper positioning inside modal */
+.react-datepicker-popper {
+  z-index: 105 !important;
+}
+
+/* Calendar dropdown fixes for dark mode */
+.react-datepicker select.dark {
+  background-color: #13111d !important;
+  color: white !important;
+}
+
+.dark .react-datepicker__current-month {
+  color: white !important;
+}
+
+.react-datepicker__month {
+  margin: 0.5rem !important;
+}

@@ -192,7 +192,7 @@ const Dashboard = () => {
 
   return (
     <motion.div
-      className={`min-h-screen bg-white dark:bg-[#0c0a1a] ${isLarge ? 'px-8' : 'p-0'}`}
+      className={`min-h-screen dark:bg-[#0c0a1a] ${isLarge ? 'px-8' : 'p-0'}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -297,7 +297,7 @@ const Dashboard = () => {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {/* Skills */}
-            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 dark:border-[#c2a7fb]/10 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
+            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Skills</h2>
                 <button
@@ -327,7 +327,7 @@ const Dashboard = () => {
               </div>
             </div>
             {/* About */}
-            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 dark:border-[#c2a7fb]/10 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
+            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">About</h2>
                 <button

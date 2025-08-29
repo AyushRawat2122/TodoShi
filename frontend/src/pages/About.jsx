@@ -1,8 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaTasks, FaComments, FaUsers, FaChartLine, FaPalette, FaVideo, FaDesktop, FaCalendarAlt } from 'react-icons/fa';
 import { PointerHighlight } from '../components/PointerHighLight';
+import { useAuthStatus } from '../hooks/useAuthStatus';
+import useUser from '../hooks/useUser';
+
 
 const About = () => {
   const teamMembers = [
@@ -12,6 +15,17 @@ const About = () => {
       image: "https://randomuser.me/api/portraits/men/41.jpg"
     }
   ];
+
+  const { isSignedIn } = useAuthStatus();
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const routeToProjects = () => {
+    if (isSignedIn && user?.data?._id) {
+      navigate(`/projects/${user.data._id}`);
+    } else {
+      navigate('/sign-up');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0c0a1a]">
@@ -24,7 +38,7 @@ const About = () => {
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-purple-100 mb-4 leading-tight">
-              About Todoshi: <br /> 
+              About Todoshi: <br />
               <span className="text-[#6229b3] dark:text-[#c2a7fb]">
                 <PointerHighlight rectangleClassName="border-[#4c1f8e]/30 dark:border-[#c2a7fb]/30">
                   Your Real-time Collaboration Hub
@@ -35,13 +49,13 @@ const About = () => {
               Todoshi is a powerful real-time team collaboration platform designed to streamline project management workflows that foster discussion and enable file sharing. We focus on managing daily work goals, project documents, and ensuring clear progress visibility, all without the complexity of technical jargon.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link 
-                to="/sign-up"
+              <button
+                onClick={routeToProjects}
                 className="px-6 py-3 bg-[#4c1f8e] dark:bg-[#6229b3]/40 text-white rounded-md hover:bg-[#6229b3] dark:hover:bg-[#4c1f8e]/40 transition-colors font-medium"
               >
                 Get Started
-              </Link>
-              <Link 
+              </button>
+              <Link
                 to="/contact"
                 className="px-6 py-3 bg-white dark:bg-[#0c0a1a]/50 text-[#4c1f8e] dark:text-purple-200 border border-[#4c1f8e] dark:border-[#c2a7fb]/20 rounded-md hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 transition-colors font-medium"
               >
@@ -49,7 +63,7 @@ const About = () => {
               </Link>
             </div>
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -76,9 +90,9 @@ const About = () => {
               </h2>
               <p className="text-center text-gray-600 dark:text-purple-200/80 max-w-3xl mx-auto">Designed to streamline your workflow and enhance productivity</p>
             </div>
-            
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 p-8">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
@@ -92,8 +106,8 @@ const About = () => {
                   Create and assign daily TODOs, mark tasks as completed, and receive notifications for important deadlines.
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
@@ -107,8 +121,8 @@ const About = () => {
                   Communicate instantly with your team via real-time group chat and easily share images, documents, and other media files.
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
@@ -122,8 +136,8 @@ const About = () => {
                   Add collaborators to your projects, manage project roles, and handle team permissions with ease.
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
@@ -137,8 +151,8 @@ const About = () => {
                   Log your daily progress directly within the app to create a permanent record of your work and achievements.
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
@@ -174,9 +188,9 @@ const About = () => {
                 We are continuously evolving Todoshi to meet your growing needs and enhance your productivity. Here's a glimpse of the exciting features we're working on:
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8 p-8">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
@@ -190,8 +204,8 @@ const About = () => {
                   Connect with your team members using our integrated video conferencing solution.
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
@@ -205,8 +219,8 @@ const About = () => {
                   Share your screen with team members during video calls for better collaboration and training.
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}

@@ -11,7 +11,7 @@ createSocketServer(server);
 
 app.use(
   cors({
-    origin: ["http://localhost:5173","http://localhost:5174"],
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -27,8 +27,10 @@ app.get("/", (req, res) => {
 
 // Import routes
 import userRoutes from "./routes/user.routes.js";
+import projectRoutes from "./routes/project.routes.js";
 
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/projects", projectRoutes);
 
 app.use(errorHandler);
 

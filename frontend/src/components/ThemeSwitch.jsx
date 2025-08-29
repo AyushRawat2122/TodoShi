@@ -1,14 +1,17 @@
 import React from 'react';
 import useTheme from '../hooks/useTheme';
 import { LuSun, LuMoon } from 'react-icons/lu';
-
+import useIsLargeScreen from '../hooks/useIsLargeScreen';
 const ThemeSwitch = ({ vertical = false, className = '' }) => {
 	const { isDark, toggleTheme } = useTheme();
-
+	const isLarge = useIsLargeScreen();
 	return (
 		<div
-			className={`${vertical ? 'rotate-90 my-4' : ''} ${className}`}
+			className={`${vertical ? 'rotate-90 my-4' : 'flex items-center justify-center gap-2 my-4'} ${className} `}
 		>
+			{!vertical && isLarge && <span className='text-[#6229b3] dark:text-purple-200'>
+				<span className='font-bold text-[#4c1f8e] dark:text-purple-300'>Theme</span> : {isDark ? 'Legends' : 'Mortals'}
+			</span>}
 			<button
 				type="button"
 				aria-label="Toggle theme"

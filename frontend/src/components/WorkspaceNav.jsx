@@ -31,9 +31,9 @@ const WorkspaceNav = ({ projectId }) => {
 		return (
 			<div className="bg-white/90 dark:bg-[#0c0a1a] border border-[#6229b3]/10 dark:bg-gradient-to-br from-gray-50/10 from-10% to-white/1 dark:border-[#c2a7fb]/20 shadow-[0_8px_30px_rgba(98,41,179,0.08)] h-full flex flex-col w-15 rounded-full">
 				{/* Back button at top */}
-				<div className="flex justify-center p-4 border-b border-[#6229b3]/10 dark:border-[#c2a7fb]/20">
+				<div className="flex justify-center py-4 border-b border-[#6229b3]/10 dark:border-[#c2a7fb]/20">
 					<button
-						className="w-8 h-8 flex items-center justify-center text-[#4c1f8e]/80 dark:text-purple-200/80 hover:text-white hover:bg-[#6229b3] rounded-full transition-colors"
+						className="w-8 h-8 flex items-center justify-center text-[#4c1f8e]/80 dark:text-purple-200/80 hover:text-white hover:bg-[#6229b3]/50 rounded-full transition-colors"
 						onClick={handleBackClick}
 						title="Go back"
 					>

@@ -20,7 +20,7 @@ const route = createBrowserRouter([{
     {
       path: 'projects', children: [
         { index: true, element: <Navigate to={"/"} replace /> },
-        { path: ':projectId', element: <Projects /> }
+        { path: ':userId', element: <Projects /> }
       ]
     },
     {

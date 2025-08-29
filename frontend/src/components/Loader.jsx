@@ -3,7 +3,7 @@ import { PiSpinnerLight } from "react-icons/pi";
 
 const Loader = ({ className }) => {
     return (
-        <PiSpinnerLight className={`animate-spin text-blue-500 dark:text-blue-300 ${className}`} />
+        <PiSpinnerLight className={`animate-spin dark:text-[#c2a7fb] text-[#4c1f8e] ${className}`} />
     );
 };
 
