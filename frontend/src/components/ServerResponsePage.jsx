@@ -1,19 +1,21 @@
 import React from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { fallingGuy } from '../utils/lottie';
+import { fallingGuyDark, fallingGuyLight } from '../utils/lottie';
 import { useNavigate } from 'react-router-dom';
-import useIsLargeScreen from '../hooks/useIsLargeScreen'; // added
+import useIsLargeScreen from '../hooks/useIsLargeScreen';
+import useTheme from '../hooks/useTheme';
 
 const ServerResponsePage = () => {
-    const isLarge = useIsLargeScreen(); // added
-    const navigate = useNavigate(); // added
+    const isLarge = useIsLargeScreen();
+    const navigate = useNavigate();
+    const { isDark } = useTheme();
     return (
         <div className='flex relative max-sm:flex-col sm:justify-center sm:items-center  h-full w-full z-999'>
             <DotLottieReact
-                src={fallingGuy}
+                src={isDark ? fallingGuyLight : fallingGuyDark}
                 autoplay
                 loop
-                className='max-sm:w-[100%] max-sm:h-[40%]  w-[50%] h-[60%]'
+                className={`${isDark ? "opacity-70" :""} max-sm:w-[100%] max-sm:h-[40%]  w-[50%] h-[60%]`}
             />
             <div
                 className={`flex flex-col px-3 sm:px-4 gap-3 max-sm:items-center max-sm:text-center 
@@ -39,13 +41,13 @@ const ServerResponsePage = () => {
                         Reload
                     </button>
                     <button
-                        onClick={() => (navigate('/', {replace: true}))}
-                    className='px-5 text-xl -skew-x-10 py-2 rounded border max-w-[120px] text-[#4c1f8e] border-[#4c1f8e] hover:bg-[#4c1f8e] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4c1f8e]/40 active:scale-[0.99] transition'
+                        onClick={() => (navigate('/', { replace: true }))}
+                        className='px-5 text-xl -skew-x-10 py-2 rounded border max-w-[120px] text-[#4c1f8e] border-[#4c1f8e] hover:bg-[#4c1f8e] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4c1f8e]/40 active:scale-[0.99] transition'
                     >
-                    Home
-                </button>
+                        Home
+                    </button>
+                </div>
             </div>
-        </div>
         </div >
     );
 }

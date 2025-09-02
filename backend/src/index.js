@@ -2,28 +2,57 @@ import dotenv from "dotenv";
 import app from "./app.js";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
-
+import admin from "firebase-admin";
 dotenv.config({});
 
 const port = process.env.PORT;
 
-app.listen(port, () => {
-  const mongoUri = process.env.MONGO_DB_URI;
+// 🔑 Service Initialization Function
+const initServices = async () => {
+  try {
+    // 1️⃣ MongoDB
+    const mongoUri = process.env.MONGO_DB_URI;
+    await mongoose.connect(mongoUri);
+    console.log("✅ Connected to MongoDB successfully 🗄️🚀");
 
-  mongoose
-    .connect(mongoUri)
-    .then(() => console.log("✅ Connected to MongoDB successfully 🗄️🚀"))
-    .then(() => {
-      cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-        secure: true,
+    // 2️⃣ Cloudinary
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+      secure: true,
+    });
+    console.log("✅ Cloudinary configured successfully ☁️");
+
+    // 3️⃣ Firebase Admin SDK
+    const serviceAccount = {
+      type: process.env.FIREBASE_TYPE,
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      client_id: process.env.FIREBASE_CLIENT_ID,
+      auth_uri: process.env.FIREBASE_AUTH_URI,
+      token_uri: process.env.FIREBASE_TOKEN_URI,
+      auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+      client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+      universe_domain: process.env.FIREBASE_UNIVERSE_DOMAIN,
+    };
+
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
       });
-      console.log("✅ Cloudinary configured successfully ☁️");
-    })
-    .catch((err) => console.error("❌ MongoDB / Cloudinary connection error 💥:", err));
+      console.log("✅ Firebase Admin SDK initialized successfully 🔥");
+    }
 
-  console.log(`💻 Server running successfully on port: ${port} 🌐`);
-  console.log(`🔗 Access: http://localhost:${port}/`);
+    return { mongoose, cloudinary, admin };
+  } catch (err) {
+    console.error("❌ Service initialization error 💥:", err);
+    process.exit(1); // Fail fast
+  }
+};
+
+app.listen(port, () => {
+  initServices();
 });

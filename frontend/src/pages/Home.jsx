@@ -12,6 +12,11 @@ const Home = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const routeToProjects = () => {
+    if(!user.data){
+      console.log("User data not available yet. Server Busy");
+      return;
+    }
+
     if (isSignedIn && user?.data?._id) {
       navigate(`/projects/${user.data._id}`);
     }else{

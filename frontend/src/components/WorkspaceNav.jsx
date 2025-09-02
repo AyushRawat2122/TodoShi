@@ -1,9 +1,9 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { FaComments, FaHistory, FaInfoCircle, FaUsers, FaClipboardList, FaChevronLeft } from 'react-icons/fa';
 import useIsLargeScreen from '../hooks/useIsLargeScreen';
 import useUser from '../hooks/useUser';
-import { useAuthStatus } from '../hooks/useAuthStatus';
+
 
 const WorkspaceNav = ({ projectId }) => {
 	// return nothing if no project id is provided via props
@@ -12,7 +12,6 @@ const WorkspaceNav = ({ projectId }) => {
 	const isLarge = useIsLargeScreen();
 	const navigate = useNavigate();
 	const { user } = useUser();
-	const { isSignedIn } = useAuthStatus();
 
 	const subroutes = [
 		// Info removed from array as it will be handled separately
@@ -79,17 +78,19 @@ const WorkspaceNav = ({ projectId }) => {
 				<div className="py-2 px-1">
 					<div className="flex justify-center">
 						{/* Avatar or 'G' fallback */}
-						<div className="w-10 h-10 rounded-full bg-[#c2a7fb] bg-opacity-30 overflow-hidden flex items-center justify-center">
-							{(user?.data?.avatar?.url || user?.avatar?.url) ? (
-								<img
-									src={user?.data?.avatar?.url || user?.avatar?.url}
-									alt="avatar"
-									className="w-full h-full object-cover"
-								/>
-							) : (
-								<span className="text-sm font-medium text-[#4c1f8e] dark:text-purple-500">G</span>
-							)}
-						</div>
+						<Link to={"/dashboard"}>
+							<div className="w-10 h-10 rounded-full bg-[#c2a7fb] bg-opacity-30 overflow-hidden flex items-center justify-center">
+								{(user?.data?.avatar?.url || user?.avatar?.url) ? (
+									<img
+										src={user?.data?.avatar?.url || user?.avatar?.url}
+										alt="avatar"
+										className="w-full h-full object-cover"
+									/>
+								) : (
+									<span className="text-sm font-medium text-[#4c1f8e] dark:text-purple-500">G</span>
+								)}
+							</div>
+						</Link>
 					</div>
 				</div>
 			</div>

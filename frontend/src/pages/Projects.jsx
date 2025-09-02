@@ -4,13 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaClock, FaEllipsisV, FaPlus, FaFolder, FaCheckCircle, FaHourglassHalf, FaTimes, FaCalendarAlt, FaTrashAlt } from 'react-icons/fa';
 import { UtilityHeader } from '../components/index.js';
 import useUser from '../hooks/useUser.js';
-import { useAuthStatus } from '../hooks/useAuthStatus.js';
 import { useForm, Controller } from 'react-hook-form';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import serverRequest from "../utils/axios.js"
 import { Loader } from '../components/index.js';
-
+import ProtectedPage from './ProtectedPage.jsx';
 // Empty state component for reuse
 const EmptyState = ({ icon: Icon, title, message, actionText, onAction }) => (
   <motion.div
@@ -263,22 +262,20 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, loading }) => {
                     type="button"
                     onClick={onClose}
                     disabled={loading}
-                    className={`px-4 py-2 border border-gray-300 dark:border-[#2a283a] rounded-md transition-colors ${
-                      loading
-                        ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
-                        : "text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#13111d]"
-                    }`}
+                    className={`px-4 py-2 border border-gray-300 dark:border-[#2a283a] rounded-md transition-colors ${loading
+                      ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
+                      : "text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#13111d]"
+                      }`}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`px-4 py-2 rounded-md transition-colors ${
-                      loading
-                        ? "bg-[#a78bfa] text-white cursor-not-allowed"
-                        : "bg-[#6229b3] text-white hover:bg-[#6229b3]/90"
-                    }`}
+                    className={`px-4 py-2 rounded-md transition-colors ${loading
+                      ? "bg-[#a78bfa] text-white cursor-not-allowed"
+                      : "bg-[#6229b3] text-white hover:bg-[#6229b3]/90"
+                      }`}
                   >
                     {loading ? "Creating..." : "Create Project"}
                   </button>
@@ -318,22 +315,20 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, projectTitle, loading 
             <button
               onClick={onClose}
               disabled={loading}
-              className={`px-4 py-2 border border-gray-300 dark:border-[#2a283a] rounded-md transition-colors ${
-                loading
-                  ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
-                  : "text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#13111d]"
-              }`}
+              className={`px-4 py-2 border border-gray-300 dark:border-[#2a283a] rounded-md transition-colors ${loading
+                ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
+                : "text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#13111d]"
+                }`}
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
               disabled={loading}
-              className={`px-4 py-2 rounded-md flex items-center transition-colors ${
-                loading
-                  ? "bg-red-300 text-white cursor-not-allowed"
-                  : "bg-red-600 text-white hover:bg-red-700"
-              }`}
+              className={`px-4 py-2 rounded-md flex items-center transition-colors ${loading
+                ? "bg-red-300 text-white cursor-not-allowed"
+                : "bg-red-600 text-white hover:bg-red-700"
+                }`}
             >
               <FaTrashAlt className="mr-2" /> Delete
             </button>
@@ -348,7 +343,6 @@ export default function Projects() {
   const { userId } = useParams();
   const [activeTab, setActiveTab] = useState('All');
   const { user } = useUser();
-  const { isServerReady, isSignedIn, isLoading } = useAuthStatus();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   // Projects state instead of constant
@@ -359,7 +353,7 @@ export default function Projects() {
   // - projectId: the _id of the project to delete
   // - projectTitle: the title of the project to show in the modal
   const [deleteModal, setDeleteModal] = useState({ open: false, projectId: null, projectTitle: "" });
-
+  console.log("reached");
   // Using useMemo for calculations to improve performance
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
@@ -395,7 +389,7 @@ export default function Projects() {
     setLoading(true);
     try {
       const response = await serverRequest.post(`/projects/create/${userId}`, projectData, { headers: { 'Content-Type': 'application/json' } });
-      console.log('Project created:', response.data);
+      setProjects(prev => [response.data.data, ...prev]);
     } catch (error) {
       console.error('Failed to create project:', error);
     } finally {
@@ -445,239 +439,228 @@ export default function Projects() {
         setLoading(false);
       }
     }
-    if (!isLoading && isSignedIn && isServerReady && userId && userId === user?.data?._id) {
+    if (userId && userId === user?.data?._id) {
       getProjects();
     }
 
-  }, [isLoading, isSignedIn, isServerReady, userId, user]);
+  }, [userId, user]);
 
-  if (isLoading) {
-    return <div className="h-screen w-full flex items-center justify-center">loading...</div>
-  }
-  if (!isSignedIn && !isLoading) {
-    console.log("Not Signed In");
-    return <Navigate to={"/sign-in"} replace={true} />
-  }
-  if (!isServerReady && !isLoading) {
-    return <div className="h-screen w-full flex items-center justify-center">Server Busy</div>
-  }
   if (userId !== user?.data?._id) {
     return <Navigate to={"/unauthorized"} replace={true} />
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0c0a1a] p-1 sm:px-6 sm:py-4">
-      {/* Header Section */}
-      <div className="max-w-7xl mx-auto">
-        <UtilityHeader backDisable={false} sticky={true} profile={true} />
+    <ProtectedPage>
+      <div className="min-h-screen bg-white dark:bg-[#0c0a1a] p-1 sm:px-6 sm:py-4">
+        {/* Header Section */}
+        <div className="max-w-7xl mx-auto">
+          <UtilityHeader backDisable={false} sticky={true} profile={true} />
 
 
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 mt-6">
-          <div className="mb-4 md:mb-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-purple-100">My Projects</h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-purple-200/70 mt-2">Manage and track your development projects</p>
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 mt-6">
+            <div className="mb-4 md:mb-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-purple-100">My Projects</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-purple-200/70 mt-2">Manage and track your development projects</p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAddProject}
+              className="px-3 sm:px-4 py-2 bg-[#6229b3] text-white rounded-lg flex items-center justify-center text-sm sm:text-base"
+            >
+              <span className="mr-2">+</span>
+              New Project
+            </motion.button>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleAddProject}
-            className="px-3 sm:px-4 py-2 bg-[#6229b3] text-white rounded-lg flex items-center justify-center text-sm sm:text-base"
-          >
-            <span className="mr-2">+</span>
-            New Project
-          </motion.button>
-        </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white dark:bg-[#0c0a1a] border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-none"
-          >
-            <h2 className="text-base sm:text-lg font-medium text-gray-700 dark:text-purple-200/80 mb-2 sm:mb-4">Total Projects</h2>
-            <p className="text-3xl sm:text-4xl font-bold text-blue-500 dark:text-blue-400">{totalProjects}</p>
-          </motion.div>
+          {/* Stats Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-white dark:bg-[#0c0a1a] border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-none"
+            >
+              <h2 className="text-base sm:text-lg font-medium text-gray-700 dark:text-purple-200/80 mb-2 sm:mb-4">Total Projects</h2>
+              <p className="text-3xl sm:text-4xl font-bold text-blue-500 dark:text-blue-400">{totalProjects}</p>
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-white dark:bg-[#0c0a1a] border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-none"
-          >
-            <h2 className="text-base sm:text-lg font-medium text-gray-700 dark:text-purple-200/80 mb-2 sm:mb-4">Active Projects</h2>
-            <p className="text-3xl sm:text-4xl font-bold text-[#6229b3] dark:text-[#c2a7fb]">{activeProjects}</p>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white dark:bg-[#0c0a1a] border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-none"
+            >
+              <h2 className="text-base sm:text-lg font-medium text-gray-700 dark:text-purple-200/80 mb-2 sm:mb-4">Active Projects</h2>
+              <p className="text-3xl sm:text-4xl font-bold text-[#6229b3] dark:text-[#c2a7fb]">{activeProjects}</p>
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white dark:bg-[#0c0a1a] border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-none"
-          >
-            <h2 className="text-base sm:text-lg font-medium text-gray-700 dark:text-purple-200/80 mb-2 sm:mb-4">Completed Projects</h2>
-            <p className="text-3xl sm:text-4xl font-bold text-green-500 dark:text-green-400">{completedProjects}</p>
-          </motion.div>
-        </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-white dark:bg-[#0c0a1a] border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-none"
+            >
+              <h2 className="text-base sm:text-lg font-medium text-gray-700 dark:text-purple-200/80 mb-2 sm:mb-4">Completed Projects</h2>
+              <p className="text-3xl sm:text-4xl font-bold text-green-500 dark:text-green-400">{completedProjects}</p>
+            </motion.div>
+          </div>
 
-        {/* All Projects Section */}
-        <div className="mb-6">
-          {/* Add back the tab selector */}
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-3 sm:gap-0">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-purple-100">All Projects</h2>
-            <div className="flex bg-gray-100 dark:bg-[#13111d] rounded-lg overflow-hidden self-start">
-              {['All', 'Active', 'Completed'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm ${
-                    activeTab === tab
+          {/* All Projects Section */}
+          <div className="mb-6">
+            {/* Add back the tab selector */}
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-purple-100">All Projects</h2>
+              <div className="flex bg-gray-100 dark:bg-[#13111d] rounded-lg overflow-hidden self-start">
+                {['All', 'Active', 'Completed'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm ${activeTab === tab
                       ? 'bg-[#6229b3] text-white'
                       : 'text-gray-600 dark:text-purple-200/70'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+                      }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          
-          {/* Loader for projects section */}
-          {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <Loader className={"text-3xl"} />
-            </div>
-          ) : (
-            <>
-              {/* Empty state handling */}
-              {totalProjects === 0 && (
-                <EmptyState
-                  icon={FaFolder}
-                  title="No Projects Yet"
-                  message="You haven't created any projects yet. Start by creating your first project to track your development work."
-                  actionText="Create First Project"
-                  onAction={handleAddProject}
-                />
-              )}
 
-              {totalProjects > 0 && filteredProjects.length === 0 && activeTab === 'Active' && (
-                <EmptyState
-                  icon={FaHourglassHalf}
-                  title="No Active Projects"
-                  message="You don't have any active projects at the moment. Start a new project or check your completed ones."
-                  actionText="Create New Project"
-                  onAction={handleAddProject}
-                />
-              )}
+            {/* Loader for projects section */}
+            {loading ? (
+              <div className="flex items-center justify-center h-48">
+                <Loader className={"text-3xl"} />
+              </div>
+            ) : (
+              <>
+                {/* Empty state handling */}
+                {totalProjects === 0 && (
+                  <EmptyState
+                    icon={FaFolder}
+                    title="No Projects Yet"
+                    message="You haven't created any projects yet. Start by creating your first project to track your development work."
+                    actionText="Create First Project"
+                    onAction={handleAddProject}
+                  />
+                )}
 
-              {totalProjects > 0 && filteredProjects.length === 0 && activeTab === 'Completed' && (
-                <EmptyState
-                  icon={FaCheckCircle}
-                  title="No Completed Projects"
-                  message="You don't have any completed projects yet. Keep working on your active projects!"
-                />
-              )}
+                {totalProjects > 0 && filteredProjects.length === 0 && activeTab === 'Active' && (
+                  <EmptyState
+                    icon={FaHourglassHalf}
+                    title="No Active Projects"
+                    message="You don't have any active projects at the moment. Start a new project or check your completed ones."
+                    actionText="Create New Project"
+                    onAction={handleAddProject}
+                  />
+                )}
 
-              {/* Projects Grid - Only show when we have projects to display */}
-              {filteredProjects.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {filteredProjects.map((project, index) => (
-                    <motion.div
-                      key={project._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 relative shadow-md dark:shadow-lg"
-                    >
-                      <div className="flex justify-between items-start mb-3 sm:mb-4">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-purple-100">{project.title}</h3>
-                        <div className="relative">
-                          <button
-                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleMenuOpen(project._id);
-                            }}
-                            disabled={loading}
-                          >
-                            <FaEllipsisV />
-                          </button>
-                          {menuOpenId === project._id && (
-                            <div
-                              className="absolute right-0 mt-2 w-36 bg-white dark:bg-[#13111d] border border-gray-200 dark:border-[#2a283a] rounded shadow-lg z-10"
-                              onClick={e => e.stopPropagation()}
+                {totalProjects > 0 && filteredProjects.length === 0 && activeTab === 'Completed' && (
+                  <EmptyState
+                    icon={FaCheckCircle}
+                    title="No Completed Projects"
+                    message="You don't have any completed projects yet. Keep working on your active projects!"
+                  />
+                )}
+
+                {/* Projects Grid - Only show when we have projects to display */}
+                {filteredProjects.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {filteredProjects.map((project, index) => (
+                      <motion.div
+                        key={project._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 relative shadow-md dark:shadow-lg"
+                      >
+                        <div className="flex justify-between items-start mb-3 sm:mb-4">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-purple-100">{project.title}</h3>
+                          <div className="relative">
+                            <button
+                              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleMenuOpen(project._id);
+                              }}
+                              disabled={loading}
                             >
-                              <button
-                                className={`w-full flex items-center px-4 py-2 text-sm rounded ${
-                                  loading
+                              <FaEllipsisV />
+                            </button>
+                            {menuOpenId === project._id && (
+                              <div
+                                className="absolute right-0 mt-2 w-36 bg-white dark:bg-[#13111d] border border-gray-200 dark:border-[#2a283a] rounded shadow-lg z-10"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <button
+                                  className={`w-full flex items-center px-4 py-2 text-sm rounded ${loading
                                     ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
                                     : "text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#2a283a]"
-                                }`}
-                                onClick={() => {
-                                  handleDeleteClick(project._id, project.title);
-                                  handleMenuClose(); // Use handleMenuClose here
-                                }}
-                                disabled={loading}
-                              >
-                                <FaTrashAlt className="mr-2" /> Delete
-                              </button>
-                            </div>
-                          )}
+                                    }`}
+                                  onClick={() => {
+                                    handleDeleteClick(project._id, project.title);
+                                    handleMenuClose(); // Use handleMenuClose here
+                                  }}
+                                  disabled={loading}
+                                >
+                                  <FaTrashAlt className="mr-2" /> Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center mb-3 sm:mb-4">
-                        <span
-                          className={`px-2 sm:px-3 py-1 text-xs font-medium rounded-full ${
-                            project.activeStatus
+                        <div className="flex items-center mb-3 sm:mb-4">
+                          <span
+                            className={`px-2 sm:px-3 py-1 text-xs font-medium rounded-full ${project.activeStatus
                               ? 'bg-purple-100 text-[#6229b3] dark:bg-purple-900/30 dark:text-purple-300'
                               : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                          }`}
-                        >
-                          {project.activeStatus ? 'Active' : 'Completed'}
-                        </span>
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 ml-3">
-                          <FaClock className="mr-1" />
-                          <span>
-                            {project.deadline
-                              ? new Date(project.deadline).toLocaleDateString()
-                              : ""}
+                              }`}
+                          >
+                            {project.activeStatus ? 'Active' : 'Completed'}
                           </span>
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 ml-3">
+                            <FaClock className="mr-1" />
+                            <span>
+                              {project.deadline
+                                ? new Date(project.deadline).toLocaleDateString()
+                                : ""}
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-purple-200/70 mb-4 sm:mb-6">
-                        {project.description}
-                      </p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-purple-200/70 mb-4 sm:mb-6">
+                          {project.description}
+                        </p>
 
-                      <button className="inline-flex items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 dark:border-[#2a283a] text-xs sm:text-sm font-medium text-gray-700 dark:text-purple-200/80 hover:bg-gray-50 dark:hover:bg-[#13111d] rounded-md transition-colors" onClick={()=>{navigate(`/workspace/${project._id}`)}}>
-                        Visit Workspace
-                      </button>
-                    </motion.div>
-                  ))}
-                  {/* Confirm Delete Modal */}
-                  <ConfirmDeleteModal
-                    isOpen={deleteModal.open}
-                    onClose={handleDeleteCancel}
-                    onConfirm={handleDeleteConfirm}
-                    projectTitle={deleteModal.projectTitle}
-                    loading={loading}
-                  />
-                </div>
-              )}
-            </>
-          )}
+                        <button className="inline-flex items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 dark:border-[#2a283a] text-xs sm:text-sm font-medium text-gray-700 dark:text-purple-200/80 hover:bg-gray-50 dark:hover:bg-[#13111d] rounded-md transition-colors" onClick={() => { navigate(`/workspace/${project.title}/${project._id}`) }}>
+                          Visit Workspace
+                        </button>
+                      </motion.div>
+                    ))}
+                    {/* Confirm Delete Modal */}
+                    <ConfirmDeleteModal
+                      isOpen={deleteModal.open}
+                      onClose={handleDeleteCancel}
+                      onConfirm={handleDeleteConfirm}
+                      projectTitle={deleteModal.projectTitle}
+                      loading={loading}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Project Creation Modal - now using the internal component */}
+          <NewProjectModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            onSubmit={handleCreateProject}
+            loading={loading}
+          />
         </div>
-        
-        {/* Project Creation Modal - now using the internal component */}
-        <NewProjectModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onSubmit={handleCreateProject}
-          loading={loading}
-        />
       </div>
-    </div>
+    </ProtectedPage>
   );
 }

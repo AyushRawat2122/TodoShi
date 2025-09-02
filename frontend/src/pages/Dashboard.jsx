@@ -6,8 +6,6 @@ import { FcGoogle } from 'react-icons/fc';
 import { PiSignOut } from "react-icons/pi";
 import { motion } from 'framer-motion';
 import { signOutUser } from "../firebase/auth.js"
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuthStatus } from '../hooks/useAuthStatus.js';
 import { useForm } from 'react-hook-form';
 import serverRequest from '../utils/axios.js';
 import useIsLargeScreen from '../hooks/useIsLargeScreen';
@@ -15,10 +13,8 @@ import useUser from '../hooks/useUser';
 import { FiExternalLink } from 'react-icons/fi';
 import Loader from '../components/Loader.jsx';
 import useConnections from '../hooks/useConnections.js';
-import LoadingPage from '../components/LoadingPage.jsx';
-import ServerResponsePage from '../components/ServerResponsePage.jsx';
 import { linkGitHub, linkGoogle } from "../firebase/auth.js"
-import { GithubAuthProvider, GoogleAuthProvider } from 'firebase/auth';
+import ProtectedPage from './ProtectedPage.jsx';
 
 const Popup = ({ isOpen, onClose, children }) => {
   // Always call hooks; guard the effect body with isOpen
@@ -63,8 +59,6 @@ const Popup = ({ isOpen, onClose, children }) => {
 };
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const { isSignedIn, isServerReady, isLoading } = useAuthStatus();
   const { user: userState } = useUser();
   const { getConnectionDetails } = useConnections();
 
@@ -177,72 +171,35 @@ const Dashboard = () => {
   }, [connections]);
 
 
-
-  if (isLoading) {
-    return <LoadingPage />;
-  }
-
-  if (!isSignedIn) {
-    return <Navigate to='/sign-in' replace />;
-  }
-
-  if (!isServerReady) {
-    return <ServerResponsePage />;
-  }
-
   return (
-    <motion.div
-      className={`min-h-screen dark:bg-[#0c0a1a] ${isLarge ? 'px-8' : 'p-0'}`}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, ease: "easeInOut" }}
-    >
-      <div className="max-w-7xl mx-auto">
-        {/* Profile Banner */}
-        <motion.div
-          className="bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 overflow-hidden dark:border dark:border-[#c2a7fb]/20"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <div
-            className={`h-38 md:h-56 relative overflow-hidden ${basicInfo.bannerUrl ? "" : "bg-gradient-to-r from-[#5b21b6] via-[#7c3aed] to-[#0ea5e9]"}`}
-            style={
-              basicInfo.bannerUrl
-                ? { backgroundImage: `url(${basicInfo.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : undefined
-            }
+    <ProtectedPage>
+      <motion.div
+        className={`min-h-screen dark:bg-[#0c0a1a] ${isLarge ? 'px-8' : 'p-0'}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Profile Banner */}
+          <motion.div
+            className="bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 overflow-hidden dark:border dark:border-[#c2a7fb]/20"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <button
-              className="absolute left-4 top-4 bg-white/20 p-2 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm"
-              onClick={() =>
-                openPopup(
-                  <EditBanner
-                    initialValues={basicInfo}
-                    onClose={closePopup}
-                    user={user}
-                  />
-                )
+            <div
+              className={`h-38 md:h-56 relative overflow-hidden ${basicInfo.bannerUrl ? "" : "bg-gradient-to-r from-[#5b21b6] via-[#7c3aed] to-[#0ea5e9]"}`}
+              style={
+                basicInfo.bannerUrl
+                  ? { backgroundImage: `url(${basicInfo.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                  : undefined
               }
             >
-              <FaPencilAlt className="text-white text-sm" />
-            </button>
-            <button className="absolute right-4 top-4 text-white flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm" onClick={handleSignOut}>
-              <PiSignOut className="inline-block mr-1" /> Sign out
-            </button>
-          </div>
-          <div className={`relative ${isLarge ? 'px-6 py-5' : 'px-4 py-4'}`}>
-            <div className={`absolute ${isLarge ? "-top-16 left-6" : "-top-8 left-4"} group`}>
-              {basicInfo.avatarUrl ? (
-                <img src={basicInfo.avatarUrl} alt="Profile" className="w-32 h-32 rounded-full border-4 bg-purple-200 dark:bg-[#c2a7fb]/20 border-white dark:border-[#c2a7fb]/60 shadow-md object-cover" />
-              ) : (
-                <div className="w-32 h-32 flex items-center justify-center rounded-full border-4 border-white dark:border-[#c2a7fb]/60 shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]"><span className='font-serif text-7xl font-[800]'>G</span></div>
-              )}
               <button
-                className={`absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:bg-gray-100 ${!isLarge ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                className="absolute left-4 top-4 bg-white/20 p-2 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm"
                 onClick={() =>
                   openPopup(
-                    <EditProfileImage
+                    <EditBanner
                       initialValues={basicInfo}
                       onClose={closePopup}
                       user={user}
@@ -250,17 +207,24 @@ const Dashboard = () => {
                   )
                 }
               >
-                <FaPencilAlt className="text-[#4c1f8e] dark:text-[#0f0030] text-sm" />
+                <FaPencilAlt className="text-white text-sm" />
+              </button>
+              <button className="absolute right-4 top-4 text-white flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm" onClick={handleSignOut}>
+                <PiSignOut className="inline-block mr-1" /> Sign out
               </button>
             </div>
-            <div className="ml-36 mt-2">
-              <div className="flex items-center gap-4">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-purple-50">{basicInfo.name}</h1>
+            <div className={`relative ${isLarge ? 'px-6 py-5' : 'px-4 py-4'}`}>
+              <div className={`absolute ${isLarge ? "-top-16 left-6" : "-top-8 left-4"} group`}>
+                {basicInfo.avatarUrl ? (
+                  <img src={basicInfo.avatarUrl} alt="Profile" className="w-32 h-32 rounded-full border-4 bg-purple-200 dark:bg-[#c2a7fb]/20 border-white dark:border-[#c2a7fb]/60 shadow-md object-cover" />
+                ) : (
+                  <div className="w-32 h-32 flex items-center justify-center rounded-full border-4 border-white dark:border-[#c2a7fb]/60 shadow-md bg-gradient-to-br from-[#7c3aed] via-[#a78bfa] to-[#38bdf8]"><span className='font-serif text-7xl font-[800]'>G</span></div>
+                )}
                 <button
-                  className="text-gray-400 dark:text-purple-300/60 hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb] transition-colors"
+                  className={`absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:bg-gray-100 ${!isLarge ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                   onClick={() =>
                     openPopup(
-                      <EditProfile
+                      <EditProfileImage
                         initialValues={basicInfo}
                         onClose={closePopup}
                         user={user}
@@ -268,268 +232,287 @@ const Dashboard = () => {
                     )
                   }
                 >
-                  <FaPencilAlt className="text-sm" />
+                  <FaPencilAlt className="text-[#4c1f8e] dark:text-[#0f0030] text-sm" />
                 </button>
               </div>
-              <p className="text-gray-500 dark:text-purple-300/60 text-sm">#ID : {basicInfo._id}</p>
-              <p className="text-gray-600 dark:text-purple-200/80 text-lg mt-1">{basicInfo.title}</p>
-              <div className="flex items-center mt-1 text-gray-500 dark:text-purple-300/60">
-                {!!basicInfo.location && <FaMapMarkerAlt className="mr-1" />}
-                {!!basicInfo.location && <span>{basicInfo.location}</span>}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-
-        {/* Content Grid */}
-        <motion.div
-          className={`grid grid-cols-1 lg:grid-cols-3 ${isLarge ? 'gap-6 mt-6' : 'gap-4 mt-4'}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeInOut" }}
-        >
-          {/* Left Column */}
-          <motion.div
-            className="lg:col-span-1 space-y-6"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            {/* Skills */}
-            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Skills</h2>
-                <button
-                  className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors flex items-center"
-                  onClick={() =>
-                    openPopup(
-                      <EditSkills
-                        initialValues={{ skills }}
-                        onClose={closePopup}
-                        user={user}
-                      />
-                    )
-                  }
-                >
-                  <span className="mr-1">+</span> Add Skill
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill, index) => (
-                  <span key={index} className="px-4 py-1.5 bg-[#c2a7fb] bg-opacity-20 dark:bg-[#c2a7fb]/30 text-[#4c1f8e] dark:text-white rounded-full text-sm font-medium hover:bg-opacity-30 dark:hover:bg-[#c2a7fb]/40 transition-all cursor-default">
-                    {skill}
-                  </span>
-                ))}
-                {skills.length === 0 && (
-                  <span className="text-sm text-gray-500 dark:text-purple-300/60">No skills added yet</span>
-                )}
-              </div>
-            </div>
-            {/* About */}
-            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">About</h2>
-                <button
-                  className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors"
-                  onClick={() =>
-                    openPopup(
-                      <EditAbout
-                        initialValues={about}
-                        onClose={closePopup}
-                        user={user}
-                      />
-                    )
-                  }
-                >
-                  Edit
-                </button>
-              </div>
-
-              {!!about.description && (
-                <p className="text-gray-700 dark:text-purple-200/80 text-sm mb-5 leading-relaxed">{about?.description}</p>
-              )}
-
-              <div className="space-y-3.5">
-                {!!about.location && (
-
-                  <div className="flex items-center">
-                    <FaMapMarkerAlt className="text-gray-500 dark:text-purple-300/60 mr-3 w-5" />
-                    <span className="text-gray-700 dark:text-purple-200/80">
-                      {about.location.length > 20 ? `${about.location.slice(0, 20)}...` : about.location}
-                    </span>
-                  </div>
-
-                )}
-
-                {!!about.portfolio && (
-
-                  <div className="flex items-center">
-
-                    <div className="text-gray-500 dark:text-purple-300/60 mr-3 w-5">🌐</div>
-                    <a
-                      href={about.portfolio}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
-                    >
-                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
-                {!!about.linkedIn && (
-                  <div className="flex items-center">
-                    <FaLinkedin className="text-[#0077b5] dark:text-[#0077b5]/80 mr-3 w-5" />
-                    <a
-                      href={about.linkedIn}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
-                    >
-                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
-
-                {!!about.x && (
-                  <div className="flex items-center">
-                    <FaTwitter className="text-[#1DA1F2] dark:text-[#1DA1F2]/80 mr-3 w-5" />
-                    <a
-                      href={about.x}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
-                    >
-                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
-
-                {!!about.github && (
-                  <div className="flex items-center">
-                    <FaGithub className="text-[#333] dark:text-white mr-3 w-5" />
-                    <a
-                      href={about.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
-                    >
-                      Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
+              <div className="ml-36 mt-2">
+                <div className="flex items-center gap-4">
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-purple-50">{basicInfo.name}</h1>
+                  <button
+                    className="text-gray-400 dark:text-purple-300/60 hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb] transition-colors"
+                    onClick={() =>
+                      openPopup(
+                        <EditProfile
+                          initialValues={basicInfo}
+                          onClose={closePopup}
+                          user={user}
+                        />
+                      )
+                    }
+                  >
+                    <FaPencilAlt className="text-sm" />
+                  </button>
+                </div>
+                <p className="text-gray-500 dark:text-purple-300/60 text-sm">#ID : {basicInfo._id}</p>
+                <p className="text-gray-600 dark:text-purple-200/80 text-lg mt-1">{basicInfo.title}</p>
+                <div className="flex items-center mt-1 text-gray-500 dark:text-purple-300/60">
+                  {!!basicInfo.location && <FaMapMarkerAlt className="mr-1" />}
+                  {!!basicInfo.location && <span>{basicInfo.location}</span>}
+                </div>
               </div>
             </div>
           </motion.div>
 
 
-
-          {/* Right Column */}
-
+          {/* Content Grid */}
           <motion.div
-            className="lg:col-span-2 space-y-6"
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            className={`grid grid-cols-1 lg:grid-cols-3 ${isLarge ? 'gap-6 mt-6' : 'gap-4 mt-4'}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeInOut" }}
           >
-
-            {/* Projects */}
-
-            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Projects</h2>
+            {/* Left Column */}
+            <motion.div
+              className="lg:col-span-1 space-y-6"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              {/* Skills */}
+              <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
+                <div className="flex justify-between items-center mb-5">
+                  <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Skills</h2>
+                  <button
+                    className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors flex items-center"
+                    onClick={() =>
+                      openPopup(
+                        <EditSkills
+                          initialValues={{ skills }}
+                          onClose={closePopup}
+                          user={user}
+                        />
+                      )
+                    }
+                  >
+                    <span className="mr-1">+</span> Add Skill
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill, index) => (
+                    <span key={index} className="px-4 py-1.5 bg-[#c2a7fb] bg-opacity-20 dark:bg-[#c2a7fb]/30 text-[#4c1f8e] dark:text-white rounded-full text-sm font-medium hover:bg-opacity-30 dark:hover:bg-[#c2a7fb]/40 transition-all cursor-default">
+                      {skill}
+                    </span>
+                  ))}
+                  {skills.length === 0 && (
+                    <span className="text-sm text-gray-500 dark:text-purple-300/60">No skills added yet</span>
+                  )}
+                </div>
               </div>
+              {/* About */}
+              <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
+                <div className="flex justify-between items-center mb-5">
+                  <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">About</h2>
+                  <button
+                    className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors"
+                    onClick={() =>
+                      openPopup(
+                        <EditAbout
+                          initialValues={about}
+                          onClose={closePopup}
+                          user={user}
+                        />
+                      )
+                    }
+                  >
+                    Edit
+                  </button>
+                </div>
 
-              <div className="space-y-5">
+                {!!about.description && (
+                  <p className="text-gray-700 dark:text-purple-200/80 text-sm mb-5 leading-relaxed">{about?.description}</p>
+                )}
 
-                {projects.map(project => (
-                  <div key={project.id} className="border-b border-gray-200 dark:border-[#c2a7fb]/20 pb-4 last:border-0 last:pb-0 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 p-3 rounded-lg transition-colors">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium text-gray-800 dark:text-purple-100">{project.name}</h3>
-                        <p className="text-xs text-gray-500 dark:text-purple-300/60 mt-1">Updated {project.lastUpdated}</p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(project.status)}`}>
-                        {project.status}
+                <div className="space-y-3.5">
+                  {!!about.location && (
+
+                    <div className="flex items-center">
+                      <FaMapMarkerAlt className="text-gray-500 dark:text-purple-300/60 mr-3 w-5" />
+                      <span className="text-gray-700 dark:text-purple-200/80">
+                        {about.location.length > 20 ? `${about.location.slice(0, 20)}...` : about.location}
                       </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
+                  )}
 
+                  {!!about.portfolio && (
 
-            {/* Connected Accounts */}
-            <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Connected Accounts</h2>
-                <button
-                  className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors"
-                  onClick={() =>
-                    openPopup(
-                      <ManageAccounts
-                        initialValues={authConnections}
-                        onClose={closePopup}
-                        user={user}
-                      />
-                    )
-                  }
-                >
-                  Manage
-                </button>
-              </div>
-
-              <div className="space-y-5">
-                {/* Google */}
-                {authConnections.google.isLinked && (
-                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
-                        <FcGoogle className="w-5 h-5" />
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-gray-800 dark:text-purple-100 font-medium">Google</p>
-                        <p className="text-sm text-gray-500 dark:text-purple-300/60">
-                          {authConnections.google.email ? `Linked as ${authConnections.google.email}` : "Access with Google account"}
-                        </p>
+
+                      <div className="text-gray-500 dark:text-purple-300/60 mr-3 w-5">🌐</div>
+                      <a
+                        href={about.portfolio}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
+                      >
+                        Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+                  {!!about.linkedIn && (
+                    <div className="flex items-center">
+                      <FaLinkedin className="text-[#0077b5] dark:text-[#0077b5]/80 mr-3 w-5" />
+                      <a
+                        href={about.linkedIn}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
+                      >
+                        Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+
+                  {!!about.x && (
+                    <div className="flex items-center">
+                      <FaTwitter className="text-[#1DA1F2] dark:text-[#1DA1F2]/80 mr-3 w-5" />
+                      <a
+                        href={about.x}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
+                      >
+                        Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+
+                  {!!about.github && (
+                    <div className="flex items-center">
+                      <FaGithub className="text-[#333] dark:text-white mr-3 w-5" />
+                      <a
+                        href={about.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-[#4c1f8e] dark:text-[#c2a7fb] hover:underline"
+                      >
+                        Visit <FiExternalLink className="inline-block w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+
+
+            {/* Right Column */}
+
+            <motion.div
+              className="lg:col-span-2 space-y-6"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+
+              {/* Projects */}
+
+              <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Projects</h2>
+                </div>
+
+                <div className="space-y-5">
+
+                  {projects.map(project => (
+                    <div key={project.id} className="border-b border-gray-200 dark:border-[#c2a7fb]/20 pb-4 last:border-0 last:pb-0 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 p-3 rounded-lg transition-colors">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-medium text-gray-800 dark:text-purple-100">{project.name}</h3>
+                          <p className="text-xs text-gray-500 dark:text-purple-300/60 mt-1">Updated {project.lastUpdated}</p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(project.status)}`}>
+                          {project.status}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              </div>
 
-                {/* GitHub */}
-                {authConnections.github.isLinked && (
-                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
-                        <FaGithub className="text-black dark:text-white text-xl" />
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-gray-800 dark:text-purple-100 font-medium">GitHub</p>
-                        <p className="text-sm text-gray-500 dark:text-purple-300/60">
-                          {authConnections.github.email ? `GitHub primary email address: ${authConnections.github.email}` : "Access with GitHub account"}
-                        </p>
+
+
+              {/* Connected Accounts */}
+              <div className={`bg-white dark:bg-[#0c0a1a] dark:bg-gradient-to-br dark:from-gray-50/10 dark:from-10% dark:to-white/1 rounded-xl shadow-md dark:shadow-[#c2a7fb]/5 dark:border dark:border-[#c2a7fb]/20 ${isLarge ? 'p-6' : 'p-4'}`}>
+                <div className="flex justify-between items-center mb-5">
+                  <h2 className="text-lg font-bold text-gray-800 dark:text-purple-100">Connected Accounts</h2>
+                  <button
+                    className="text-[#8236ec] dark:text-[#c2a7fb] text-sm font-medium hover:text-[#4c1f8e] dark:hover:text-[#c2a7fb]/80 transition-colors"
+                    onClick={() =>
+                      openPopup(
+                        <ManageAccounts
+                          initialValues={authConnections}
+                          onClose={closePopup}
+                          user={user}
+                        />
+                      )
+                    }
+                  >
+                    Manage
+                  </button>
+                </div>
+
+                <div className="space-y-5">
+                  {/* Google */}
+                  {authConnections.google.isLinked && (
+                    <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
+                          <FcGoogle className="w-5 h-5" />
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-gray-800 dark:text-purple-100 font-medium">Google</p>
+                          <p className="text-sm text-gray-500 dark:text-purple-300/60">
+                            {authConnections.google.email ? `Linked as ${authConnections.google.email}` : "Access with Google account"}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {!authConnections.google.isLinked && !authConnections.github.isLinked && (
-                  <p className="text-sm text-gray-500 dark:text-purple-300/60 p-3">No accounts connected. Click "Manage" to add a provider.</p>
-                )}
+                  {/* GitHub */}
+                  {authConnections.github.isLinked && (
+                    <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 rounded-lg transition-all">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-white dark:bg-[#0c0a1a]/50 border border-gray-200 dark:border-[#c2a7fb]/20 flex items-center justify-center">
+                          <FaGithub className="text-black dark:text-white text-xl" />
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-gray-800 dark:text-purple-100 font-medium">GitHub</p>
+                          <p className="text-sm text-gray-500 dark:text-purple-300/60">
+                            {authConnections.github.email ? `GitHub primary email address: ${authConnections.github.email}` : "Access with GitHub account"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!authConnections.google.isLinked && !authConnections.github.isLinked && (
+                    <p className="text-sm text-gray-500 dark:text-purple-300/60 p-3">No accounts connected. Click "Manage" to add a provider.</p>
+                  )}
+                </div>
               </div>
-            </div>
 
+            </motion.div>
           </motion.div>
-        </motion.div>
-      </div >
+        </div >
 
-      {/* Popup Component */}
-      < Popup isOpen={isPopupOpen} onClose={closePopup} >
-        {popupContent}
-      </Popup >
-    </motion.div >
+        {/* Popup Component */}
+        < Popup isOpen={isPopupOpen} onClose={closePopup} >
+          {popupContent}
+        </Popup >
+      </motion.div >
+    </ProtectedPage>
   );
 };
 

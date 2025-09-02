@@ -4,6 +4,7 @@ import morgan from "morgan";
 import errorHandler from "./middlewares/errorHandler.middleware.js";
 import { createSocketServer } from "./config/socket.js";
 import { createServer } from "http";
+import secureAuthMiddleware from "./middlewares/auth.middleware.js";
 
 const app = express();
 const server = createServer(app);
@@ -20,6 +21,7 @@ app.use(
 app.use(express.json({ limit: "16kb" }));
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
+app.use(secureAuthMiddleware);
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello SIR</h1>");

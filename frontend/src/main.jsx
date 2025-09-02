@@ -27,7 +27,7 @@ const route = createBrowserRouter([{
       path: 'workspace', children: [
         { index: true, element: <Navigate to={"/"} replace /> },
         {
-          path: ':projectId', element: <Workspace />, children: [
+          path: ':projectName/:projectId', element: <Workspace />, children: [
             { index: true, element: <ProjectInfo /> },
             { path: "chat", element: <Chat /> },
             { path: "collaborators", element: <Collaborators /> },
