@@ -4,6 +4,6 @@ const router = Router();
 
 router.route("/create/:userID").post(createProject);
 router.route("/search/:userID").get(getAllProjects);
-router.route("/delete/:projectID").delete(deleteProject);
+router.route("/delete/:projectID/:userID").delete(deleteProject);
 
 export default router;

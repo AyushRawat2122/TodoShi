@@ -3,6 +3,9 @@ import app from "./app.js";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 import admin from "firebase-admin";
+import http from "http";
+import { createSocketServer } from "./config/socket.js";
+import registerSocketEvents from "./events/todoshiEvents.js";
 dotenv.config({});
 
 const port = process.env.PORT;
@@ -53,6 +56,14 @@ const initServices = async () => {
   }
 };
 
-app.listen(port, () => {
-  initServices();
+// 🖥️ Create HTTP server and attach both REST + Socket.io
+const server = http.createServer(app);
+
+// 🔌 Initialize socket server (binds to HTTP server)
+createSocketServer(server);
+// 🚀 Start server
+server.listen(port, async () => {
+  console.log(`✅ Server running on http://localhost:${port}`);
+  await initServices();
+  registerSocketEvents();
 });

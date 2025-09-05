@@ -89,9 +89,9 @@ function App() {
         if (user) {
           const lastSignInMethod = getLastSignInMethod();
           console.log('✅ User is signed in:', user);
-          handleSignIn(user, lastSignInMethod);
+          await handleSignIn(user, lastSignInMethod);
         } else {
-          handleSignOut();
+          await handleSignOut();
         }
       } catch (error) {
         console.error('Error during authentication state change:', error);

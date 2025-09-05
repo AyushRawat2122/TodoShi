@@ -13,5 +13,5 @@ import Chat from "./Chat.jsx";
 import Collaborators from "./Collaborators.jsx";
 import Todos from "./Todos.jsx";
 import Logs from "./Logs.jsx";
-
-export { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide , Verify, Projects, ProjectInfo, Chat, Collaborators, Todos, Logs };
+import UnauthorizedPage from "./UnauthorizedPage.jsx";
+export { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide , Verify, Projects, ProjectInfo, Chat, Collaborators, Todos, Logs, UnauthorizedPage };

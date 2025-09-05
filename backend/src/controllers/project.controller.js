@@ -9,6 +9,7 @@ import User from "../models/user.models.js";
 export const createProject = asyncHandler(async (req, res, next) => {
   const { title, description, deadline } = req.body;
   const { userID } = req.params;
+  const tokenUID = req.user.uid;
 
   if (!userID) {
     return next(new ApiError(400, "User ID is required"));
@@ -16,6 +17,9 @@ export const createProject = asyncHandler(async (req, res, next) => {
   const user = await User.findById(userID);
   if (!user) {
     return next(new ApiError(404, "User not found"));
+  }
+  if (user.firebaseUID.toString() !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
   }
 
   console.log("Creating project:", { title, description, deadline, createdBy: user._id });
@@ -26,7 +30,6 @@ export const createProject = asyncHandler(async (req, res, next) => {
     deadline: deadline,
     createdBy: user._id,
   });
-
   if (!newProject) {
     return next(new ApiError(500, "Failed to create project"));
   }
@@ -36,11 +39,20 @@ export const createProject = asyncHandler(async (req, res, next) => {
 
 export const getAllProjects = asyncHandler(async (req, res, next) => {
   const { userID } = req.params;
+  const tokenUID = req.user.uid;
+
   if (!userID) {
     return next(new ApiError(400, "User ID is required"));
   }
-  const projects = await Project.find({ createdBy: userID });
+  const user = await User.findById(userID);
+  if (!user) {
+    return next(new ApiError(404, "User not found"));
+  }
+  if (user.firebaseUID.toString() !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
 
+  const projects = await Project.find({ createdBy: userID });
   if (!projects) {
     return next(new ApiError(404, "No projects found"));
   }
@@ -49,10 +61,25 @@ export const getAllProjects = asyncHandler(async (req, res, next) => {
 });
 
 export const deleteProject = asyncHandler(async (req, res, next) => {
-  const { projectID } = req.params;
-  if (!projectID) {
-    return next(new ApiError(400, "Project ID is required"));
+  const { projectID, userID } = req.params; //the user ID provided here is not firebase UID its a mongodb _id
+  const tokenUID = req.user.uid;
+
+  if (!projectID || !userID) {
+    return next(new ApiError(400, "Project ID and User ID are required"));
   }
+  const user = await User.findById(userID);
+  if (!user) {
+    return next(new ApiError(404, "User not found"));
+  }
+  const project = await Project.findById(projectID);
+  if (!project) {
+    return next(new ApiError(404, "Project not found"));
+  }
+
+  if (user.firebaseUID !== tokenUID || project.createdBy.toString() !== user._id.toString()) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
+
   const deletedProject = await Project.findByIdAndDelete(projectID);
   if (!deletedProject) {
     return next(new ApiError(404, "Project not found"));
@@ -62,4 +89,3 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
 });
 
 // for workspaces .........................
-

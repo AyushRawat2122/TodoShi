@@ -5,7 +5,7 @@ import useIsLargeScreen from '../hooks/useIsLargeScreen';
 import useUser from '../hooks/useUser';
 
 
-const WorkspaceNav = ({ projectId }) => {
+const WorkspaceNav = ({ projectId, projectName }) => {
 	// return nothing if no project id is provided via props
 	if (!projectId) return null;
 
@@ -15,10 +15,10 @@ const WorkspaceNav = ({ projectId }) => {
 
 	const subroutes = [
 		// Info removed from array as it will be handled separately
-		{ path: `/workspace/${projectId}/chat`, name: 'Chat', icon: <FaComments /> },
-		{ path: `/workspace/${projectId}/logs`, name: 'Logs', icon: <FaHistory /> },
-		{ path: `/workspace/${projectId}/collaborators`, name: 'Collaborators', icon: <FaUsers /> },
-		{ path: `/workspace/${projectId}/todos`, name: 'Todos', icon: <FaClipboardList /> }
+		{ path: `/workspace/${projectName}/${projectId}/chat`, name: 'Chat', icon: <FaComments /> },
+		{ path: `/workspace/${projectName}/${projectId}/logs`, name: 'Logs', icon: <FaHistory /> },
+		{ path: `/workspace/${projectName}/${projectId}/collaborators`, name: 'Collaborators', icon: <FaUsers /> },
+		{ path: `/workspace/${projectName}/${projectId}/todos`, name: 'Todos', icon: <FaClipboardList /> }
 	];
 
 	const handleBackClick = () => {
@@ -46,7 +46,7 @@ const WorkspaceNav = ({ projectId }) => {
 						{/* Info Link - normal styling (not active) */}
 						<li className="px-3">
 							<NavLink
-								to={`/workspace/${projectId}`}
+								to={`/workspace/${projectName}/${projectId}`}
 								className="flex items-center justify-center p-2 rounded-full transition-all text-[#4c1f8e] dark:text-purple-200 hover:bg-[#6229b3]/20 dark:hover:bg-[#c2a7fb]/10"
 								title="Info"
 							>

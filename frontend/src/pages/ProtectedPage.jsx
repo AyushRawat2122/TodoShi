@@ -16,8 +16,6 @@ const ProtectedPage = ({ className, children }) => {
     if (!isServerReady) {
         return <ServerResponsePage />;
     }
-
-
     return (
         <div className={className}>
             {children}

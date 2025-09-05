@@ -5,8 +5,9 @@ let io;
 function createSocketServer(server) {
   io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: ["http://localhost:5173", "http://localhost:5174"],
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 }
@@ -15,9 +16,6 @@ function getSocketServer() {
   if (!io) {
     throw new Error("Socket server is not initialized. Call createSocketServer first.");
   }
-  io.on("connection", (Socket) => {
-    console.log("A user connected:", Socket.id);
-  });
   return io;
 }
 

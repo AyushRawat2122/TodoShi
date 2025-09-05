@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-const SOCKET_URL = import.meta.env.VITE_SERVER_URL;
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
 let socket = null;
 
@@ -9,6 +9,7 @@ export const connectSocket = () => {
     if (!SOCKET_URL) {
       throw new Error("Missing SOCKET_URL environment variable");
     }
+    console.log(SOCKET_URL)
     socket = io(SOCKET_URL, {
       withCredentials: true,
     });

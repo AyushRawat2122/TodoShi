@@ -7,7 +7,7 @@ import { store } from './store/store.js';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import {
   SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide, Verify,
-  Projects, ProjectInfo, Chat, Collaborators, Todos, Logs
+  Projects, ProjectInfo, Chat, Collaborators, Todos, Logs, UnauthorizedPage
 } from './pages/index.js';
 
 const route = createBrowserRouter([{
@@ -46,7 +46,8 @@ const route = createBrowserRouter([{
         { index: true, element: <Navigate to={"/sign-in"} replace /> },
         { path: ":UID/:emailID", element: <Verify /> }
       ]
-    }
+    },
+    { path: 'unauthorized', element: <UnauthorizedPage /> }
   ]
 }]);
 

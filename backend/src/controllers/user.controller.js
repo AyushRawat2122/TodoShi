@@ -6,7 +6,11 @@ import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/cloudinary.js";
 
 export const getUserDetails = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID; // extract user ID from request parameters
+  const tokenUID = req.user.uid; //extracted uid from the token provided
 
+  if (userId !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
   // search for the user in the database
   let user = await User.findOne({ firebaseUID: userId });
   if (!user) {
@@ -23,6 +27,11 @@ export const getUserDetails = asyncHandller(async (req, res, next) => {
 
 export const updateAbout = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID;
+  const tokenUID = req.user.uid;
+  if (userId !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
+
   const aboutPayload = req?.body?.data; // frontend sends { data: cleaned }
 
   if (!userId) {
@@ -51,13 +60,16 @@ export const updateAbout = asyncHandller(async (req, res, next) => {
     return next(new ApiError(500, "Failed to update user about information"));
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "user about updated successfully", updatedUser));
+  return res.status(200).json(new ApiResponse(200, "user about updated successfully", updatedUser));
 });
 
 export const updateBasicInfo = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID; // extract user ID from request parameters
+  const tokenUID = req.user.uid;
+  if (userId !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
+
   const { username, role } = req.body; // extract username and role from request body
   if (!username || !role) {
     return next(new ApiError(400, "Username and role are required"));
@@ -78,6 +90,11 @@ export const updateBasicInfo = asyncHandller(async (req, res, next) => {
 
 export const updateSkills = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID; // extract user ID from request parameters
+  const tokenUID = req.user.uid;
+  if (userId !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
+
   const { skills } = req.body; // extract skills from request body
   console.log(skills, userId);
   if (!skills || !Array.isArray(skills)) {
@@ -99,6 +116,11 @@ export const updateSkills = asyncHandller(async (req, res, next) => {
 
 export const updateAvatar = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID; // extract user ID from request parameters
+  const tokenUID = req.user.uid;
+  if (userId !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
+
   const avatar = req?.files?.avatar?.[0]; // extract avatar file from request files
   console.log("Avatar file received:", avatar, "User ID:", userId);
   if (!avatar) {
@@ -138,6 +160,11 @@ export const updateAvatar = asyncHandller(async (req, res, next) => {
 
 export const updateBanner = asyncHandller(async (req, res, next) => {
   const userId = req?.params?.firebaseUID; // extract user ID from request parameters
+  const tokenUID = req.user.uid;
+  if (userId !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
+
   const banner = req?.files?.banner?.[0]; // extract banner file from request files
   console.log("Banner file received:", banner, "User ID:", userId);
 
