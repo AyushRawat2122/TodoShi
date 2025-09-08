@@ -12,10 +12,10 @@ import useTheme from '../hooks/useTheme';
 const VerticalNav = () => {
 	const [collapsed, setCollapsed] = useState(false);
 	const isLarge = useIsLargeScreen();
-	const { user } = useUser(); 
+	const { user } = useUser();
 	const { isDark } = useTheme();
 	const navigate = useNavigate(); // added
-	const {isSignedIn} = useAuthStatus();
+	const { isSignedIn, isLoading } = useAuthStatus();
 	const navItems = [
 		{ path: '/', name: 'Home', icon: <FaHome /> },
 		{ path: '/dashboard', name: 'Dashboard', icon: <MdContacts /> },
@@ -27,8 +27,8 @@ const VerticalNav = () => {
 	const toggleCollapse = () => setCollapsed(!collapsed);
 
 	useEffect(() => {
-		if(user?.data) {
-			
+		if (user?.data) {
+
 		}
 	}, [user]);
 
@@ -40,7 +40,7 @@ const VerticalNav = () => {
 					{/* Header */}
 					<div className={`flex ${collapsed ? 'justify-center' : 'justify-between'} p-4 border-b border-[#6229b3]/10  dark:border-[#c2a7fb]/20`}>
 						{!collapsed && (
-							<img 
+							<img
 								src={isDark ? "/todoshi-branding-light.png" : "/todoshi-branding-dark.png"}
 								alt="todoshi"
 								className='h-10'
@@ -68,10 +68,9 @@ const VerticalNav = () => {
 									<NavLink
 										to={item.path}
 										className={({ isActive }) =>
-											`flex items-center ${collapsed ? 'justify-center' : ''} p-2 rounded-full transition-all ${
-												isActive
-													? 'bg-gradient-to-r from-[#6229b3] to-[#4c1f8e] text-white shadow-sm dark:bg-gradient-to-r dark:from-[#6229b3]/50 dark:to-[#4c1f8e]/40'
-													: 'text-[#4c1f8e] dark:text-purple-200 hover:bg-[#6229b3]/20 dark:hover:bg-[#c2a7fb]/10'
+											`flex items-center ${collapsed ? 'justify-center' : ''} p-2 rounded-full transition-all ${isActive
+												? 'bg-gradient-to-r from-[#6229b3] to-[#4c1f8e] text-white shadow-sm dark:bg-gradient-to-r dark:from-[#6229b3]/50 dark:to-[#4c1f8e]/40'
+												: 'text-[#4c1f8e] dark:text-purple-200 hover:bg-[#6229b3]/20 dark:hover:bg-[#c2a7fb]/10'
 											}`
 										}
 										title={collapsed ? item.name : ''}
@@ -86,7 +85,7 @@ const VerticalNav = () => {
 
 					{/* User Profile Section (Optional) */}
 					<div className="py-2 px-1">
-						<div className={`flex ${collapsed ? 'justify-center' : 'items-center px-2'}`}>
+						<div className={`flex ${collapsed && !isLoading ? 'justify-center' : 'items-center px-2'}`}>
 							{/* Avatar or 'G' fallback */}
 							<div className="w-10 h-10 rounded-full bg-[#c2a7fb] bg-opacity-30 overflow-hidden flex items-center justify-center">
 								{(user?.data?.avatar?.url || user?.avatar?.url) ? (
@@ -101,7 +100,7 @@ const VerticalNav = () => {
 							</div>
 
 							{/* Details or Sign in button (only when expanded) */}
-							{!collapsed && (
+							{!collapsed && !isLoading && (
 								isSignedIn ? (
 									<div className="ml-3">
 										<p className="text-sm font-medium text-[#4c1f8e] dark:text-purple-200 truncate">
@@ -144,10 +143,9 @@ const VerticalNav = () => {
 									<NavLink
 										to={item.path}
 										className={({ isActive }) =>
-											`flex-1 flex flex-col items-center justify-center gap-1 rounded-t-xl py-2 text-xs transition ${
-												isActive
-													? 'text-[#4c1f8e] dark:text-purple-200 bg-[#6229b3]/15 dark:bg-gradient-to-r dark:from-[#6229b3]/30 dark:to-[#4c1f8e]/20'
-													: 'text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10'
+											`flex-1 flex flex-col items-center justify-center gap-1 rounded-t-xl py-2 text-xs transition ${isActive
+												? 'text-[#4c1f8e] dark:text-purple-200 bg-[#6229b3]/15 dark:bg-gradient-to-r dark:from-[#6229b3]/30 dark:to-[#4c1f8e]/20'
+												: 'text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10'
 											}`
 										}
 										title={item.name}

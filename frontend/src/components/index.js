@@ -7,6 +7,9 @@ import { PointerHighlight } from "./PointerHighLight.jsx";
 import LoadingPage from "./LoadingPage.jsx";
 import ServerResponsePage from "./ServerResponsePage.jsx";
 import UtilityHeader from "./UtilityHeader.jsx";
+import PdfViewer from "./PdfViewer.jsx";
+import ImageViewer from "./ImageViewer.jsx";
+
 export {
   Loader,
   Oauth,
@@ -16,5 +19,7 @@ export {
   PointerHighlight,
   LoadingPage,
   ServerResponsePage,
-  UtilityHeader
+  UtilityHeader,
+  PdfViewer,
+  ImageViewer,
 };

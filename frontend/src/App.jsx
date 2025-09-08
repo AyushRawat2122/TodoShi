@@ -111,7 +111,7 @@ function App() {
   }, [isSignedIn])
 
   return (
-    <div className={`p-1 flex dark:bg-[#0c0a1a] h-screen w-screen bg-gray-50 overflow-hidden1`}>
+    <div className={`p-1 flex dark:bg-[#0c0a1a] h-screen w-screen bg-gray-50 overflow-hidden`}>
       {/* Single nav instance; it renders sidebar on large and bottom bar on small */}
       {(!isAuthPage && !isglobalNavDisabled) && <VerticalNav />}
 

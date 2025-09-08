@@ -127,3 +127,18 @@ button {
 .react-datepicker__month {
   margin: 0.5rem !important;
 }
+
+/* Hide scrollbar for all browsers while maintaining scroll functionality */
+.hiddenScroll {
+  overflow: auto;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Chrome, Safari and Opera */
+.hiddenScroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
