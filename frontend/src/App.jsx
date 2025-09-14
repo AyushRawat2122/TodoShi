@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { use, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from './firebase/config';
@@ -22,7 +22,7 @@ function App() {
   const isglobalNavDisabled = location.pathname.startsWith('/workspace') || location.pathname.startsWith('/projects');
   const contentXPadding = !isglobalNavDisabled && isLarge ? 'px-10' : '';
   const { isSignedIn } = useAuthStatus();
-
+  const isErrorPage = location.pathname === '/unauthorized' || location.pathname === '/not-found';
   const handleSignIn = async (user, lastSignInMethod) => {
     // if lastSignInMethod is not set, it will be null which means the user has cleared its local storage and as firebase neither provides the last sign-in method nor security to unverified email addresses, it is important to handle this case appropriately. so we are signing out the user. 
     if (!lastSignInMethod) {
@@ -63,10 +63,7 @@ function App() {
         console.log('Error fetching server user details:', error);
         updateUser(null);
       }
-
       console.log('User is signed in and has a valid last sign-in method.');
-      if (isAuthPage) { navigate('/', { replace: true }); }
-
     }
   }
   const handleSignOut = async () => {
@@ -78,7 +75,6 @@ function App() {
     }
     console.log('❌ User is signed out');
   }
-  const socketRef = useRef(null);
 
   useEffect(() => {
     const auth = getAuth(app);
@@ -103,17 +99,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (isSignedIn) {
-      // User is signed in, you can perform actions here
-    } else {
-      // User is signed out, you can perform actions here
+    if(isAuthPage && isSignedIn){
+      navigate('/', { replace: true });
     }
-  }, [isSignedIn])
-
+  }, [isSignedIn]);
   return (
     <div className={`p-1 flex dark:bg-[#0c0a1a] h-screen w-screen bg-gray-50 overflow-hidden`}>
       {/* Single nav instance; it renders sidebar on large and bottom bar on small */}
-      {(!isAuthPage && !isglobalNavDisabled) && <VerticalNav />}
+      {(!isAuthPage && !isglobalNavDisabled && !isErrorPage) && <VerticalNav />}
 
       {/* Main content with dynamic bottom padding for mobile bottom bar */}
       <div className={`flex-1 h-full ${contentXPadding} ${isLarge ? '' : 'pb-20'} dark:bg-[#0c0a1a] overflow-y-scroll`} >

@@ -6,7 +6,7 @@ const secureAuthMiddleware = async (req, res, next) => {
   try {
     const requestToken = req.headers.authorization?.trim()?.split(" ")[1];
     if (!requestToken) {
-      return next(new ApiError(401, "Unauthorized bearer token not found"));
+      return next(new ApiError(401, "Unauthorized berer token not found"));
     }
     const decodedToken = await admin.auth().verifyIdToken(requestToken);
     req.user = decodedToken;

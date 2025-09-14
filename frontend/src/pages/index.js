@@ -14,4 +14,6 @@ import Collaborators from "./Collaborators.jsx";
 import Todos from "./Todos.jsx";
 import Logs from "./Logs.jsx";
 import UnauthorizedPage from "./UnauthorizedPage.jsx";
-export { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide , Verify, Projects, ProjectInfo, Chat, Collaborators, Todos, Logs, UnauthorizedPage };
+import ProtectedPage from './ProtectedPage.jsx';
+import NotFound from "./4O4.jsx";
+export { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide , Verify, Projects, ProjectInfo, Chat, Collaborators, Todos, Logs, UnauthorizedPage, ProtectedPage, NotFound };

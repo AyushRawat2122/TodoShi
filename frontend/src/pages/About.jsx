@@ -12,7 +12,7 @@ const About = () => {
     {
       name: "Ayush Rawat",
       title: "CEO & Founder",
-      image: "https://randomuser.me/api/portraits/men/41.jpg"
+      image: "/CEO.jpg"
     }
   ];
 

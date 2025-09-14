@@ -1,9 +1,37 @@
 import { create } from "zustand";
 
 export const useProject = create((set, get) => ({
-  info: {},
-
+  info: {
+    activeStatus: true,
+    image: { publicId: "", url: "" },
+    title: "",
+    description: "",
+    links: [],
+    srs: { publicId: "", url: "" },
+    deadline: "",
+    createdAt: "",
+  },
+  isOwner: false,
+  owner: {
+    avatar: "",
+    username: "",
+    userId: "",
+  },
+  roomID: "",
+  collaborators: [],
+  chats: [],
+  logs: [],
   // actions :
-  setInfo: (info) => set({ info: info }),
-  editInfo: (key , value) => set(state => ({ info: { ...state.info, [key]: value } })),
+  setInfo: (newInfo) => set({ info: { ...newInfo } }),
+  editInfo: (key, value) => set((state) => ({ info: { ...state.info, [key]: value } })),
+  setIsOwner: (isOwner) => set({ isOwner }),
+  setOwner: (owner) =>
+    set({
+      owner: {
+        avatar: owner.avatar || "",
+        username: owner.username || "",
+        userId: owner.userId || "",
+      },
+    }),
+  setRoomID: (roomID) => set({ roomID }),
 }));

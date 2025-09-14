@@ -41,7 +41,7 @@ export const getAllProjects = asyncHandler(async (req, res, next) => {
   const { userID } = req.params;
   const tokenUID = req.user.uid;
 
-  if (!userID) {
+  if (!userID.trim()) {
     return next(new ApiError(400, "User ID is required"));
   }
   const user = await User.findById(userID);
@@ -64,7 +64,7 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
   const { projectID, userID } = req.params; //the user ID provided here is not firebase UID its a mongodb _id
   const tokenUID = req.user.uid;
 
-  if (!projectID || !userID) {
+  if (!projectID.trim() || !userID.trim()) {
     return next(new ApiError(400, "Project ID and User ID are required"));
   }
   const user = await User.findById(userID);
@@ -89,3 +89,33 @@ export const deleteProject = asyncHandler(async (req, res, next) => {
 });
 
 // for workspaces .........................
+
+export const getProjectDetails = asyncHandler(async (req, res, next) => {
+  console.log("Fetching project details for projectID:", req.params.projectID);
+  const { uid } = req.user; //firebase UID from token
+  const { projectID } = req.params;
+  if (!projectID.trim()) {
+    return next(new ApiError(400, "Project ID is required"));
+  }
+  console.log("Firebase UID from token:", uid);
+  const user = await User.findOne({ firebaseUID: uid });
+  if (!user) {
+    return next(new ApiError(404, "User not found"));
+  }
+  const project = await Project.findById(projectID).populate('createdBy');
+  if (!project) {
+    return next(new ApiError(404, "Project not found"));
+  }
+  console.log("Project found:", project);
+  if (
+    project.createdBy._id.toString() !== user._id.toString() &&
+    !project.collaborators.some((collab) => collab.equals(user._id))
+  ) {
+    return next(new ApiError(403, "You are not authorized to access this resource"));
+  }
+
+  const isOwner = project.createdBy._id.equals(user._id);
+  const projectObject = project.toObject();
+  console.log("User is authorized to access this project");
+  return res.status(200).json(new ApiResponse(200, "Project retrieved successfully", {...projectObject , isOwner}));
+});

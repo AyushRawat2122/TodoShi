@@ -2,9 +2,9 @@ import React from 'react';
 import { useAuthStatus } from "../hooks/useAuthStatus.js"
 import { Navigate } from "react-router-dom";
 import { ServerResponsePage, LoadingPage } from "../components/index.js";
+import { Outlet } from 'react-router-dom';
 
-
-const ProtectedPage = ({ className, children }) => {
+const ProtectedPage = () => {
     const { isSignedIn, isLoading, isServerReady } = useAuthStatus();
     console.log("Mounted ProtectedPage");
     if (isLoading) {
@@ -17,8 +17,8 @@ const ProtectedPage = ({ className, children }) => {
         return <ServerResponsePage />;
     }
     return (
-        <div className={className}>
-            {children}
+        <div className='h-full w-full'>
+            <Outlet />
         </div>
     );
 }

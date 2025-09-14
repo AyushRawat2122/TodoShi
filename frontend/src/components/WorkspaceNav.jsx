@@ -109,7 +109,7 @@ const WorkspaceNav = ({ projectId, projectName }) => {
 					{/* Info Link - normal styling */}
 					<li className="flex">
 						<NavLink
-							to={`/workspace/${projectId}`}
+							to={`/workspace/${projectName}/${projectId}`}
 							className="flex-1 flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-xs transition text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10"
 							title="Info"
 						>
