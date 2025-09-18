@@ -3,11 +3,12 @@ import ApiError from "../utils/apiError.js";
 import ApiResponse from "../utils/apiResponse.js";
 import Project from "../models/project.models.js";
 import User from "../models/user.models.js";
-
+import { getSocketServer } from "../config/socket.js";
+import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/cloudinary.js";
 // for projects ...............
 
 export const createProject = asyncHandler(async (req, res, next) => {
-  const { title, description, deadline } = req.body;
+  const { title, description, deadline, roomID } = req.body;
   const { userID } = req.params;
   const tokenUID = req.user.uid;
 
@@ -30,6 +31,7 @@ export const createProject = asyncHandler(async (req, res, next) => {
     deadline: deadline,
     createdBy: user._id,
   });
+
   if (!newProject) {
     return next(new ApiError(500, "Failed to create project"));
   }
@@ -97,12 +99,11 @@ export const getProjectDetails = asyncHandler(async (req, res, next) => {
   if (!projectID.trim()) {
     return next(new ApiError(400, "Project ID is required"));
   }
-  console.log("Firebase UID from token:", uid);
   const user = await User.findOne({ firebaseUID: uid });
   if (!user) {
     return next(new ApiError(404, "User not found"));
   }
-  const project = await Project.findById(projectID).populate('createdBy');
+  const project = await Project.findById(projectID).populate("createdBy");
   if (!project) {
     return next(new ApiError(404, "Project not found"));
   }
@@ -116,6 +117,124 @@ export const getProjectDetails = asyncHandler(async (req, res, next) => {
 
   const isOwner = project.createdBy._id.equals(user._id);
   const projectObject = project.toObject();
-  console.log("User is authorized to access this project");
-  return res.status(200).json(new ApiResponse(200, "Project retrieved successfully", {...projectObject , isOwner}));
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Project retrieved successfully", { ...projectObject, isOwner }));
+});
+
+export const updateProjectDetails = asyncHandler(async (req, res, next) => {
+  const { projectID } = req.params;
+  const { title, deadline, roomID } = req.body;
+  const imageFile = req?.files?.imageFile?.[0];
+  const project = await Project.findById(projectID);
+  if (!project) {
+    return next(new ApiError(404, "Project not found"));
+  }
+  if (!roomID || roomID?.trim() === "") {
+    return next(new ApiError(400, "Room ID is required"));
+  }
+  const prevImageId = project.ProjectImage?.publicId;
+
+  let updateFields = {};
+  if (title.trim() !== "") {
+    updateFields.title = title;
+  }
+  if (imageFile) {
+    let result = null;
+    try {
+      result = await uploadOnCloudinary(imageFile?.buffer);
+    } catch (error) {
+      console.log(error);
+    }
+    if (!result) {
+      return next(new ApiError(500, "Failed to upload image to Cloudinary"));
+    }
+    updateFields.ProjectImage = { publicId: result?.public_id, url: result?.secure_url };
+  }
+  if (deadline.trim() !== "") {
+    updateFields.deadline = deadline;
+  }
+
+  let updatedProject;
+  if (Object.keys(updateFields).length > 0) {
+    updatedProject = await Project.findByIdAndUpdate(
+      projectID,
+      { $set: updateFields },
+      { new: true }
+    );
+  }
+
+  if (!updatedProject) {
+    return next(new ApiError(500, "Failed to update project"));
+  }
+
+  const io = getSocketServer();
+  io.to(roomID).emit("project-details-update", {
+    image: updatedProject.ProjectImage,
+    title: updatedProject.title,
+    deadline: updatedProject.deadline,
+  });
+
+  if (prevImageId && imageFile) {
+    await deleteOnCloudinary(prevImageId);
+  }
+  return res.status(200).json(new ApiResponse(200, "Project updated successfully", {}));
+});
+
+export const uploadProjectSRS = asyncHandler(async (req, res, next) => {
+  const { projectID } = req.params;
+  const { roomID } = req.body;
+  const srs = req?.files?.srs?.[0];
+  if (!srs) {
+    return next(new ApiError(400, "SRS file is required"));
+  }
+  const project = await Project.findById(projectID);
+  if (!project) {
+    return next(new ApiError(404, "Project not found"));
+  }
+  if (!roomID || roomID?.trim() === "") {
+    return next(new ApiError(400, "Room ID is required"));
+  }
+  const srsID = project.srsDocFile?.publicId;
+  console.log("Uploading SRS file for projectID:", projectID, "in roomID:", roomID, srs);
+  let result = null;
+  try {
+    console.log("Srs:", srs);
+    result = await uploadOnCloudinary(srs?.buffer, {
+      resource_type: "raw",
+      use_filename: true,
+      unique_filename: false,
+      filename_override: srs?.originalname || "SRS.pdf", // 👈 important!
+    });
+  } catch (error) {
+    console.log(error);
+  }
+  console.log("Cloudinary upload result:", result);
+  if (!result) {
+    return next(new ApiError(500, "Failed to upload doc file to Cloudinary"));
+  }
+
+  console.log("Updating project with new SRS file info");
+  const updatedProject = await Project.findByIdAndUpdate(
+    projectID,
+    { srsDocFile: { publicId: result?.public_id, url: result?.secure_url } },
+    { new: true }
+  );
+
+  console.log("Updated project:", updatedProject);
+  if (!updatedProject) {
+    return next(new ApiError(500, "Failed to update project"));
+  }
+
+  console.log("Emitting SRS update to room:", roomID);
+  const io = getSocketServer();
+  io.to(roomID).emit("project-srs-update", {
+    srs: updatedProject.srsDocFile,
+  });
+  console.log("Emitted SRS update event");
+  if (srsID) {
+    await deleteOnCloudinary(srsID);
+  }
+  return res.status(200).json(new ApiResponse(200, "Project updated successfully", {}));
 });

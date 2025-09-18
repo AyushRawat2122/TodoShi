@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaStar, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt } from 'react-icons/fa';
 import { useAuthStatus } from '../hooks/useAuthStatus';
 import { useNavigate } from 'react-router-dom';
+import useIsLargeScreen from '../hooks/useIsLargeScreen';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +13,7 @@ const Contact = () => {
     message: '',
     rating: 0
   });
-
+  const isLarge = useIsLargeScreen();
   const [submitted, setSubmitted] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
 
@@ -285,6 +286,8 @@ const Contact = () => {
           </div>
         </div>
       </section>
+
+      {!isLarge && <div className='h-20' />}
     </div>
   );
 };

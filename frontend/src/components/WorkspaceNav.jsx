@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { FaComments, FaHistory, FaInfoCircle, FaUsers, FaClipboardList, FaChevronLeft } from 'react-icons/fa';
-import useIsLargeScreen from '../hooks/useIsLargeScreen';
+import { useMediaQuery } from 'react-responsive';
 import useUser from '../hooks/useUser';
 
 
@@ -9,7 +9,11 @@ const WorkspaceNav = ({ projectId, projectName }) => {
 	// return nothing if no project id is provided via props
 	if (!projectId) return null;
 
-	const isLarge = useIsLargeScreen();
+	// Responsive breakpoints
+	const isDesktop = useMediaQuery({ minWidth: 1024 }); // lg breakpoint (tailwind default)
+	const isTablet = useMediaQuery({ minWidth: 640, maxWidth: 1023 }); // sm to lg
+	const isMobile = useMediaQuery({ maxWidth: 639 }); // below sm
+
 	const navigate = useNavigate();
 	const { user } = useUser();
 
@@ -25,8 +29,8 @@ const WorkspaceNav = ({ projectId, projectName }) => {
 		navigate('/dashboard');
 	};
 
-	// Desktop: permanently minimized vertical list with styling from VerticalNav
-	if (isLarge) {
+	// Desktop: permanently minimized vertical list
+	if (isDesktop) {
 		return (
 			<div className="bg-white/90 dark:bg-[#0c0a1a] border border-[#6229b3]/10 dark:bg-gradient-to-br from-gray-50/10 from-10% to-white/1 dark:border-[#c2a7fb]/20 shadow-[0_8px_30px_rgba(98,41,179,0.08)] h-full flex flex-col w-15 rounded-full">
 				{/* Back button at top */}
@@ -97,7 +101,84 @@ const WorkspaceNav = ({ projectId, projectName }) => {
 		);
 	}
 
-	// Mobile: compact bottom nav matching VerticalNav styling
+	// Tablet: floating bottom nav
+	if (isTablet) {
+		return (
+			<div className="fixed bottom-4 inset-x-0 bg-transparent z-50 px-6">
+				<div className="max-w-md mx-auto bg-white/90 dark:bg-[#0c0a1a]/95 backdrop-blur-lg 
+                    border border-[#6229b3]/15 dark:border-[#c2a7fb]/20 
+                    rounded-full shadow-lg py-2 px-4">
+					<nav>
+						<ul className="flex justify-between items-center">
+							{/* Back button */}
+							<li>
+								<button
+									className="w-10 h-10 flex items-center justify-center text-[#4c1f8e]/80 dark:text-purple-200/80 hover:text-[#6229b3] dark:hover:text-[#c2a7fb] transition-colors"
+									onClick={handleBackClick}
+									title="Go back"
+								>
+									<FaChevronLeft size={18} />
+								</button>
+							</li>
+
+							{/* Info Link */}
+							<li>
+								<NavLink
+									to={`/workspace/${projectName}/${projectId}`}
+									className={({ isActive }) =>
+										`flex items-center justify-center w-10 h-10 rounded-full transition-all ${isActive
+											? 'bg-[#8236ec]/15 text-[#8236ec] dark:bg-[#8236ec]/30 dark:text-purple-200'
+											: 'text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10'
+										}`
+									}
+									title="Info"
+								>
+									<span className="text-lg"><FaInfoCircle /></span>
+								</NavLink>
+							</li>
+
+							{/* Other menu items */}
+							{subroutes.map((item) => (
+								<li key={item.path}>
+									<NavLink
+										to={item.path}
+										className={({ isActive }) =>
+											`flex items-center justify-center w-10 h-10 rounded-full transition-all ${isActive
+												? 'bg-[#8236ec]/15 text-[#8236ec] dark:bg-[#8236ec]/30 dark:text-purple-200'
+												: 'text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10'
+											}`
+										}
+										title={item.name}
+									>
+										<span className="text-lg">{item.icon}</span>
+									</NavLink>
+								</li>
+							))}
+
+							{/* User profile */}
+							<li>
+								<Link to="/dashboard">
+									<div className="w-8 h-8 rounded-full bg-[#c2a7fb] bg-opacity-30 overflow-hidden flex items-center justify-center">
+										{(user?.data?.avatar?.url || user?.avatar?.url) ? (
+											<img
+												src={user?.data?.avatar?.url || user?.avatar?.url}
+												alt="avatar"
+												className="w-full h-full object-cover"
+											/>
+										) : (
+											<span className="text-xs font-medium text-[#4c1f8e] dark:text-purple-500">G</span>
+										)}
+									</div>
+								</Link>
+							</li>
+						</ul>
+					</nav>
+				</div>
+			</div>
+		);
+	}
+
+	// Mobile: fixed bottom nav
 	return (
 		<div className="fixed bottom-0 py-3 inset-x-0 z-50 
 			border-t border-[#6229b3]/15 dark:border-[#c2a7fb]/20
@@ -110,27 +191,34 @@ const WorkspaceNav = ({ projectId, projectName }) => {
 					<li className="flex">
 						<NavLink
 							to={`/workspace/${projectName}/${projectId}`}
-							className="flex-1 flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-xs transition text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10"
+							className={({ isActive }) =>
+								`flex-1 flex flex-col items-center justify-center gap-1 rounded-lg py-1 text-xs transition ${isActive
+									? 'text-[#8236ec] dark:text-purple-200 bg-[#8236ec]/15 dark:bg-[#8236ec]/30'
+									: 'text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10'
+								}`
+							}
 							title="Info"
 						>
-							<span className="text-xl"><FaInfoCircle /></span>
+							<span className="text-lg"><FaInfoCircle /></span>
+							<span className="text-[10px]">Info</span>
 						</NavLink>
 					</li>
 
-					{/* Other menu items with #8236ec color scheme when active */}
+					{/* Other menu items */}
 					{subroutes.map((item) => (
-						<li key={item.path} className="flex justify-center">
+						<li key={item.path} className="flex">
 							<NavLink
 								to={item.path}
 								className={({ isActive }) =>
-									`flex justify-center items-center w-12 h-12 rounded-full py-2 text-sm transition ${isActive
+									`flex-1 flex flex-col items-center justify-center gap-1 rounded-lg py-1 text-xs transition ${isActive
 										? 'text-[#8236ec] dark:text-purple-200 bg-[#8236ec]/15 dark:bg-[#8236ec]/30'
 										: 'text-gray-600 dark:text-gray-300 hover:bg-[#6229b3]/10 dark:hover:bg-[#c2a7fb]/10'
 									}`
 								}
 								title={item.name}
 							>
-								<span className="text-xl">{item.icon}</span>
+								<span className="text-lg">{item.icon}</span>
+								<span className="text-[10px]">{item.name}</span>
 							</NavLink>
 						</li>
 					))}

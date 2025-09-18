@@ -22,8 +22,7 @@ export const useProject = create((set, get) => ({
   chats: [],
   logs: [],
   // actions :
-  setInfo: (newInfo) => set({ info: { ...newInfo } }),
-  editInfo: (key, value) => set((state) => ({ info: { ...state.info, [key]: value } })),
+  setInfo: (newInfo) => set((state) => ({ info: { ...state.info, ...newInfo } })),
   setIsOwner: (isOwner) => set({ isOwner }),
   setOwner: (owner) =>
     set({

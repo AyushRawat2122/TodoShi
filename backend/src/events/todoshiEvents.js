@@ -1,5 +1,6 @@
 import { getSocketServer } from "../config/socket.js";
 import admin from "firebase-admin";
+import Project from "../models/project.models.js";
 
 function registerSocketEvents() {
   const io = getSocketServer();
@@ -30,6 +31,54 @@ function registerSocketEvents() {
         }
       } catch (error) {
         socket.emit("room-connection-error", { message: "Failed to join room", error });
+      }
+    });
+
+    // ==================== Info Page Events ===================== //
+
+    // project update-description
+    socket.on("update-project-description", async ({ roomID, projectId, description }) => {
+      console.log("➡️ Updating project description:", { roomID, projectId, description });
+      try {
+        if (!roomID || !description || !projectId) {
+          throw new Error("Room ID, project ID, and description are required");
+        }
+        const updatedProject = await Project.findByIdAndUpdate(
+          projectId,
+          { description: description },
+          { new: true }
+        );
+        if (!updatedProject) {
+          throw new Error("Project update failed");
+        }
+        io.to(roomID).emit("project-description-update", {
+          description: updatedProject.description,
+        });
+      } catch (error) {
+        console.error("Error updating project description:", error);
+      }
+    });
+
+    //project update-links
+    socket.on("update-project-links", async ({ roomID, projectId, links }) => {
+      console.log("➡️ Updating project links:", { roomID, projectId, links });
+      try {
+        if (!roomID || !Array.isArray(links) || !projectId) {
+          throw new Error("Room ID, project ID, and links are required");
+        }
+        const updatedProject = await Project.findByIdAndUpdate(
+          projectId,
+          { links: links },
+          { new: true }
+        );
+        if (!updatedProject) {
+          throw new Error("Project update failed");
+        }
+        io.to(roomID).emit("project-links-update", {
+          links: updatedProject.links,
+        });
+      } catch (error) {
+        console.error("Error updating project description:", error);
       }
     });
 

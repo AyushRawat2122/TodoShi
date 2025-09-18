@@ -504,9 +504,9 @@ const Dashboard = () => {
           </motion.div>
         </motion.div>
       </div >
-
+      {!isLarge && <div className='h-40' />}
       {/* Popup Component */}
-      < Popup isOpen={isPopupOpen} onClose={closePopup} >
+      <Popup isOpen={isPopupOpen} onClose={closePopup} >
         {popupContent}
       </Popup >
     </motion.div >

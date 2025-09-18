@@ -1,25 +1,24 @@
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
 //configuration of cloudinary
-const uploadOnCloudinary = async (fileBuffer) => {
+const uploadOnCloudinary = async (fileBuffer, options = {}) => {
   if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) return null;
 
   try {
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { resource_type: "auto" },
+        options,
         (err, res) => (err ? reject(err) : resolve(res))
       );
       streamifier.createReadStream(fileBuffer).pipe(uploadStream);
     });
-    return {
-      ...result,
-      url: result.secure_url,
-    };
-  } catch {
+    return { ...result, url: result.secure_url };
+  } catch (error) {
+    console.error("Error uploading to Cloudinary", error);
     return null;
   }
 };
+
 
 const deleteOnCloudinary = async (publicId) => {
   try {
