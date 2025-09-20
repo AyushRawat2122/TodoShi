@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, forwardRef } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaClock, FaEllipsisV, FaPlus, FaFolder, FaCheckCircle, FaHourglassHalf, FaTimes, FaCalendarAlt, FaTrashAlt } from 'react-icons/fa';
+import { FaClock, FaEllipsisV, FaPlus, FaFolder, FaCheckCircle, FaHourglassHalf, FaTimes, FaCalendarAlt, FaTrashAlt, FaImage } from 'react-icons/fa';
 import { UtilityHeader } from '../components/index.js';
 import useUser from '../hooks/useUser.js';
 import { useForm, Controller } from 'react-hook-form';
@@ -317,7 +317,8 @@ export default function Projects() {
   const handleDeleteConfirm = async () => {
     try {
       // API call to delete project
-      await serverRequest.delete(`/projects/delete/${deleteModal.projectId}`);
+      console.log("Deleting project with ID:", deleteModal.projectId);
+      await serverRequest.delete(`/projects/delete/${deleteModal.projectId}/${user?.data?._id}`);
       setProjects(prev => prev.filter(p => p._id !== deleteModal.projectId));
     } catch (error) {
       console.error('Failed to delete project:', error);
@@ -477,71 +478,113 @@ export default function Projects() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent border border-gray-200 dark:border-[#2a283a] rounded-lg p-4 sm:p-6 relative shadow-md dark:shadow-lg"
+                      onClick={() => { navigate(`/workspace/${project.title}/${project._id}`) }}
                     >
-                      <div className="flex justify-between items-start mb-3 sm:mb-4">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-purple-100">{project.title}</h3>
-                        <div className="relative">
-                          <button
-                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleMenuOpen(project._id);
-                            }}
-                            disabled={loading}
-                          >
-                            <FaEllipsisV />
-                          </button>
-                          {menuOpenId === project._id && (
-                            <div
-                              className="absolute right-0 mt-2 w-36 bg-white dark:bg-[#13111d] border border-gray-200 dark:border-[#2a283a] rounded shadow-lg z-10"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <button
-                                className={`w-full flex items-center px-4 py-2 text-sm rounded ${loading
-                                  ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
-                                  : "text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#2a283a]"
-                                  }`}
-                                onClick={() => {
-                                  handleDeleteClick(project._id, project.title);
-                                  handleMenuClose(); // Use handleMenuClose here
-                                }}
-                                disabled={loading}
-                              >
-                                <FaTrashAlt className="mr-2" /> Delete
-                              </button>
+                      {/* Card Header with Image + Title */}
+                      <div className="flex gap-4 mb-4">
+                        {/* Project Image - Square on the side */}
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
+                          {project.ProjectImage?.url ? (
+                            <img 
+                              src={project.ProjectImage.url} 
+                              alt={project.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#13111d]/50">
+                              <FaImage className="text-2xl text-gray-400 dark:text-gray-600" />
                             </div>
                           )}
                         </div>
-                      </div>
-
-                      <div className="flex items-center mb-3 sm:mb-4">
-                        <span
-                          className={`px-2 sm:px-3 py-1 text-xs font-medium rounded-full ${project.activeStatus
-                            ? 'bg-purple-100 text-[#6229b3] dark:bg-purple-900/30 dark:text-purple-300'
-                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                            }`}
-                        >
-                          {project.activeStatus ? 'Active' : 'Completed'}
-                        </span>
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 ml-3">
-                          <FaClock className="mr-1" />
-                          <span>
-                            {project.deadline
-                              ? new Date(project.deadline).toLocaleDateString()
-                              : ""}
-                          </span>
+                        
+                        {/* Title and Status */}
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-purple-100">{project.title}</h3>
+                            
+                            {/* Menu Button - Only for owner */}
+                            {project.createdBy === user?.data?._id && (
+                              <div className="relative z-10">
+                                <button
+                                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white p-1"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    handleMenuOpen(project._id);
+                                  }}
+                                  disabled={loading}
+                                >
+                                  <FaEllipsisV />
+                                </button>
+                                {menuOpenId === project._id && (
+                                  <div
+                                    className="absolute right-0 mt-1 w-36 bg-white dark:bg-[#13111d] border border-gray-200 dark:border-[#2a283a] rounded shadow-lg z-20"
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    <button
+                                      className={`w-full flex items-center px-4 py-2 text-sm rounded ${loading
+                                        ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
+                                        : "text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#2a283a]"
+                                        }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteClick(project._id, project.title);
+                                        handleMenuClose();
+                                      }}
+                                      disabled={loading}
+                                    >
+                                      <FaTrashAlt className="mr-2" /> Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Status Badge */}
+                          <div className="flex items-center mt-3">
+                            <span
+                              className={`px-2 sm:px-3 py-0.5 text-xs font-medium rounded-full ${project.activeStatus
+                                ? 'bg-purple-100 text-[#6229b3] dark:bg-purple-900/30 dark:text-purple-300'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                }`}
+                            >
+                              {project.activeStatus ? 'Active' : 'Completed'}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-purple-200/70 mb-4 sm:mb-6">
-                        {project.description}
-                      </p>
-
-                      <button className="inline-flex items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 dark:border-[#2a283a] text-xs sm:text-sm font-medium text-gray-700 dark:text-purple-200/80 hover:bg-gray-50 dark:hover:bg-[#13111d] rounded-md transition-colors" onClick={() => { navigate(`/workspace/${project.title}/${project._id}`) }}>
-                        Visit Workspace
-                      </button>
+                      {/* Description and Details */}
+                      <div className="mt-2">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-purple-200/70 mb-4">
+                          {project.description}
+                        </p>
+                        
+                        {/* Deadline and Workspace Button */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                            <FaClock className="mr-1" />
+                            <span>
+                              {project.deadline
+                                ? new Date(project.deadline).toLocaleDateString()
+                                : "No deadline"}
+                            </span>
+                          </div>
+                          
+                          <button 
+                            className="px-3 py-1.5 border border-gray-300 dark:border-[#2a283a] text-xs font-medium text-gray-700 dark:text-purple-200/80 hover:bg-gray-50 dark:hover:bg-[#13111d] rounded-md transition-colors"
+                            onClick={(e) => { 
+                              e.stopPropagation();
+                              navigate(`/workspace/${project.title}/${project._id}`);
+                            }}
+                          >
+                            Visit Workspace
+                          </button>
+                        </div>
+                      </div>
                     </motion.div>
                   ))}
+                  
                   {/* Confirm Delete Modal */}
                   <ConfirmDeleteModal
                     isOpen={deleteModal.open}

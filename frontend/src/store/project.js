@@ -33,4 +33,6 @@ export const useProject = create((set, get) => ({
       },
     }),
   setRoomID: (roomID) => set({ roomID }),
+  setLogs: (logs) => set({ logs }),
+  addLog: (log) => set((state) => ({ logs: [log, ...state.logs] })),
 }));
