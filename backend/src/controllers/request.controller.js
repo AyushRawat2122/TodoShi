@@ -5,11 +5,16 @@ import { Request, User, Project } from "../models/index.js";
 
 export const getAllRequests = asyncHandler(async (req, res, next) => {
   const { userID } = req.params;
-  // TODO: Implement get all requests logic
+
   if (!userID.trim()) {
     return next(new ApiError(400, "User ID is required"));
   }
-  const requests = await Request.find({ receiverId: userID });
+
+  const requests = await Request.find({ receiverId: userID })
+    .populate("senderId", "username avatar _id")
+    .populate("projectId", "title description _id")
+    .sort({ createdAt: -1 });
+
   return res.status(200).json(new ApiResponse(200, "Requests retrieved successfully", requests));
 });
 
@@ -29,9 +34,13 @@ export const sendRequest = asyncHandler(async (req, res, next) => {
   if (!project) {
     return next(new ApiError(404, "Project not found"));
   }
+  if (project.createdBy.toString() === userID) {
+    return next(new ApiError(400, "Cannot send collaboration request to yourself"));
+  }
   if (project.createdBy.toString() !== sender._id.toString()) {
     return next(new ApiError(403, "Only the project owner can send collaboration requests"));
   }
+
   const receiver = await User.findById(userID);
   if (!receiver) {
     return next(new ApiError(404, "Receiver not found"));
@@ -93,14 +102,16 @@ export const revokeRequest = asyncHandler(async (req, res, next) => {
 
 export const acceptRequest = asyncHandler(async (req, res, next) => {
   const { requestID, userID } = req.params;
-  // TODO: Implement accept request logic
+
   if (!requestID.trim() || !userID.trim()) {
     return next(new ApiError(400, "Request ID and User ID are required"));
   }
-  const request = await Request.findById(requestID);
+
+  const request = await Request.findById(requestID).populate("projectId");
   if (!request) {
     return next(new ApiError(404, "Request not found"));
   }
+
   if (request.receiverId.toString() !== userID) {
     return next(new ApiError(403, "Only the request receiver can accept it"));
   }
@@ -108,9 +119,26 @@ export const acceptRequest = asyncHandler(async (req, res, next) => {
   if (request.status !== "pending") {
     return next(new ApiError(400, "Only pending requests can be accepted"));
   }
+
+  // Update request status
   request.status = "accepted";
   await request.save();
-  return res.status(200).json(new ApiResponse(200, "Request accepted successfully", {}));
+
+  // Add user to project collaborators
+  const project = await Project.findById(request.projectId);
+  if (!project) {
+    return next(new ApiError(404, "Project not found"));
+  }
+
+  // Check if user is already a collaborator
+  if (!project.collaborators.some((id) => id.toString() === userID)) {
+    project.collaborators.push(userID);
+    await project.save();
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Request accepted successfully", { request, project }));
 });
 
 export const rejectRequest = asyncHandler(async (req, res, next) => {

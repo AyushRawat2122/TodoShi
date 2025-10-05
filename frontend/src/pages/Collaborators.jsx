@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaSearch, FaUserPlus, FaTimes, FaEllipsisV, FaUser } from 'react-icons/fa';
 import { BiX } from 'react-icons/bi';
 import { useProject } from '../store/project';
+import useUser from '../hooks/useUser';
 import Loader from '../components/Loader';
 import UserAvatar from '../components/UserAvatar';
 import SearchInvitePanel from '../components/SearchInvitePanel';
+import serverRequest from '../utils/axios';
 
 // Memoized components to prevent unnecessary re-renders
 const TabNavigation = memo(({ activeTab, setActiveTab, tabs }) => {
@@ -44,70 +46,65 @@ const SearchBar = memo(({ value, onChange }) => {
   );
 });
 
-// Role Badge component
-const RoleBadge = memo(({ role }) => {
-  const getBadgeStyle = () => {
-    switch (role) {
-      case 'owner':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'admin':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'member':
-        return 'bg-purple-100 text-[#6229b3] dark:bg-purple-900/30 dark:text-purple-300';
-      case 'viewer':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
-    }
-  };
-
-  return (
-    <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${getBadgeStyle()}`}>
-      {role}
-    </span>
-  );
-});
-
 // Request Tab Component with its own fetch logic
-const RequestsTab = memo(({ projectId, status, searchQuery }) => {
+const RequestsTab = memo(({ projectId, status, searchQuery, onCountUpdate }) => {
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch requests for this specific tab
   useEffect(() => {
-    setIsLoading(true);
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      console.log('RequestsTab - Fetching requests for project:', projectId, 'status:', status);
+      
+      try {
+        const response = await serverRequest.get(
+          `/collaborators/get-outgoing-requests/${projectId}`
+        );
 
-    // TODO: API call to fetch requests
-    // Example:
-    // const fetchRequests = async () => {
-    //   try {
-    //     const response = await fetch(`/api/projects/${projectId}/requests?status=${status}`);
-    //     const data = await response.json();
-    //     setRequests(data);
-    //   } catch (error) {
-    //     console.error('Error fetching requests:', error);
-    //   } finally {
-    //     setIsLoading(false);
-    //   }
-    // };
-    // fetchRequests();
+        console.log('RequestsTab - Fetch Response:', response.data);
 
-    // Mock data for demonstration
-    setTimeout(() => {
-      setRequests([
-        /* Sample data for visualization */
-      ]);
-      setIsLoading(false);
-    }, 1000);
-  }, [projectId, status]);
+        if (response.data.success) {
+          console.log('RequestsTab - All Requests:', response.data.data);
+          
+          // Filter by status
+          const filteredRequests = response.data.data.filter(req => {
+            if (status === 'pending') return req.status === 'pending';
+            if (status === 'rejected') return req.status === 'rejected';
+            return true;
+          });
+          
+          console.log('RequestsTab - Filtered Requests:', filteredRequests);
+          setRequests(filteredRequests);
+          
+          // Update count for this tab
+          if (onCountUpdate) {
+            onCountUpdate(status, filteredRequests.length);
+          }
+        }
+      } catch (error) {
+        console.log('Error fetching requests:', error);
+        setRequests([]);
+        if (onCountUpdate) {
+          onCountUpdate(status, 0);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchRequests();
+    }
+  }, [projectId, status, onCountUpdate]);
 
   // Filter requests based on searchQuery
   const filteredRequests = useMemo(() => {
     return requests.filter(request => {
+      const displayUser = request.receiverId || request.sender || {};
       return (
-        request.sender?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.sender?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.sender?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+        displayUser.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        displayUser.username?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
   }, [requests, searchQuery]);
@@ -215,8 +212,8 @@ const ConfirmModal = memo(({ isOpen, onClose, onConfirm, title, message, confirm
 const CollaboratorRow = memo(({ collaborator, isOwner, currentUserId, onRemove }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const isCurrentUser = collaborator.userId === currentUserId || collaborator._id === currentUserId;
-  const isOwnerRow = collaborator.role === 'owner';
-  const canManage = isOwner && !isOwnerRow && !isCurrentUser;
+  const isProjectOwner = collaborator.role === 'owner' || collaborator.isOwner;
+  const canManage = isOwner && !isProjectOwner && !isCurrentUser;
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -229,19 +226,21 @@ const CollaboratorRow = memo(({ collaborator, isOwner, currentUserId, onRemove }
       <div className="flex items-center gap-3">
         <UserAvatar user={collaborator} />
         <div>
-          <div className="font-medium text-gray-900 dark:text-purple-100">
-            {collaborator.name || collaborator.username}
-            {isCurrentUser && <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(You)</span>}
+          <div className="font-medium text-gray-900 dark:text-purple-100 flex items-center gap-2">
+            <span>{collaborator.username || 'Unknown User'}</span>
+            {isProjectOwner && (
+              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                Owner
+              </span>
+            )}
+            {isCurrentUser && <span className="text-xs text-gray-500 dark:text-gray-400">(You)</span>}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">{collaborator.email}</div>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <RoleBadge role={collaborator.role} />
-
         <div className="text-sm text-gray-500 dark:text-gray-400 min-w-24 text-right">
-          {`Joined ${formatDate(collaborator.joinedAt || collaborator.createdAt)}`}
+          {isProjectOwner ? 'Project Owner' : `Joined ${formatDate(collaborator.joinedAt || collaborator.createdAt)}`}
         </div>
 
         {canManage && (
@@ -279,15 +278,17 @@ const RequestRow = memo(({ request }) => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' });
   };
 
+  // For outgoing requests, we display the receiver (person being invited)
+  const displayUser = request.receiverId || request.sender || {};
+
   return (
     <div className="py-4 px-4 border-b border-gray-200 dark:border-[#2a283a] flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <UserAvatar user={request.sender || {}} />
+        <UserAvatar user={displayUser} />
         <div>
           <div className="font-medium text-gray-900 dark:text-purple-100">
-            {request.sender?.name || request.sender?.username}
+            {displayUser.username || 'Unknown User'}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">{request.sender?.email}</div>
         </div>
       </div>
 
@@ -311,12 +312,80 @@ const RequestRow = memo(({ request }) => {
 export default function Collaborators() {
   const { projectId } = useParams();
   const { isOwner, collaborators, setCollaborators } = useProject();
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [selectedCollaborator, setSelectedCollaborator] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(true);
+  const [projectOwner, setProjectOwner] = useState(null);
+  const [requestCounts, setRequestCounts] = useState({ pending: 0, rejected: 0 });
+
+  // Fetch collaborators on component mount
+  useEffect(() => {
+    const fetchCollaborators = async () => {
+      try {
+        setIsLoadingCollaborators(true);
+        console.log('Collaborators - Fetching for project:', projectId);
+        
+        const response = await serverRequest.get(
+          `/collaborators/get-collaborators/${projectId}`
+        );
+        
+        console.log('Collaborators - Fetch Response:', response.data);
+        
+        if (response.data.success) {
+          console.log('Collaborators - Data:', response.data.data);
+          
+          // Set project owner
+          if (response.data.data.createdBy) {
+            setProjectOwner(response.data.data.createdBy);
+          }
+          
+          // Set collaborators
+          setCollaborators(response.data.data.collaborators || []);
+        }
+      } catch (error) {
+        console.log('Error fetching collaborators:', error);
+      } finally {
+        setIsLoadingCollaborators(false);
+      }
+    };
+
+    if (projectId) {
+      fetchCollaborators();
+    }
+  }, [projectId, setCollaborators]);
+
+  // Fetch initial counts for pending and rejected tabs
+  useEffect(() => {
+    const fetchRequestCounts = async () => {
+      if (!projectId || !isOwner) return;
+
+      try {
+        const response = await serverRequest.get(
+          `/collaborators/get-outgoing-requests/${projectId}`
+        );
+
+        if (response.data.success) {
+          const allRequests = response.data.data || [];
+          const pendingCount = allRequests.filter(req => req.status === 'pending').length;
+          const rejectedCount = allRequests.filter(req => req.status === 'rejected').length;
+          
+          setRequestCounts({
+            pending: pendingCount,
+            rejected: rejectedCount
+          });
+        }
+      } catch (error) {
+        console.log('Error fetching request counts:', error);
+      }
+    };
+
+    fetchRequestCounts();
+  }, [projectId, isOwner]);
 
   // Reset to active tab if current tab is not allowed for non-owners
   useEffect(() => {
@@ -325,34 +394,60 @@ export default function Collaborators() {
     }
   }, [isOwner, activeTab]);
 
+  // Handle count updates from RequestsTab (when data changes)
+  const handleCountUpdate = useCallback((status, count) => {
+    setRequestCounts(prev => ({ ...prev, [status]: count }));
+  }, []);
+
   // Generate tabs based on ownership status - Memoized
   const tabs = useMemo(() => {
+    const totalMembers = (projectOwner ? 1 : 0) + collaborators.length;
     const baseTabs = [
-      { id: 'active', label: 'Active Collaborators', count: collaborators.filter(c => c.status === 'active').length },
+      { id: 'active', label: 'Active Collaborators', count: totalMembers },
     ];
 
     if (isOwner) {
       return [
         ...baseTabs,
-        { id: 'pending', label: 'Pending Requests', count: null }, // Count provided by API
-        { id: 'rejected', label: 'Declined Requests', count: null }, // Count provided by API
+        { id: 'pending', label: 'Pending Requests', count: requestCounts.pending },
+        { id: 'rejected', label: 'Declined Requests', count: requestCounts.rejected },
       ];
     }
 
     return baseTabs;
-  }, [isOwner, collaborators]);
+  }, [isOwner, collaborators, projectOwner, requestCounts]);
 
   // Filter collaborators based on userId and name only
   const filteredCollaborators = useMemo(() => {
-    return collaborators.filter(collab => {
+    const allMembers = [];
+    
+    // Add owner first if exists
+    if (projectOwner) {
+      allMembers.push({
+        ...projectOwner,
+        role: 'owner',
+        isOwner: true
+      });
+    }
+    
+    // Add collaborators
+    collaborators.forEach(collab => {
+      allMembers.push({
+        ...collab,
+        role: 'member',
+        isOwner: false
+      });
+    });
+    
+    // Filter based on search
+    return allMembers.filter(member => {
       const search = searchQuery.toLowerCase();
       return (
-        (collab.name?.toLowerCase().includes(search) ||
-        collab.userId?.toLowerCase().includes(search)) &&
-        collab.status === 'active'
+        member.name?.toLowerCase().includes(search) ||
+        member.username?.toLowerCase().includes(search)
       );
     });
-  }, [collaborators, searchQuery]);
+  }, [collaborators, projectOwner, searchQuery]);
 
   // Handle direct invite from search results
   const handleInviteUserFromSearch = useCallback(async (user) => {
@@ -376,20 +471,29 @@ export default function Collaborators() {
     setIsConfirmModalOpen(true);
   }, [isOwner]);
 
-  const handleConfirmRemove = useCallback(() => {
+  const handleConfirmRemove = useCallback(async () => {
     if (!isOwner || !selectedCollaborator) return;
 
+    console.log('Collaborators - Removing collaborator:', selectedCollaborator, 'from project:', projectId);
     setLoading(true);
-    // TODO: API call to remove collaborator
+    try {
+      const response = await serverRequest.delete(
+        `/collaborators/remove-collaborator/${selectedCollaborator._id}/${projectId}`
+      );
 
-    // Mock for demonstration
-    setTimeout(() => {
-      setCollaborators(prev => prev.filter(c => c._id !== selectedCollaborator._id));
+      console.log('Collaborators - Remove Response:', response.data);
+
+      if (response.data.success) {
+        setCollaborators(prev => prev.filter(c => c._id !== selectedCollaborator._id));
+        setIsConfirmModalOpen(false);
+        setSelectedCollaborator(null);
+      }
+    } catch (error) {
+      console.log('Error removing collaborator:', error);
+    } finally {
       setLoading(false);
-      setIsConfirmModalOpen(false);
-      setSelectedCollaborator(null);
-    }, 1000);
-  }, [isOwner, selectedCollaborator, setCollaborators]);
+    }
+  }, [isOwner, selectedCollaborator, setCollaborators, projectId]);
 
   // Memoized action button for empty state
   const emptyStateActionButton = useMemo(() => {
@@ -448,15 +552,19 @@ export default function Collaborators() {
 
         {/* Content based on active tab */}
         <div className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent border border-gray-200 dark:border-[#2a283a] rounded-xl overflow-hidden shadow-sm">
-          {activeTab === 'active' ? (
-            // Active collaborators list
+          {isLoadingCollaborators ? (
+            <div className="py-16 text-center">
+              <Loader className="mx-auto w-8 h-8 text-[#6229b3]" />
+              <p className="mt-4 text-gray-500 dark:text-gray-400">Loading collaborators...</p>
+            </div>
+          ) : activeTab === 'active' ? (
             filteredCollaborators.length > 0 ? (
               filteredCollaborators.map(collaborator => (
                 <CollaboratorRow
                   key={collaborator._id}
                   collaborator={collaborator}
                   isOwner={isOwner}
-                  currentUserId="1" // Replace with actual current user ID
+                  currentUserId={user?.data?._id}
                   onRemove={handleRemove}
                 />
               ))
@@ -468,11 +576,11 @@ export default function Collaborators() {
               />
             )
           ) : (
-            // Requests tabs - Each has its own fetch logic
             <RequestsTab
               projectId={projectId}
               status={activeTab}
               searchQuery={searchQuery}
+              onCountUpdate={handleCountUpdate}
             />
           )}
         </div>

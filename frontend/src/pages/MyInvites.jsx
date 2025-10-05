@@ -1,71 +1,42 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import InviteRow from '../components/InviteRow';
 import Loader from '../components/Loader';
+import useUser from '../hooks/useUser';
+import serverRequest from '../utils/axios';
 
 const MyInvites = () => {
   const [activeTab, setActiveTab] = useState('pending');
   const [invites, setInvites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  const { user } = useUser();
 
   // Fetch invites on mount
   useEffect(() => {
     const fetchInvites = async () => {
-      setIsLoading(true);
+      if (!user?.data?._id) return;
       
-      // TODO: API call to fetch invites
-      // Example:
-      // try {
-      //   const response = await fetch('/api/invites');
-      //   const data = await response.json();
-      //   setInvites(data);
-      // } catch (error) {
-      //   console.error('Error fetching invites:', error);
-      // } finally {
-      //   setIsLoading(false);
-      // }
-
-      // Mock data for demonstration
-      setTimeout(() => {
-        setInvites([
-          {
-            _id: '1',
-            email: 'alex@acme.com',
-            role: 'admin',
-            status: 'pending',
-            invitedBy: 'You',
-            sentAt: '2025-09-14',
-            projectId: 'proj1',
-            projectName: 'Project Alpha'
-          },
-          {
-            _id: '2',
-            email: 'jane@example.com',
-            role: 'member',
-            status: 'accepted',
-            invitedBy: 'John Doe',
-            sentAt: '2025-09-10',
-            projectId: 'proj2',
-            projectName: 'Project Beta'
-          },
-          {
-            _id: '3',
-            email: 'bob@example.com',
-            role: 'viewer',
-            status: 'rejected',
-            invitedBy: 'Sarah Smith',
-            sentAt: '2025-09-08',
-            projectId: 'proj3',
-            projectName: 'Project Gamma'
-          }
-        ]);
+      setIsLoading(true);
+      try {
+        const response = await serverRequest.get(`/requests/get-requests/${user.data._id}`);
+        
+        console.log('MyInvites - Fetch Response:', response.data);
+        
+        if (response.data.success) {
+          console.log('MyInvites - Invites Data:', response.data.data);
+          setInvites(response.data.data || []);
+        }
+      } catch (error) {
+        console.log('Error fetching invites:', error);
+        setInvites([]);
+      } finally {
         setIsLoading(false);
-      }, 1000);
+      }
     };
 
     fetchInvites();
-  }, []);
+  }, [user?.data?._id]);
 
   // Filter invites by status
   const filteredInvites = useMemo(() => {
@@ -74,55 +45,57 @@ const MyInvites = () => {
 
   // Handle accept invite
   const handleAccept = useCallback(async (invite) => {
+    if (!user?.data?._id) return;
+    
+    console.log('MyInvites - Accepting invite:', invite);
     setActionLoading(invite._id);
     
-    // TODO: API call to accept invite
-    // Example:
-    // try {
-    //   await fetch(`/api/invites/${invite._id}/accept`, { method: 'POST' });
-    //   setInvites(prev => prev.map(inv => 
-    //     inv._id === invite._id ? { ...inv, status: 'accepted' } : inv
-    //   ));
-    // } catch (error) {
-    //   console.error('Error accepting invite:', error);
-    // } finally {
-    //   setActionLoading(null);
-    // }
+    try {
+      const response = await serverRequest.patch(
+        `/requests/accept-request/${invite._id}/${user.data._id}`
+      );
 
-    // Mock for demonstration
-    setTimeout(() => {
-      setInvites(prev => prev.map(inv => 
-        inv._id === invite._id ? { ...inv, status: 'accepted' } : inv
-      ));
+      console.log('MyInvites - Accept Response:', response.data);
+
+      if (response.data.success) {
+        setInvites(prev => prev.map(inv => 
+          inv._id === invite._id ? { ...inv, status: 'accepted' } : inv
+        ));
+        console.log('Invitation accepted successfully');
+      }
+    } catch (error) {
+      console.log('Error accepting invite:', error.response?.data?.message || error.message);
+    } finally {
       setActionLoading(null);
-    }, 800);
-  }, []);
+    }
+  }, [user?.data?._id]);
 
   // Handle reject invite
   const handleReject = useCallback(async (invite) => {
+    if (!user?.data?._id) return;
+    
+    console.log('MyInvites - Rejecting invite:', invite);
     setActionLoading(invite._id);
     
-    // TODO: API call to reject invite
-    // Example:
-    // try {
-    //   await fetch(`/api/invites/${invite._id}/reject`, { method: 'POST' });
-    //   setInvites(prev => prev.map(inv => 
-    //     inv._id === invite._id ? { ...inv, status: 'rejected' } : inv
-    //   ));
-    // } catch (error) {
-    //   console.error('Error rejecting invite:', error);
-    // } finally {
-    //   setActionLoading(null);
-    // }
+    try {
+      const response = await serverRequest.patch(
+        `/requests/reject-request/${invite._id}/${user.data._id}`
+      );
 
-    // Mock for demonstration
-    setTimeout(() => {
-      setInvites(prev => prev.map(inv => 
-        inv._id === invite._id ? { ...inv, status: 'rejected' } : inv
-      ));
+      console.log('MyInvites - Reject Response:', response.data);
+
+      if (response.data.success) {
+        setInvites(prev => prev.map(inv => 
+          inv._id === invite._id ? { ...inv, status: 'rejected' } : inv
+        ));
+        console.log('Invitation rejected');
+      }
+    } catch (error) {
+      console.log('Error rejecting invite:', error.response?.data?.message || error.message);
+    } finally {
       setActionLoading(null);
-    }, 800);
-  }, []);
+    }
+  }, [user?.data?._id]);
 
   const tabs = [
     { id: 'pending', label: 'Pending', count: invites.filter(i => i.status === 'pending').length },
@@ -163,48 +136,68 @@ const MyInvites = () => {
           {/* Table Header */}
           <div className="grid grid-cols-6 gap-4 py-3 px-4 bg-gray-50 dark:bg-[#1f1b31]/50 border-b border-gray-200 dark:border-[#2a283a]">
             <div className="col-span-1 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-              Email
+              Project
             </div>
             <div className="col-span-1 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-              Role
+              Invited By
             </div>
             <div className="col-span-1 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
               Status
             </div>
             <div className="col-span-1 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-              Invited by
-            </div>
-            <div className="col-span-1 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
               Sent
             </div>
-            <div className="col-span-1 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-right">
+            <div className="col-span-2 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-right">
               Actions
             </div>
           </div>
 
           {/* Table Body */}
-          {isLoading ? (
-            <div className="py-16 text-center">
-              <Loader className="mx-auto w-8 h-8 text-[#6229b3]" />
-              <p className="mt-4 text-gray-500 dark:text-gray-400">Loading invites...</p>
-            </div>
-          ) : filteredInvites.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-gray-500 dark:text-gray-400">
-                No {activeTab} invites found
-              </p>
-            </div>
-          ) : (
-            filteredInvites.map(invite => (
-              <InviteRow
-                key={invite._id}
-                invite={invite}
-                onAccept={handleAccept}
-                onReject={handleReject}
-                loading={actionLoading === invite._id}
-              />
-            ))
-          )}
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="py-16 text-center"
+              >
+                <Loader className="mx-auto w-8 h-8 text-[#6229b3]" />
+                <p className="mt-4 text-gray-500 dark:text-gray-400">Loading invites...</p>
+              </motion.div>
+            ) : filteredInvites.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="py-16 text-center"
+              >
+                <p className="text-gray-500 dark:text-gray-400">
+                  No {activeTab} invites found
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="invites"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <AnimatePresence>
+                  {filteredInvites.map((invite, index) => (
+                    <InviteRow
+                      key={invite._id}
+                      invite={invite}
+                      onAccept={handleAccept}
+                      onReject={handleReject}
+                      loading={actionLoading === invite._id}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 import InviteListItem from './InviteListItem';
 import Loader from './Loader';
+import serverRequest from '../utils/axios';
 
-/**
- * Search panel for finding and inviting users to a project
- */
 const SearchInvitePanel = ({ projectId, onInviteUser }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -19,57 +18,65 @@ const SearchInvitePanel = ({ projectId, onInviteUser }) => {
       return;
     }
 
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       setIsSearching(true);
       
-      // TODO: Replace with actual API call
-      // Example:
-      // const searchUsers = async () => {
-      //   try {
-      //     const response = await fetch(`/api/users/search?q=${searchQuery}`);
-      //     const data = await response.json();
-      //     setSearchResults(data);
-      //   } catch (error) {
-      //     console.error('Error searching users:', error);
-      //   } finally {
-      //     setIsSearching(false);
-      //   }
-      // };
-      // searchUsers();
-
-      // Mock search results
-      setTimeout(() => {
-        const mockResults = [
-          { userId: 'u1', name: 'John Doe', username: 'johndoe', email: 'john@example.com' },
-          { userId: 'u2', name: 'Jane Smith', username: 'janesmith', email: 'jane@example.com' },
-          { userId: 'u3', name: 'Alex Johnson', username: 'alexj', email: 'alex@example.com' }
-        ].filter(user => 
-          user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      console.log('SearchInvitePanel - Searching for:', searchQuery);
+      
+      try {
+        const response = await serverRequest.get(
+          `/collaborators/search-users?query=${encodeURIComponent(searchQuery)}`
         );
-        
-        setSearchResults(mockResults);
+
+        console.log('SearchInvitePanel - Search Response:', response.data);
+
+        if (response.data.success) {
+          console.log('SearchInvitePanel - Search Results:', response.data.data);
+          setSearchResults(response.data.data || []);
+        }
+      } catch (error) {
+        console.log('Error searching users:', error);
+        setSearchResults([]);
+      } finally {
         setIsSearching(false);
-      }, 500);
+      }
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
   // Handle inviting a user
-  const handleInviteUser = async (user) => {
-    setInvitingUserIds(prev => [...prev, user.userId]);
+  const handleInviteUser = async (selectedUser) => {
+    console.log('SearchInvitePanel - Inviting user:', selectedUser, 'to project:', projectId);
+    setInvitingUserIds(prev => [...prev, selectedUser._id]);
     
     try {
-      await onInviteUser(user);
+      const response = await serverRequest.post(
+        `/requests/send-request/${projectId}/${selectedUser._id}`
+      );
+
+      console.log('SearchInvitePanel - Invite Response:', response.data);
+
+      if (response.data.success) {
+        console.log('Collaboration request sent successfully');
+        // Remove from search results after successful invite
+        setSearchResults(prev => prev.filter(u => u._id !== selectedUser._id));
+      }
+    } catch (error) {
+      console.log('Error sending request:', error.response?.data?.message || error.message);
     } finally {
-      setInvitingUserIds(prev => prev.filter(id => id !== user.userId));
+      setInvitingUserIds(prev => prev.filter(id => id !== selectedUser._id));
     }
   };
 
   return (
-    <div className="mt-6 bg-white dark:bg-[#13111d]/50 border border-gray-200 dark:border-[#2a283a] rounded-xl overflow-hidden shadow-sm">
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="mt-6 bg-white dark:bg-[#13111d]/50 border border-gray-200 dark:border-[#2a283a] rounded-xl overflow-hidden shadow-sm"
+    >
       {/* Search input */}
       <div className="p-4 border-b border-gray-200 dark:border-[#2a283a]">
         <div className="relative">
@@ -86,31 +93,67 @@ const SearchInvitePanel = ({ projectId, onInviteUser }) => {
 
       {/* Results section */}
       <div className="max-h-64 overflow-y-auto">
-        {isSearching ? (
-          <div className="py-8 text-center">
-            <Loader className="w-6 h-6 mx-auto text-[#6229b3]" />
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Searching users...</p>
-          </div>
-        ) : searchQuery.length < 2 ? (
-          <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-            <p>Enter at least 2 characters to search users</p>
-          </div>
-        ) : searchResults.length === 0 ? (
-          <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-            <p>No users found matching "{searchQuery}"</p>
-          </div>
-        ) : (
-          searchResults.map(user => (
-            <InviteListItem
-              key={user.userId}
-              user={user}
-              onInvite={handleInviteUser}
-              loading={invitingUserIds.includes(user.userId)}
-            />
-          ))
-        )}
+        <AnimatePresence mode="wait">
+          {isSearching ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-8 text-center"
+            >
+              <Loader className="w-6 h-6 mx-auto text-[#6229b3]" />
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Searching users...</p>
+            </motion.div>
+          ) : searchQuery.length < 2 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-8 text-center text-gray-500 dark:text-gray-400"
+            >
+              <p>Enter at least 2 characters to search users</p>
+            </motion.div>
+          ) : searchResults.length === 0 ? (
+            <motion.div
+              key="no-results"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-8 text-center text-gray-500 dark:text-gray-400"
+            >
+              <p>No users found matching "{searchQuery}"</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <AnimatePresence>
+                {searchResults.map((searchUser, index) => (
+                  <motion.div
+                    key={searchUser._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                  >
+                    <InviteListItem
+                      user={searchUser}
+                      onInvite={handleInviteUser}
+                      loading={invitingUserIds.includes(searchUser._id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

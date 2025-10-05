@@ -1,10 +1,5 @@
 import React, { memo } from 'react';
 
-/**
- * User avatar component that displays an image or a fallback with initials
- * 
- * @param {Object} user - User object with optional avatar/image properties
- */
 const UserAvatar = memo(({ user }) => {
   const hasAvatar = user?.avatar?.url || user?.image?.url;
 

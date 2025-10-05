@@ -11,7 +11,8 @@ export const getAllCollaborators = asyncHandler(async (req, res, next) => {
   }
   const ProjectCollaborators = await Project.findById(projectID)
     .populate("collaborators", "username avatar _id")
-    .select("collaborators");
+    .populate("createdBy", "username avatar _id")
+    .select("collaborators createdBy");
 
   if (!ProjectCollaborators) {
     return next(new ApiError(404, "Project not found"));
@@ -66,9 +67,9 @@ export const getOutgoingRequests = asyncHandler(async (req, res, next) => {
   }
 
   const outgoingRequests = await Request.find({
-    sender: user._id,
-    project: project._id,
-  });
+    senderId: user._id,
+    projectId: project._id,
+  }).populate("receiverId", "username avatar _id");
 
   return res
     .status(200)
@@ -103,21 +104,31 @@ export const leaveProject = asyncHandler(async (req, res, next) => {
 //search users by username or ID
 export const searchUsers = asyncHandler(async (req, res, next) => {
   const { query } = req.query;
-  if (!query.trim()) {
+  if (!query || !query.trim()) {
     return next(new ApiError(400, "Search query is required"));
   }
+
   let results = [];
+
+  // Check if query is a valid MongoDB ObjectId
   if (Types.ObjectId.isValid(query)) {
-    const user = await User.findById(query);
+    const user = await User.findById(query).select("username avatar _id");
     if (user) {
       results.push(user);
     }
-  } else {
-    const users = await User.find({
-      username: { $regex: query, $options: "i" },
-    });
-    results.push(...users);
   }
 
-  return res.status(200).json(new ApiResponse(200, "Users retrieved successfully", results));
+  // Search by username (case-insensitive)
+  const users = await User.find({
+    username: { $regex: query, $options: "i" },
+  })
+    .select("username avatar _id")
+    .limit(10);
+
+  results.push(...users);
+
+  // Remove duplicates
+  const uniqueResults = Array.from(new Map(results.map((u) => [u._id.toString(), u])).values());
+
+  return res.status(200).json(new ApiResponse(200, "Users retrieved successfully", uniqueResults));
 });

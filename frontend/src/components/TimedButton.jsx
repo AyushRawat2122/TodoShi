@@ -1,17 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-/**
- * TimedButton Component
- * 
- * A button that becomes disabled for a specified amount of time after being clicked.
- * Displays a countdown timer showing the remaining time until it becomes active again.
- * 
- * @param {string} className - CSS classes to apply to the button
- * @param {function} onClick - Function to execute when the button is clicked
- * @param {number} time - Time in milliseconds that the button should remain disabled
- * @param {ReactNode} children - Content to display inside the button
- * @param {string} type - HTML button type (e.g., 'button', 'submit')
- */
+
 const TimedButton = ({ className, onClick, time, children, type }) => {
     // Reference to the timer interval for cleanup
     let timer = useRef(null);

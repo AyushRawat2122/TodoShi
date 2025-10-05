@@ -11,7 +11,7 @@ const router = Router();
 
 router.route("/get-requests/:userID").get(getAllRequests);
 router.route("/send-request/:projectID/:userID").post(sendRequest);
-router.route("/revoke-request/:projectID/:requestID").delete(revokeRequest);
+router.route("/revoke-request/:requestID/:projectID").delete(revokeRequest);
 router.route("/accept-request/:requestID/:userID").patch(acceptRequest);
 router.route("/reject-request/:requestID/:userID").patch(rejectRequest);
 
