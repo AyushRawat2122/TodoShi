@@ -54,7 +54,9 @@ export const getAllProjects = asyncHandler(async (req, res, next) => {
     return next(new ApiError(403, "You are not authorized to access this resource"));
   }
 
-  const projects = await Project.find({ createdBy: userID });
+  const projects = await Project.find({
+    $or: [{ createdBy: user._id }, { collaborators: user._id }],
+  });
   if (!projects) {
     return next(new ApiError(404, "No projects found"));
   }

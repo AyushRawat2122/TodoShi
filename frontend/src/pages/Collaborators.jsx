@@ -210,7 +210,6 @@ const ConfirmModal = memo(({ isOpen, onClose, onConfirm, title, message, confirm
 
 // CollaboratorRow component - Memoized
 const CollaboratorRow = memo(({ collaborator, isOwner, currentUserId, onRemove }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
   const isCurrentUser = collaborator.userId === currentUserId || collaborator._id === currentUserId;
   const isProjectOwner = collaborator.role === 'owner' || collaborator.isOwner;
   const canManage = isOwner && !isProjectOwner && !isCurrentUser;
@@ -222,48 +221,38 @@ const CollaboratorRow = memo(({ collaborator, isOwner, currentUserId, onRemove }
   };
 
   return (
-    <div className="py-4 px-4 border-b border-gray-200 dark:border-[#2a283a] flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="py-4 px-4 border-b border-gray-200 dark:border-[#2a283a] flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#2a283a]/30 transition-colors">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
         <UserAvatar user={collaborator} />
-        <div>
-          <div className="font-medium text-gray-900 dark:text-purple-100 flex items-center gap-2">
-            <span>{collaborator.username || 'Unknown User'}</span>
+        <div className="min-w-0">
+          <div className="font-medium text-gray-900 dark:text-purple-100 flex items-center gap-2 flex-wrap">
+            <span className="truncate">{collaborator.username || 'Unknown User'}</span>
             {isProjectOwner && (
-              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 whitespace-nowrap">
                 Owner
               </span>
             )}
-            {isCurrentUser && <span className="text-xs text-gray-500 dark:text-gray-400">(You)</span>}
+            {isCurrentUser && <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">(You)</span>}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:hidden">
+            {isProjectOwner ? 'Project Owner' : `Joined ${formatDate(collaborator.joinedAt || collaborator.createdAt)}`}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="text-sm text-gray-500 dark:text-gray-400 min-w-24 text-right">
+      <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+        <div className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap hidden sm:block">
           {isProjectOwner ? 'Project Owner' : `Joined ${formatDate(collaborator.joinedAt || collaborator.createdAt)}`}
         </div>
 
         {canManage && (
-          <div className="relative">
-            <button
-              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#2a283a]"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <FaEllipsisV />
-            </button>
-
-            {menuOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-[#13111d] border border-gray-200 dark:border-[#2a283a] rounded-lg shadow-lg z-10">
-                <button
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#2a283a] flex items-center gap-2 rounded-lg"
-                  onClick={() => { onRemove(collaborator); setMenuOpen(false); }}
-                >
-                  <BiX className="text-red-500" />
-                  Remove Collaborator
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => onRemove(collaborator)}
+            className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 border-2 border-red-300 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-.5 whitespace-nowrap"
+          >
+            <BiX className="" />
+            <span className="hidden sm:inline">Remove</span>
+          </button>
         )}
       </div>
     </div>
@@ -409,13 +398,13 @@ export default function Collaborators() {
     if (isOwner) {
       return [
         ...baseTabs,
-        { id: 'pending', label: 'Pending Requests', count: requestCounts.pending },
-        { id: 'rejected', label: 'Declined Requests', count: requestCounts.rejected },
+        { id: 'pending', label: 'Pending Requests' },
+        { id: 'rejected', label: 'Declined Requests' },
       ];
     }
 
     return baseTabs;
-  }, [isOwner, collaborators, projectOwner, requestCounts]);
+  }, [isOwner, collaborators, projectOwner]);
 
   // Filter collaborators based on userId and name only
   const filteredCollaborators = useMemo(() => {

@@ -1,7 +1,7 @@
 import { getSocketServer } from "../config/socket.js";
 import admin from "firebase-admin";
-import { Project, Log } from "../models/index.js";
-function registerSocketEvents() {
+import { Project, Log, Todo } from "../models/index.js";
+export default function registerSocketEvents() {
   const io = getSocketServer();
 
   io.use(async (socket, next) => {
@@ -54,7 +54,7 @@ function registerSocketEvents() {
           description: updatedProject.description,
         });
       } catch (error) {
-        console.error("Error updating project description:", error);
+        socket.emit("server-error", `Error updating project description: ${error.message}`);
       }
     });
 
@@ -77,7 +77,7 @@ function registerSocketEvents() {
           links: updatedProject.links,
         });
       } catch (error) {
-        console.error("Error updating project description:", error);
+        socket.emit("server-error", `Error updating project links: ${error.message}`);
       }
     });
 
@@ -97,7 +97,163 @@ function registerSocketEvents() {
         console.log("✅ Project log added:", newLog);
         io.to(roomID).emit("new-project-log", newLog);
       } catch (error) {
-        console.error("Error adding project log:", error);
+        socket.emit("server-error", `Error adding project log: ${error.message}`);
+      }
+    });
+
+    // ==================== Todo Page Events ===================== //
+
+    // add-new-todo
+    socket.on(
+      "new-todo",
+      async ({ title, description, status, createdBy, projectId, priority, roomID, date }) => {
+        console.log("📥 new-todo event received:", {
+          title,
+          description,
+          status,
+          createdBy,
+          projectId,
+          priority,
+          roomID,
+          date,
+          socketId: socket.id,
+          user: socket.user,
+        });
+
+        try {
+          if (
+            !title?.trim() ||
+            !description?.trim() ||
+            typeof status !== "boolean" ||
+            !createdBy?.trim() ||
+            !projectId?.trim() ||
+            !priority?.trim() ||
+            !roomID?.trim() ||
+            !date?.trim()
+          ) {
+            console.error("❌ Validation failed - missing fields");
+            throw new Error("All fields are required");
+          }
+
+          console.log("✅ Validation passed, creating todo...");
+
+          const newTodo = await Todo.create({
+            title,
+            description,
+            status,
+            createdBy,
+            projectId,
+            priority,
+            date, // Store the local date string
+          });
+
+          console.log("✅ Todo created in DB:", newTodo);
+
+          // Populate createdBy field
+          await newTodo.populate("createdBy", "username avatar _id");
+
+          console.log("✅ Todo populated:", newTodo);
+
+          if (!newTodo) {
+            throw new Error("Todo creation failed");
+          }
+
+          console.log(`📤 Emitting new-todo to room ${roomID}`);
+          io.to(roomID).emit("new-todo", newTodo);
+          console.log("✅ new-todo event emitted successfully");
+        } catch (error) {
+          console.error("❌ Error in new-todo handler:", error);
+          socket.emit("server-error", `Error adding new todo: ${error.message}`);
+        }
+      }
+    );
+
+    // mark-todo-completed
+    socket.on("mark-todo-completed", async ({ todoId, roomID }) => {
+      console.log("📥 mark-todo-completed event received:", { todoId, roomID, socketId: socket.id });
+
+      try {
+        if (!todoId?.trim() || !roomID?.trim()) {
+          throw new Error("Todo ID and Room ID are required");
+        }
+
+        console.log("🔄 Updating todo status to completed...");
+        const updatedTodo = await Todo.findByIdAndUpdate(
+          todoId,
+          { status: true },
+          { new: true }
+        ).populate("createdBy", "username avatar _id");
+
+        console.log("✅ Todo updated:", updatedTodo);
+
+        if (!updatedTodo) {
+          throw new Error("Todo update failed");
+        }
+
+        console.log(`📤 Emitting todo-completed to room ${roomID}`);
+        io.to(roomID).emit("todo-completed", updatedTodo);
+        console.log("✅ todo-completed event emitted successfully");
+      } catch (error) {
+        console.error("❌ Error in mark-todo-completed:", error);
+        socket.emit("server-error", `Error marking todo as completed: ${error.message}`);
+      }
+    });
+
+    //mark-todo-pending
+    socket.on("mark-todo-pending", async ({ todoId, roomID }) => {
+      console.log("📥 mark-todo-pending event received:", { todoId, roomID, socketId: socket.id });
+
+      try {
+        if (!todoId?.trim() || !roomID?.trim()) {
+          throw new Error("Todo ID and Room ID are required");
+        }
+
+        console.log("🔄 Updating todo status to pending...");
+        const updatedTodo = await Todo.findByIdAndUpdate(
+          todoId,
+          { status: false },
+          { new: true }
+        ).populate("createdBy", "username avatar _id");
+
+        console.log("✅ Todo updated:", updatedTodo);
+
+        if (!updatedTodo) {
+          throw new Error("Todo update failed");
+        }
+
+        console.log(`📤 Emitting todo-pending to room ${roomID}`);
+        io.to(roomID).emit("todo-pending", updatedTodo);
+        console.log("✅ todo-pending event emitted successfully");
+      } catch (error) {
+        console.error("❌ Error in mark-todo-pending:", error);
+        socket.emit("server-error", `Error marking todo as pending: ${error.message}`);
+      }
+    });
+
+    // delete-todo
+    socket.on("delete-todo", async ({ todoId, roomID }) => {
+      console.log("📥 delete-todo event received:", { todoId, roomID, socketId: socket.id });
+
+      try {
+        if (!todoId?.trim() || !roomID?.trim()) {
+          throw new Error("Todo ID and Room ID are required");
+        }
+
+        console.log("🗑️ Deleting todo...");
+        const deletedTodo = await Todo.findByIdAndDelete(todoId);
+
+        console.log("✅ Todo deleted:", deletedTodo);
+
+        if (!deletedTodo) {
+          throw new Error("Todo deletion failed");
+        }
+
+        console.log(`📤 Emitting todo-deleted to room ${roomID}`);
+        io.to(roomID).emit("todo-deleted", deletedTodo);
+        console.log("✅ todo-deleted event emitted successfully");
+      } catch (error) {
+        console.error("❌ Error in delete-todo:", error);
+        socket.emit("server-error", `Error deleting todo: ${error.message}`);
       }
     });
 
@@ -107,5 +263,3 @@ function registerSocketEvents() {
     });
   });
 }
-
-export default registerSocketEvents;

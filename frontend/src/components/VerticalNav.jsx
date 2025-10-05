@@ -169,7 +169,7 @@ const VerticalNav = () => {
 							{isSignedIn && (
 								<li>
 									<div 
-										onClick={() => navigate('/profile')}
+										onClick={() => navigate('/dashboard')}
 										className="w-10 h-10 rounded-full bg-[#c2a7fb] bg-opacity-30 overflow-hidden flex items-center justify-center cursor-pointer"
 									>
 										{(user?.data?.avatar?.url || user?.avatar?.url) ? (

@@ -9,6 +9,7 @@ import { useAuthStatus } from '../hooks/useAuthStatus.js';
 import serverRequest from '../utils/axios.js';
 import { useProject } from '../store/project.js';
 import { useSocketOn } from '../hooks/useSocket.js';
+
 export default function Workspace() {
   const { projectId, projectName } = useParams();
   const { isDark } = useTheme();
@@ -16,8 +17,16 @@ export default function Workspace() {
   const [loading, setLoading] = useState(true);
   const [isValid, setIsValid] = useState(false);
   const { isSignedIn } = useAuthStatus();
-  const { setInfo, info, setIsOwner, setOwner, setRoomID, logs, addLog, setLogs } = useProject();
+  const { setInfo, info, setIsOwner, setOwner, setRoomID, logs, addLog, setLogs, setTodos, addTodo, updateTodo, removeTodo, currentTodosDate } = useProject();
   const navigate = useNavigate();
+
+  // Utility function to format date in local timezone
+  const formatDateToLocal = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   // lets verify first that you ve access to this project or not
   useEffect(() => {
@@ -26,6 +35,7 @@ export default function Workspace() {
         const { data } = await serverRequest.get(`/projects/get/${projectId}`, { headers: { "Content-Type": "application/json" } });
         const projectData = data?.data;
         console.log("data :", projectData);
+        
         const newInfo = {
           activeStatus: true,
           description: projectData?.description,
@@ -42,17 +52,27 @@ export default function Workspace() {
           username: projectData?.createdBy?.username || "",
           userId: projectData?.createdBy?._id || "",
         }
-        console.log("ownerData :", ownerData);
 
         setInfo(newInfo);
         setIsOwner(projectData?.isOwner || false);
         setOwner(ownerData);
 
+        // Fetch logs
         const { data: logData } = await serverRequest.get(`/logs/${projectId}`, { headers: { "Content-Type": "application/json" } });
-        console.log("logData :", logData);
         setLogs(logData?.data || []);
 
-        // if all goes well then only we set isValid to true
+        // Fetch current date todos
+        const currentDateString = formatDateToLocal(new Date());
+        console.log("📅 Fetching todos for current date:", currentDateString);
+        try {
+          const { data: todoData } = await serverRequest.get(`/todos/${projectId}?date=${currentDateString}`);
+          console.log("✅ Current date todos fetched:", todoData?.data);
+          setTodos(todoData?.data || [], currentDateString);
+        } catch (todoError) {
+          console.error("❌ Error fetching current date todos:", todoError);
+          setTodos([], currentDateString);
+        }
+
         console.log("Project access verified and data populated.");
         setIsValid(true);
       } catch (error) {
@@ -98,6 +118,11 @@ export default function Workspace() {
     console.log("Project Logs updated:", logs);
   }, [info, logs]);
 
+  // ========== SOCKETS - Server Errors ==========
+  useSocketOn("server-error", (errorMsg) => {
+    console.log(errorMsg);
+  });
+
   // ========== SOCKETS - Logs page ==========
   useSocketOn("new-project-log", (newLog) => {
     addLog(newLog);
@@ -116,6 +141,49 @@ export default function Workspace() {
   });
   useSocketOn("project-description-update", (updatedDesc) => {
     setInfo(updatedDesc);
+  });
+
+  // ========== SOCKETS - Todo Page Events ==========
+  // Only listen to todo events if currently viewing today's todos
+  useSocketOn("new-todo", (newTodo) => {
+    console.log("🔔 Socket received new-todo:", newTodo);
+    console.log("📅 Todo date field:", newTodo.date);
+    console.log("📅 Current todos date:", currentTodosDate);
+    
+    // Now we use the date field directly - no timezone conversion needed!
+    if (currentTodosDate === newTodo.date) {
+      console.log("✅ Adding new todo to state");
+      addTodo(newTodo);
+    } else {
+      console.log("⏭️ Ignoring new-todo event - viewing different date");
+    }
+  });
+
+  useSocketOn("todo-completed", (updatedTodo) => {
+    if (currentTodosDate === updatedTodo.date) {
+      console.log("✅ Todo completed via socket:", updatedTodo);
+      updateTodo(updatedTodo._id, { status: true });
+    } else {
+      console.log("⏭️ Ignoring todo-completed event - viewing different date");
+    }
+  });
+
+  useSocketOn("todo-pending", (updatedTodo) => {
+    if (currentTodosDate === updatedTodo.date) {
+      console.log("⏳ Todo marked pending via socket:", updatedTodo);
+      updateTodo(updatedTodo._id, { status: false });
+    } else {
+      console.log("⏭️ Ignoring todo-pending event - viewing different date");
+    }
+  });
+
+  useSocketOn("todo-deleted", (deletedTodo) => {
+    if (currentTodosDate === deletedTodo.date) {
+      console.log("🗑️ Todo deleted via socket:", deletedTodo);
+      removeTodo(deletedTodo._id);
+    } else {
+      console.log("⏭️ Ignoring todo-deleted event - viewing different date");
+    }
   });
 
   if (loading) {

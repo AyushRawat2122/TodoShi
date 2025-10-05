@@ -21,6 +21,8 @@ export const useProject = create((set, get) => ({
   collaborators: [],
   chats: [],
   logs: [],
+  todos: [],
+  currentTodosDate: null, // Track which date's todos are currently loaded
   // actions :
   setInfo: (newInfo) => set((state) => ({ info: { ...state.info, ...newInfo } })),
   setIsOwner: (isOwner) => set({ isOwner }),
@@ -35,8 +37,6 @@ export const useProject = create((set, get) => ({
   setRoomID: (roomID) => set({ roomID }),
   setLogs: (logs) => set({ logs: logs }),
   addLog: (log) => set((state) => ({ logs: [...state.logs, log] })),
-  
-  // New actions for collaborators
   setCollaborators: (collaborators) => set({ collaborators }),
   addCollaborator: (collaborator) => set((state) => ({ 
     collaborators: [...state.collaborators, collaborator] 
@@ -48,5 +48,14 @@ export const useProject = create((set, get) => ({
     collaborators: state.collaborators.map(c => 
       c._id === collaboratorId ? { ...c, ...updates } : c
     )
+  })),
+  // Todo actions
+  setTodos: (todos, date) => set({ todos, currentTodosDate: date }),
+  addTodo: (todo) => set((state) => ({ todos: [...state.todos, todo] })),
+  updateTodo: (todoId, updates) => set((state) => ({
+    todos: state.todos.map(t => t._id === todoId ? { ...t, ...updates } : t)
+  })),
+  removeTodo: (todoId) => set((state) => ({
+    todos: state.todos.filter(t => t._id !== todoId)
   })),
 }));

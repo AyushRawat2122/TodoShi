@@ -6,7 +6,8 @@ const todoSchema = new Schema(
     status: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
-    priority: { type: String, enum: ["low", "medium", "high"], default: "medium" }
+    priority: { type: String, enum: ["low", "medium", "high"], default: "medium" },
+    date: { type: String, required: true } // Store date as YYYY-MM-DD string (local date)
   },
   { timestamps: true }
 );

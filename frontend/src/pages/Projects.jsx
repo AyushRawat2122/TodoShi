@@ -8,7 +8,7 @@ import { useForm, Controller } from 'react-hook-form';
 import DatePickerField from '../components/DatePickerField';
 import serverRequest from "../utils/axios.js"
 import { Loader } from '../components/index.js';
-
+import { IoMdNotifications } from "react-icons/io";
 const EmptyState = ({ icon: Icon, title, message, actionText, onAction }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -358,15 +358,26 @@ export default function Projects() {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-purple-100">My Projects</h1>
             <p className="text-sm sm:text-base text-gray-600 dark:text-purple-200/70 mt-2">Manage and track your development projects</p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleAddProject}
-            className="px-3 sm:px-4 py-2 bg-[#6229b3] text-white rounded-lg flex items-center justify-center text-sm sm:text-base"
-          >
-            <span className="mr-2">+</span>
-            New Project
-          </motion.button>
+          <div className='flex gap-2'>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAddProject}
+              className="px-3 sm:px-4 py-2 bg-[#6229b3] text-white rounded-lg flex items-center justify-center text-sm sm:text-base"
+            >
+              <span className="mr-2">+</span>
+              New Project
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { navigate("/my-invites") }}
+              className="px-3 sm:px-4 py-2 bg-[#6229b3] text-white rounded-lg flex items-center justify-center text-sm sm:text-base"
+            >
+              <span className="mr-2"> <IoMdNotifications className='text-xl' /> </span>
+              Invites
+            </motion.button>
+          </div>
         </div>
 
         {/* Stats Section */}
@@ -546,7 +557,7 @@ export default function Projects() {
                       </div>
 
                       {/* Description and Details */}
-                      <div className="mt-2">
+                      <div className="mt-2 flex flex-col justify-between h-32">
                         <p className="text-xs sm:text-sm text-gray-600 dark:text-purple-200/70 mb-4">
                           {project.description}
                         </p>
