@@ -33,6 +33,20 @@ export const useProject = create((set, get) => ({
       },
     }),
   setRoomID: (roomID) => set({ roomID }),
-  setLogs: (logs) => set({ logs }),
-  addLog: (log) => set((state) => ({ logs: [log, ...state.logs] })),
+  setLogs: (logs) => set({ logs: logs }),
+  addLog: (log) => set((state) => ({ logs: [...state.logs, log] })),
+  
+  // New actions for collaborators
+  setCollaborators: (collaborators) => set({ collaborators }),
+  addCollaborator: (collaborator) => set((state) => ({ 
+    collaborators: [...state.collaborators, collaborator] 
+  })),
+  removeCollaborator: (collaboratorId) => set((state) => ({
+    collaborators: state.collaborators.filter(c => c._id !== collaboratorId)
+  })),
+  updateCollaborator: (collaboratorId, updates) => set((state) => ({
+    collaborators: state.collaborators.map(c => 
+      c._id === collaboratorId ? { ...c, ...updates } : c
+    )
+  })),
 }));

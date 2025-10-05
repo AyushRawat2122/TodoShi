@@ -6,6 +6,7 @@ const todoSchema = new Schema(
     status: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+    priority: { type: String, enum: ["low", "medium", "high"], default: "medium" }
   },
   { timestamps: true }
 );

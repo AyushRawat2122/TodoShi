@@ -1,7 +1,6 @@
 import { getSocketServer } from "../config/socket.js";
 import admin from "firebase-admin";
-import Project from "../models/project.models.js";
-
+import { Project, Log } from "../models/index.js";
 function registerSocketEvents() {
   const io = getSocketServer();
 
@@ -79,6 +78,26 @@ function registerSocketEvents() {
         });
       } catch (error) {
         console.error("Error updating project description:", error);
+      }
+    });
+
+    // ==================== Logs Page Events ===================== //
+
+    // add-project-log
+    socket.on("add-project-log", async ({ roomID, projectId, description }) => {
+      try {
+        if (!roomID || !description || !projectId) {
+          throw new Error("Room ID, project ID, and description are required");
+        }
+        console.log("➡️ Adding project log:", { roomID, projectId, description });
+        const newLog = await Log.create({ description, projectId });
+        if (!newLog) {
+          throw new Error("Log creation failed");
+        }
+        console.log("✅ Project log added:", newLog);
+        io.to(roomID).emit("new-project-log", newLog);
+      } catch (error) {
+        console.error("Error adding project log:", error);
       }
     });
 

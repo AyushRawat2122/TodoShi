@@ -30,9 +30,15 @@ app.get("/", (req, res) => {
 // Import routes
 import userRoutes from "./routes/user.routes.js";
 import projectRoutes from "./routes/project.routes.js";
-
+import logRoutes from "./routes/log.routes.js";
+import requestRoutes from "./routes/request.routes.js";
+import collaboratorRoutes from "./routes/collaborator.routes.js";
+// Use routes
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/projects", projectRoutes);
+app.use("/api/v1/logs", logRoutes);
+app.use("/api/v1/requests", requestRoutes);
+app.use("/api/v1/collaborators", collaboratorRoutes);
 
 app.use(errorHandler);
 

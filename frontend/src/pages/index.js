@@ -14,6 +14,28 @@ import Collaborators from "./Collaborators.jsx";
 import Todos from "./Todos.jsx";
 import Logs from "./Logs.jsx";
 import UnauthorizedPage from "./UnauthorizedPage.jsx";
-import ProtectedPage from './ProtectedPage.jsx';
+import ProtectedPage from "./ProtectedPage.jsx";
 import NotFound from "./4O4.jsx";
-export { SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide , Verify, Projects, ProjectInfo, Chat, Collaborators, Todos, Logs, UnauthorizedPage, ProtectedPage, NotFound };
+import MyInvites from "./MyInvites.jsx";
+
+export {
+  SignIn,
+  Workspace,
+  SignUp,
+  MyInvites,
+  Dashboard,
+  Home,
+  About,
+  Contact,
+  Guide,
+  Verify,
+  Projects,
+  ProjectInfo,
+  Chat,
+  Collaborators,
+  Todos,
+  Logs,
+  UnauthorizedPage,
+  ProtectedPage,
+  NotFound,
+};

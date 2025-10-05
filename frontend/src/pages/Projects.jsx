@@ -8,8 +8,7 @@ import { useForm, Controller } from 'react-hook-form';
 import DatePickerField from '../components/DatePickerField';
 import serverRequest from "../utils/axios.js"
 import { Loader } from '../components/index.js';
-import ProtectedPage from './ProtectedPage.jsx';
-// Empty state component for reuse
+
 const EmptyState = ({ icon: Icon, title, message, actionText, onAction }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -93,10 +92,6 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, loading }) => {
                         value: 3,
                         message: "Title must be at least 3 characters"
                       },
-                      pattern: {
-                        value: /^\S+$/, // no spaces allowed
-                        message: "Spaces are not allowed"
-                      }
                     })}
                     className={`w-full px-4 py-3 border ${errors.title ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-[#2a283a]'} dark:bg-[#13111d] dark:text-purple-100 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6229b3] focus:border-transparent transition-colors`}
                     placeholder="Enter project title"
@@ -119,10 +114,6 @@ const NewProjectModal = ({ isOpen, onClose, onSubmit, loading }) => {
                       minLength: {
                         value: 10,
                         message: "Description must be at least 10 characters"
-                      },
-                      pattern: {
-                        value: /^\S+$/, // no spaces allowed
-                        message: "Spaces are not allowed"
                       }
                     })}
                     rows="4"
@@ -485,9 +476,9 @@ export default function Projects() {
                         {/* Project Image - Square on the side */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
                           {project.ProjectImage?.url ? (
-                            <img 
-                              src={project.ProjectImage.url} 
-                              alt={project.title} 
+                            <img
+                              src={project.ProjectImage.url}
+                              alt={project.title}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -496,12 +487,12 @@ export default function Projects() {
                             </div>
                           )}
                         </div>
-                        
+
                         {/* Title and Status */}
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-purple-100">{project.title}</h3>
-                            
+
                             {/* Menu Button - Only for owner */}
                             {project.createdBy === user?.data?._id && (
                               <div className="relative z-10">
@@ -539,7 +530,7 @@ export default function Projects() {
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Status Badge */}
                           <div className="flex items-center mt-3">
                             <span
@@ -559,7 +550,7 @@ export default function Projects() {
                         <p className="text-xs sm:text-sm text-gray-600 dark:text-purple-200/70 mb-4">
                           {project.description}
                         </p>
-                        
+
                         {/* Deadline and Workspace Button */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
@@ -570,10 +561,10 @@ export default function Projects() {
                                 : "No deadline"}
                             </span>
                           </div>
-                          
-                          <button 
+
+                          <button
                             className="px-3 py-1.5 border border-gray-300 dark:border-[#2a283a] text-xs font-medium text-gray-700 dark:text-purple-200/80 hover:bg-gray-50 dark:hover:bg-[#13111d] rounded-md transition-colors"
-                            onClick={(e) => { 
+                            onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/workspace/${project.title}/${project._id}`);
                             }}
@@ -584,7 +575,7 @@ export default function Projects() {
                       </div>
                     </motion.div>
                   ))}
-                  
+
                   {/* Confirm Delete Modal */}
                   <ConfirmDeleteModal
                     isOpen={deleteModal.open}

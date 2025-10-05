@@ -8,15 +8,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStatus } from '../hooks/useAuthStatus.js';
 import serverRequest from '../utils/axios.js';
 import { useProject } from '../store/project.js';
-
+import { useSocketOn } from '../hooks/useSocket.js';
 export default function Workspace() {
   const { projectId, projectName } = useParams();
   const { isDark } = useTheme();
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isValid, setIsValid] = useState(false);
   const { isSignedIn } = useAuthStatus();
-  const { setInfo, info, setIsOwner, setOwner, setRoomID } = useProject();
+  const { setInfo, info, setIsOwner, setOwner, setRoomID, logs, addLog, setLogs } = useProject();
   const navigate = useNavigate();
+
   // lets verify first that you ve access to this project or not
   useEffect(() => {
     const verifyAccess_populateProject = async () => {
@@ -46,6 +48,13 @@ export default function Workspace() {
         setIsOwner(projectData?.isOwner || false);
         setOwner(ownerData);
 
+        const { data: logData } = await serverRequest.get(`/logs/${projectId}`, { headers: { "Content-Type": "application/json" } });
+        console.log("logData :", logData);
+        setLogs(logData?.data || []);
+
+        // if all goes well then only we set isValid to true
+        console.log("Project access verified and data populated.");
+        setIsValid(true);
       } catch (error) {
         if (error.status === 403) {
           navigate("/unauthorized", { replace: true });
@@ -63,7 +72,7 @@ export default function Workspace() {
 
   useEffect(() => {
     let socket;
-    if (isSignedIn && !loading) {
+    if (isSignedIn && !loading && isValid) {
       connectSocket().then(() => {
         socket = getSocket();
         if (!socket) return;
@@ -82,11 +91,33 @@ export default function Workspace() {
         disconnectSocket();
       }
     };
-  }, [isSignedIn, loading]);
+  }, [isSignedIn, loading, isValid]);
 
   useEffect(() => {
     console.log("Project Info updated:", info);
-  }, [info]);
+    console.log("Project Logs updated:", logs);
+  }, [info, logs]);
+
+  // ========== SOCKETS - Logs page ==========
+  useSocketOn("new-project-log", (newLog) => {
+    addLog(newLog);
+    console.log("New log received:", { newLog });
+  });
+
+  // ========== SOCKETS - Info page ==========
+  useSocketOn("project-details-update", (updatedInfo) => {
+    setInfo(updatedInfo);
+  });
+  useSocketOn("project-links-update", (updatedLinks) => {
+    setInfo(updatedLinks);
+  });
+  useSocketOn("project-srs-update", (updatedSrs) => {
+    setInfo(updatedSrs);
+  });
+  useSocketOn("project-description-update", (updatedDesc) => {
+    setInfo(updatedDesc);
+  });
+
   if (loading) {
     return (<div className='h-full w-full flex items-center bg-gray-50 dark:bg-[#0c0c0c] justify-center'>
       <Loader className={"text-4xl"} />
@@ -100,7 +131,7 @@ export default function Workspace() {
         <WorkspaceNav projectId={projectId} projectName={projectName} />
       </div>
       <main className="h-full flex-1 overflow-y-scroll hiddenScroll flex-col px-1 sm:px-6 pb-6 ">
-        <div className="mb-4 flex justify-between sticky z-[2] -top-1 items-center bg-gray-50 dark:bg-[#0c0a1a] sm:px-6">
+        <div className="mb-4 flex justify-between sticky z-[20] -top-1 items-center bg-gray-50 dark:bg-[#0c0a1a] sm:px-6">
           <h2 className="text-2xl font-bold">Workspace<span className='max-sm:hidden'>:{projectName}</span></h2>
           <div className='flex items-center gap-5'>
             <ThemeSwitch />

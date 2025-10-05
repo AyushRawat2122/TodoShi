@@ -122,19 +122,6 @@ export default function ProjectInfo() {
     }
   };
 
-  // ========== SOCKETS ==========
-  useSocketOn("project-details-update", (updatedInfo) => {
-    setInfo(updatedInfo);
-  });
-  useSocketOn("project-links-update", (updatedLinks) => {
-    setInfo(updatedLinks);
-  });
-  useSocketOn("project-srs-update", (updatedSrs) => {
-    setInfo(updatedSrs);
-  });
-  useSocketOn("project-description-update", (updatedDesc) => {
-    setInfo(updatedDesc);
-  });
 
   // ========== RENDER ==========
   return (
