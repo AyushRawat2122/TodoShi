@@ -449,22 +449,6 @@ export default function Collaborators() {
     });
   }, [collaborators, projectOwner, searchQuery]);
 
-  // Handle direct invite from search results
-  const handleInviteUserFromSearch = useCallback(async (user) => {
-    if (!isOwner) return;
-    
-    // TODO: API call to invite user
-    // Example:
-    // const response = await fetch(`/api/projects/${projectId}/invite`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email: user.email })
-    // });
-    
-    // Mock success for demonstration
-    return new Promise(resolve => setTimeout(resolve, 800));
-  }, [isOwner, projectId]);
-
   const handleRemove = useCallback((collaborator) => {
     if (!isOwner) return;
     setSelectedCollaborator(collaborator);
@@ -540,7 +524,6 @@ export default function Collaborators() {
         {isOwner && showSearchPanel && (
           <SearchInvitePanel 
             projectId={projectId}
-            onInviteUser={handleInviteUserFromSearch}
           />
         )}
 
