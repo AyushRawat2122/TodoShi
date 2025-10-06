@@ -9,7 +9,7 @@ import { useAuthStatus } from '../hooks/useAuthStatus.js';
 import serverRequest from '../utils/axios.js';
 import { useProject } from '../store/project.js';
 import { useSocketOn } from '../hooks/useSocket.js';
-
+import useUser from '../hooks/useUser.js';
 export default function Workspace() {
   const { projectId, projectName } = useParams();
   const { isDark } = useTheme();
@@ -17,8 +17,9 @@ export default function Workspace() {
   const [loading, setLoading] = useState(true);
   const [isValid, setIsValid] = useState(false);
   const { isSignedIn } = useAuthStatus();
-  const { setInfo, info, setIsOwner, setOwner, setRoomID, logs, addLog, setLogs, setTodos, addTodo, updateTodo, removeTodo, currentTodosDate } = useProject();
+  const { setInfo, info, setIsOwner, setOwner, setRoomID, logs, addLog, setLogs, setTodos, addTodo, updateTodo, removeTodo, currentTodosDate, removeCollaborator } = useProject();
   const navigate = useNavigate();
+  const { user } = useUser();
 
   // Utility function to format date in local timezone
   const formatDateToLocal = (date) => {
@@ -35,7 +36,7 @@ export default function Workspace() {
         const { data } = await serverRequest.get(`/projects/get/${projectId}`, { headers: { "Content-Type": "application/json" } });
         const projectData = data?.data;
         console.log("data :", projectData);
-        
+
         const newInfo = {
           activeStatus: true,
           description: projectData?.description,
@@ -144,12 +145,11 @@ export default function Workspace() {
   });
 
   // ========== SOCKETS - Todo Page Events ==========
-  // Only listen to todo events if currently viewing today's todos
   useSocketOn("new-todo", (newTodo) => {
     console.log("🔔 Socket received new-todo:", newTodo);
     console.log("📅 Todo date field:", newTodo.date);
     console.log("📅 Current todos date:", currentTodosDate);
-    
+
     // Now we use the date field directly - no timezone conversion needed!
     if (currentTodosDate === newTodo.date) {
       console.log("✅ Adding new todo to state");
@@ -186,6 +186,19 @@ export default function Workspace() {
     }
   });
 
+  // ========== SOCKETS - Collaborator left event ==========
+
+  useSocketOn("collaborator-left", (collaborator) => {
+    console.log("👤 Collaborator left:", collaborator.userName);
+    removeCollaborator(collaborator.userId);
+    if (collaborator.userId === user.data._id) {
+      disconnectSocket();
+      navigate("/", { replace: true });
+    }
+    // Handle collaborator left event (e.g., update UI)
+  });
+
+  // =======================================================================
   if (loading) {
     return (<div className='h-full w-full flex items-center bg-gray-50 dark:bg-[#0c0c0c] justify-center'>
       <Loader className={"text-4xl"} />

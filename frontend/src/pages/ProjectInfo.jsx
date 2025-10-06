@@ -439,10 +439,16 @@ const ModalFooter = ({ onClose, loading, submitText }) => (
 );
 
 // Modal content components
+
 const EditProjectModalContent = ({ info, onClose, onSubmit, loading }) => {
   const { register, handleSubmit, formState: { errors }, setValue } = useForm({
     mode: 'onChange',
-    defaultValues: { title: info.title || '', deadline: info.deadline || '' }
+    defaultValues: {
+      title: info.title || '',
+      deadline: info.deadline || '',
+      // default to current value; fallback to true (Active)
+      activeStatus: info.activeStatus === false ? 'false' : 'true',
+    }
   });
   const [deadlineValue, setDeadlineValue] = useState(info.deadline ? new Date(info.deadline) : null);
   const { roomID } = useProject();
@@ -481,6 +487,10 @@ const EditProjectModalContent = ({ info, onClose, onSubmit, loading }) => {
     if (imageFileRef.current) {
       formData.append("imageFile", imageFileRef.current);
     }
+    // ensure boolean, append at the end
+    const active = data.activeStatus === true || data.activeStatus === 'true';
+    formData.append("activeStatus", String(active));
+
     onSubmit(formData);
   };
 
@@ -516,6 +526,21 @@ const EditProjectModalContent = ({ info, onClose, onSubmit, loading }) => {
           disabled={loading}
         />
         <input type="hidden" {...register('deadline')} />
+      </div>
+
+      {/* Project Status */}
+      <div>
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-purple-200">Project Status</label>
+        <select
+          disabled={loading}
+          {...register('activeStatus', {
+            setValueAs: v => v === 'true',
+          })}
+          className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13111d] text-gray-800 dark:text-purple-100 border-gray-300 dark:border-[#c2a7fb]/30 ${loading ? 'opacity-60' : ''}`}
+        >
+          <option value="true">Active</option>
+          <option value="false">Completed</option>
+        </select>
       </div>
 
       <div>

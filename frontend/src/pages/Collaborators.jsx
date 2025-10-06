@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSearch, FaUserPlus, FaTimes, FaEllipsisV, FaUser } from 'react-icons/fa';
 import { BiX } from 'react-icons/bi';
+import { FiRefreshCw } from 'react-icons/fi';
 import { useProject } from '../store/project';
 import useUser from '../hooks/useUser';
 import Loader from '../components/Loader';
@@ -13,17 +14,22 @@ import serverRequest from '../utils/axios';
 // Memoized components to prevent unnecessary re-renders
 const TabNavigation = memo(({ activeTab, setActiveTab, tabs }) => {
   return (
-    <div className="flex mb-6 border-b border-gray-200 dark:border-[#2a283a] overflow-x-auto no-scrollbar">
+    <div className="flex mb-4 sm:mb-6 border-b border-gray-200 dark:border-[#2a283a] overflow-x-auto scrollbar-hide">
       {tabs.map(tab => (
         <button
           key={tab.id}
           onClick={() => setActiveTab(tab.id)}
-          className={`px-4 py-3 text-sm font-medium whitespace-nowrap flex-shrink-0 ${activeTab === tab.id
-            ? 'border-b-2 border-[#6229b3] text-[#6229b3] dark:border-[#c2a7fb] dark:text-[#c2a7fb]'
-            : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+          className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+            ? 'border-b-2 border-gray-900 dark:border-purple-100 text-gray-900 dark:text-purple-100'
+            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-purple-100'
             }`}
         >
-          {tab.label} {tab.count !== undefined && `(${tab.count})`}
+          <span>{tab.label}</span>
+          {tab.count !== undefined && (
+            <span className="ml-1.5 sm:ml-2 inline-flex items-center justify-center px-1.5 sm:px-2 py-0.5 text-xs font-bold leading-none text-white bg-purple-600 rounded-full">
+              {tab.count}
+            </span>
+          )}
         </button>
       ))}
     </div>
@@ -33,13 +39,13 @@ const TabNavigation = memo(({ activeTab, setActiveTab, tabs }) => {
 // Search input component
 const SearchBar = memo(({ value, onChange }) => {
   return (
-    <div className="relative mb-6">
+    <div className="relative mb-4 sm:mb-6">
       <input
         type="text"
         placeholder="Search collaborators..."
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-[#2a283a] rounded-lg bg-white dark:bg-[#13111d] text-gray-800 dark:text-purple-100 focus:outline-none focus:ring-1 focus:ring-[#6229b3] focus:border-transparent"
+        className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-[#2a283a] rounded-lg bg-white dark:bg-[#13111d] text-gray-800 dark:text-purple-100 focus:outline-none focus:ring-1 focus:ring-[#6229b3] focus:border-transparent"
       />
       <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
     </div>
@@ -47,56 +53,63 @@ const SearchBar = memo(({ value, onChange }) => {
 });
 
 // Request Tab Component with its own fetch logic
-const RequestsTab = memo(({ projectId, status, searchQuery, onCountUpdate }) => {
+const RequestsTab = memo(({ projectId, status, searchQuery, onCountUpdate, onRefresh }) => {
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch requests for this specific tab
-  useEffect(() => {
-    const fetchRequests = async () => {
-      setIsLoading(true);
-      console.log('RequestsTab - Fetching requests for project:', projectId, 'status:', status);
-      
-      try {
-        const response = await serverRequest.get(
-          `/collaborators/get-outgoing-requests/${projectId}`
-        );
+  const fetchRequests = useCallback(async () => {
+    setIsLoading(true);
+    console.log('RequestsTab - Fetching requests for project:', projectId, 'status:', status);
+    
+    try {
+      const response = await serverRequest.get(
+        `/collaborators/get-outgoing-requests/${projectId}`
+      );
 
-        console.log('RequestsTab - Fetch Response:', response.data);
+      console.log('RequestsTab - Fetch Response:', response.data);
 
-        if (response.data.success) {
-          console.log('RequestsTab - All Requests:', response.data.data);
-          
-          // Filter by status
-          const filteredRequests = response.data.data.filter(req => {
-            if (status === 'pending') return req.status === 'pending';
-            if (status === 'rejected') return req.status === 'rejected';
-            return true;
-          });
-          
-          console.log('RequestsTab - Filtered Requests:', filteredRequests);
-          setRequests(filteredRequests);
-          
-          // Update count for this tab
-          if (onCountUpdate) {
-            onCountUpdate(status, filteredRequests.length);
-          }
-        }
-      } catch (error) {
-        console.log('Error fetching requests:', error);
-        setRequests([]);
+      if (response.data.success) {
+        console.log('RequestsTab - All Requests:', response.data.data);
+        
+        // Filter by status
+        const filteredRequests = response.data.data.filter(req => {
+          if (status === 'pending') return req.status === 'pending';
+          if (status === 'rejected') return req.status === 'rejected';
+          return true;
+        });
+        
+        console.log('RequestsTab - Filtered Requests:', filteredRequests);
+        setRequests(filteredRequests);
+        
+        // Update count for this tab
         if (onCountUpdate) {
-          onCountUpdate(status, 0);
+          onCountUpdate(status, filteredRequests.length);
         }
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.log('Error fetching requests:', error);
+      setRequests([]);
+      if (onCountUpdate) {
+        onCountUpdate(status, 0);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, status, onCountUpdate]);
 
+  useEffect(() => {
     if (projectId) {
       fetchRequests();
     }
-  }, [projectId, status, onCountUpdate]);
+  }, [projectId, fetchRequests]);
+
+  // Expose refresh to parent
+  useEffect(() => {
+    if (onRefresh) {
+      onRefresh.current = fetchRequests;
+    }
+  }, [fetchRequests, onRefresh]);
 
   // Filter requests based on searchQuery
   const filteredRequests = useMemo(() => {
@@ -221,36 +234,36 @@ const CollaboratorRow = memo(({ collaborator, isOwner, currentUserId, onRemove }
   };
 
   return (
-    <div className="py-4 px-4 border-b border-gray-200 dark:border-[#2a283a] flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#2a283a]/30 transition-colors">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <UserAvatar user={collaborator} />
-        <div className="min-w-0">
-          <div className="font-medium text-gray-900 dark:text-purple-100 flex items-center gap-2 flex-wrap">
-            <span className="truncate">{collaborator.username || 'Unknown User'}</span>
-            {isProjectOwner && (
-              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 whitespace-nowrap">
-                Owner
-              </span>
-            )}
-            {isCurrentUser && <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">(You)</span>}
+    <div className="py-3 sm:py-4 px-3 sm:px-4 border-b border-gray-200 dark:border-[#2a283a] last:border-b-0 hover:bg-gray-50 dark:hover:bg-[#2a283a]/30 transition-colors">
+      <div className="flex items-center justify-between gap-3">
+        {/* Left side - Avatar and user info */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <div className="flex-shrink-0">
+            <UserAvatar user={collaborator} size="sm" />
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:hidden">
-            {isProjectOwner ? 'Project Owner' : `Joined ${formatDate(collaborator.joinedAt || collaborator.createdAt)}`}
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-sm sm:text-base text-gray-900 dark:text-purple-100 flex items-center gap-2 flex-wrap">
+              <span className="truncate">{collaborator.username || 'Unknown User'}</span>
+              {isProjectOwner && (
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 whitespace-nowrap">
+                  Owner
+                </span>
+              )}
+              {isCurrentUser && <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">(You)</span>}
+            </div>
+            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {isProjectOwner ? 'Project Owner' : `Joined ${formatDate(collaborator.joinedAt || collaborator.createdAt)}`}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-        <div className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap hidden sm:block">
-          {isProjectOwner ? 'Project Owner' : `Joined ${formatDate(collaborator.joinedAt || collaborator.createdAt)}`}
-        </div>
-
+        {/* Right side - Remove button */}
         {canManage && (
           <button
             onClick={() => onRemove(collaborator)}
-            className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 border-2 border-red-300 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-.5 whitespace-nowrap"
+            className="flex-shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-1 whitespace-nowrap"
           >
-            <BiX className="" />
+            <BiX className="w-4 h-4" />
             <span className="hidden sm:inline">Remove</span>
           </button>
         )}
@@ -267,31 +280,33 @@ const RequestRow = memo(({ request }) => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' });
   };
 
-  // For outgoing requests, we display the receiver (person being invited)
   const displayUser = request.receiverId || request.sender || {};
 
   return (
-    <div className="py-4 px-4 border-b border-gray-200 dark:border-[#2a283a] flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <UserAvatar user={displayUser} />
-        <div>
-          <div className="font-medium text-gray-900 dark:text-purple-100">
-            {displayUser.username || 'Unknown User'}
+    <div className="py-3 sm:py-4 px-3 sm:px-4 border-b border-gray-200 dark:border-[#2a283a] last:border-b-0 hover:bg-gray-50 dark:hover:bg-[#2a283a]/30 transition-colors">
+      <div className="flex items-center justify-between gap-3">
+        {/* Left side - Avatar and user info */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <div className="flex-shrink-0">
+            <UserAvatar user={displayUser} size="sm" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-sm sm:text-base text-gray-900 dark:text-purple-100 truncate">
+              {displayUser.username || 'Unknown User'}
+            </div>
+            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {`Sent ${formatDate(request.createdAt)}`}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${request.status === 'pending'
+        {/* Right side - Status badge */}
+        <span className={`flex-shrink-0 px-2 sm:px-2.5 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${request.status === 'pending'
             ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
           }`}>
           {request.status === 'pending' ? 'Pending' : 'Declined'}
         </span>
-
-        <div className="text-sm text-gray-500 dark:text-gray-400 min-w-24 text-right">
-          {`Sent ${formatDate(request.createdAt)}`}
-        </div>
       </div>
     </div>
   );
@@ -309,44 +324,46 @@ export default function Collaborators() {
   const [loading, setLoading] = useState(false);
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [projectOwner, setProjectOwner] = useState(null);
   const [requestCounts, setRequestCounts] = useState({ pending: 0, rejected: 0 });
+  const requestsTabRefreshRef = React.useRef(null);
 
   // Fetch collaborators on component mount
-  useEffect(() => {
-    const fetchCollaborators = async () => {
-      try {
-        setIsLoadingCollaborators(true);
-        console.log('Collaborators - Fetching for project:', projectId);
+  const fetchCollaborators = useCallback(async () => {
+    try {
+      setIsLoadingCollaborators(true);
+      console.log('Collaborators - Fetching for project:', projectId);
+      
+      const response = await serverRequest.get(
+        `/collaborators/get-collaborators/${projectId}`
+      );
+      
+      console.log('Collaborators - Fetch Response:', response.data);
+      
+      if (response.data.success) {
+        console.log('Collaborators - Data:', response.data.data);
         
-        const response = await serverRequest.get(
-          `/collaborators/get-collaborators/${projectId}`
-        );
-        
-        console.log('Collaborators - Fetch Response:', response.data);
-        
-        if (response.data.success) {
-          console.log('Collaborators - Data:', response.data.data);
-          
-          // Set project owner
-          if (response.data.data.createdBy) {
-            setProjectOwner(response.data.data.createdBy);
-          }
-          
-          // Set collaborators
-          setCollaborators(response.data.data.collaborators || []);
+        // Set project owner
+        if (response.data.data.createdBy) {
+          setProjectOwner(response.data.data.createdBy);
         }
-      } catch (error) {
-        console.log('Error fetching collaborators:', error);
-      } finally {
-        setIsLoadingCollaborators(false);
+        
+        // Set collaborators
+        setCollaborators(response.data.data.collaborators || []);
       }
-    };
+    } catch (error) {
+      console.log('Error fetching collaborators:', error);
+    } finally {
+      setIsLoadingCollaborators(false);
+    }
+  }, [projectId, setCollaborators]);
 
+  useEffect(() => {
     if (projectId) {
       fetchCollaborators();
     }
-  }, [projectId, setCollaborators]);
+  }, [projectId, fetchCollaborators]);
 
   // Fetch initial counts for pending and rejected tabs
   useEffect(() => {
@@ -484,14 +501,32 @@ export default function Collaborators() {
     return null;
   }, [isOwner, activeTab]);
 
+  // Handle refresh
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      if (activeTab === 'active') {
+        await fetchCollaborators();
+      } else if (requestsTabRefreshRef.current) {
+        await requestsTabRefreshRef.current();
+      }
+    } catch (error) {
+      console.log('Error refreshing:', error);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  }, [isRefreshing, activeTab, fetchCollaborators]);
+
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header section */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-purple-100">Project Collaborators</h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-purple-200/70 mt-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-purple-100">Project Collaborators</h1>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-purple-200/70 mt-1">
               {isOwner
                 ? "Manage team members and monitor collaboration requests"
                 : "View team members working on this project"}
@@ -501,10 +536,11 @@ export default function Collaborators() {
           {isOwner && (
             <button
               onClick={() => setShowSearchPanel(prev => !prev)}
-              className="px-4 py-2 bg-[#6229b3] dark:bg-[#8236ec] text-white rounded-md hover:bg-[#4c1f8e] dark:hover:bg-[#6229b3] transition-colors flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 text-sm bg-[#6229b3] dark:bg-[#8236ec] text-white rounded-md hover:bg-[#4c1f8e] dark:hover:bg-[#6229b3] transition-colors flex items-center gap-2 whitespace-nowrap"
             >
-              <FaSearch />
-              <span>{showSearchPanel ? "Hide Search" : "Find Users"}</span>
+              <FaSearch className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">{showSearchPanel ? "Hide Search" : "Find Users"}</span>
+              <span className="sm:hidden">Find</span>
             </button>
           )}
         </div>
@@ -519,15 +555,31 @@ export default function Collaborators() {
         {/* Search bar for filtering existing collaborators */}
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-        {/* Tab navigation */}
-        <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
+        {/* Tab navigation with Refresh Button */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6 border-b border-gray-200 dark:border-[#2a283a]">
+          <div className="flex overflow-x-auto scrollbar-hide flex-1">
+            <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
+          </div>
+          
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoadingCollaborators}
+            className={`ml-2 sm:ml-4 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[#1f1b31] hover:bg-gray-200 dark:hover:bg-[#2a283a] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
+              isRefreshing ? 'animate-pulse' : ''
+            }`}
+          >
+            <FiRefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
 
         {/* Content based on active tab */}
-        <div className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent border border-gray-200 dark:border-[#2a283a] rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent border border-gray-200 dark:border-[#2a283a] rounded-lg sm:rounded-xl overflow-hidden shadow-sm">
           {isLoadingCollaborators ? (
-            <div className="py-16 text-center">
-              <Loader className="mx-auto w-8 h-8 text-[#6229b3]" />
-              <p className="mt-4 text-gray-500 dark:text-gray-400">Loading collaborators...</p>
+            <div className="py-12 sm:py-16 text-center">
+              <Loader className="mx-auto w-6 h-6 sm:w-8 sm:h-8 text-[#6229b3]" />
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-500 dark:text-gray-400">Loading collaborators...</p>
             </div>
           ) : activeTab === 'active' ? (
             filteredCollaborators.length > 0 ? (
@@ -553,6 +605,7 @@ export default function Collaborators() {
               status={activeTab}
               searchQuery={searchQuery}
               onCountUpdate={handleCountUpdate}
+              onRefresh={requestsTabRefreshRef}
             />
           )}
         </div>

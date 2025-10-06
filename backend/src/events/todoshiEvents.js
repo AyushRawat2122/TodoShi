@@ -81,6 +81,34 @@ export default function registerSocketEvents() {
       }
     });
 
+    //project activeStatus toggled
+    socket.on("toggle-project-status", async ({ roomID, projectId, activeStatus }) => {
+      console.log("➡️ Toggling project status:", { roomID, projectId, activeStatus });
+      try {
+        if (!roomID || !projectId || typeof activeStatus !== "boolean") {
+          throw new Error("Room ID, project ID, and activeStatus are required");
+        }
+        const updatedProject = await Project.findByIdAndUpdate(
+          projectId,
+          { activeStatus },
+          { new: true }
+        );
+
+        if (!updatedProject) {
+          throw new Error("Project not found");
+        }
+
+        console.log("✅ Project status toggled:", updatedProject);
+        // Emit to all clients in the room
+        io.to(roomID).emit("project-status-toggled", {
+          activeStatus: updatedProject.activeStatus,
+        });
+      } catch (error) {
+        console.error("❌ Error toggling project status:", error);
+        socket.emit("server-error", `Error toggling project status: ${error.message}`);
+      }
+    });
+
     // ==================== Logs Page Events ===================== //
 
     // add-project-log
@@ -170,8 +198,6 @@ export default function registerSocketEvents() {
 
     // mark-todo-completed
     socket.on("mark-todo-completed", async ({ todoId, roomID }) => {
-      console.log("📥 mark-todo-completed event received:", { todoId, roomID, socketId: socket.id });
-
       try {
         if (!todoId?.trim() || !roomID?.trim()) {
           throw new Error("Todo ID and Room ID are required");

@@ -39,6 +39,27 @@ export const createProject = asyncHandler(async (req, res, next) => {
   return res.status(201).json(new ApiResponse(201, "Project created successfully", newProject));
 });
 
+export const projectToDisplay = asyncHandler(async (req, res, next) => {
+  const tokenUID = req.user.uid;
+  if (!tokenUID) {
+    return next(new ApiError(400, "User ID is required"));
+  }
+  const user = await User.findOne({ firebaseUID: tokenUID });
+  if (!user) {
+    return next(new ApiError(404, "User not found"));
+  }
+  const recentProjects = await Project.find({ createdBy: user._id })
+    .select("_id title ProjectImage activeStatus createdAt")
+    .sort({ createdAt: -1 })
+    .limit(4);
+  if (!recentProjects) {
+    return next(new ApiError(404, "No projects found"));
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Recent projects retrieved successfully", recentProjects));
+});
+
 export const getAllProjects = asyncHandler(async (req, res, next) => {
   const { userID } = req.params;
   const tokenUID = req.user.uid;
@@ -127,7 +148,9 @@ export const getProjectDetails = asyncHandler(async (req, res, next) => {
 
 export const updateProjectDetails = asyncHandler(async (req, res, next) => {
   const { projectID } = req.params;
-  const { title, deadline, roomID } = req.body;
+  const { title, deadline, roomID, activeStatus } = req.body;
+  console.log(activeStatus, title, deadline, roomID);
+
   const imageFile = req?.files?.imageFile?.[0];
   const project = await Project.findById(projectID);
   if (!project) {
@@ -157,6 +180,7 @@ export const updateProjectDetails = asyncHandler(async (req, res, next) => {
   if (deadline.trim() !== "") {
     updateFields.deadline = deadline;
   }
+  updateFields.activeStatus = activeStatus === "true" ? true : false;
 
   let updatedProject;
   if (Object.keys(updateFields).length > 0) {
@@ -176,6 +200,7 @@ export const updateProjectDetails = asyncHandler(async (req, res, next) => {
     image: updatedProject.ProjectImage,
     title: updatedProject.title,
     deadline: updatedProject.deadline,
+    activeStatus: updatedProject.activeStatus,
   });
 
   if (prevImageId && imageFile) {
@@ -239,4 +264,63 @@ export const uploadProjectSRS = asyncHandler(async (req, res, next) => {
     await deleteOnCloudinary(srsID);
   }
   return res.status(200).json(new ApiResponse(200, "Project updated successfully", {}));
+});
+
+export const leaveProject = asyncHandler(async (req, res, next) => {
+  const { projectID, userID } = req.params;
+  const tokenUID = req.user.uid;
+
+  if (!projectID.trim() || !userID.trim()) {
+    return next(new ApiError(400, "Project ID and User ID are required"));
+  }
+
+  const user = await User.findById(userID);
+  if (!user) {
+    return next(new ApiError(404, "User not found"));
+  }
+
+  // Verify token matches user
+  if (user.firebaseUID !== tokenUID) {
+    return next(new ApiError(403, "You are not authorized to perform this action"));
+  }
+
+  const project = await Project.findById(projectID);
+  if (!project) {
+    return next(new ApiError(404, "Project not found"));
+  }
+
+  // Check if user is the owner (owners cannot leave their own project)
+  if (project.createdBy.toString() === user._id.toString()) {
+    return next(new ApiError(400, "Project owner cannot leave the project. Delete it instead."));
+  }
+
+  // Check if user is actually a collaborator
+  const isCollaborator = project.collaborators.some((collab) => collab.equals(user._id));
+  if (!isCollaborator) {
+    return next(new ApiError(400, "You are not a collaborator in this project"));
+  }
+
+  // Remove user from collaborators array
+  const updatedProject = await Project.findByIdAndUpdate(
+    projectID,
+    { $pull: { collaborators: user._id } },
+    { new: true }
+  );
+
+  if (!updatedProject) {
+    return next(new ApiError(500, "Failed to leave project"));
+  }
+
+  // Emit socket event to notify other collaborators
+  const io = getSocketServer();
+  const roomID = project.title.trim().slice(0, 2) + projectID.trim();
+  io.to(roomID).emit("collaborator-left", {
+    userId: user._id,
+    userName: user.username,
+    projectId: projectID,
+  });
+
+  return res.status(200).json(
+    new ApiResponse(200, "Successfully left the project", { projectId: projectID })
+  );
 });

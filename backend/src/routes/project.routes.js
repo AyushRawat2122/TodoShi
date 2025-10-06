@@ -7,9 +7,13 @@ import {
   getProjectDetails,
   updateProjectDetails,
   uploadProjectSRS,
+  projectToDisplay,
+  leaveProject
 } from "../controllers/project.controller.js";
+
 const router = Router();
 
+router.route("/displayProjects/:userID").get(projectToDisplay);
 router.route("/create/:userID").post(createProject);
 router.route("/search/:userID").get(getAllProjects);
 router.route("/delete/:projectID/:userID").delete(deleteProject);
@@ -21,5 +25,7 @@ router
 router
   .route("/upload-srs/:projectID")
   .post(uploader.fields([{ name: "srs", maxCount: 1 }]), uploadProjectSRS);
+
+router.route("/leave/:projectID/:userID").delete(leaveProject);
 
 export default router;

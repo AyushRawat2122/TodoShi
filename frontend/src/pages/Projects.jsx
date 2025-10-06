@@ -233,6 +233,58 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, projectTitle, loading 
   </AnimatePresence>
 );
 
+// Add Leave Project Modal Component
+const ConfirmLeaveModal = ({ isOpen, onClose, onConfirm, projectTitle, loading }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="bg-white dark:bg-[#13111d] rounded-xl p-6 border border-gray-200 dark:border-[#2a283a] shadow-xl w-full max-w-sm"
+          onClick={e => e.stopPropagation()}
+        >
+          <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-purple-100">Leave Project</h3>
+          <p className="mb-6 text-gray-700 dark:text-purple-200">
+            Are you sure you want to leave <span className="font-semibold">{projectTitle}</span>? You will lose access to this project.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className={`px-4 py-2 border border-gray-300 dark:border-[#2a283a] rounded-md transition-colors ${
+                loading
+                  ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
+                  : "text-gray-700 dark:text-purple-200 hover:bg-gray-50 dark:hover:bg-[#13111d]"
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className={`px-4 py-2 rounded-md flex items-center transition-colors ${
+                loading
+                  ? "bg-red-300 text-white cursor-not-allowed"
+                  : "bg-red-600 text-white hover:bg-red-700"
+              }`}
+            >
+              <FaTimes className="mr-2" /> Leave
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
 export default function Projects() {
   const { userId } = useParams();
   const [activeTab, setActiveTab] = useState('All');
@@ -247,6 +299,11 @@ export default function Projects() {
   // - projectId: the _id of the project to delete
   // - projectTitle: the title of the project to show in the modal
   const [deleteModal, setDeleteModal] = useState({ open: false, projectId: null, projectTitle: "" });
+  // This state manages the leave confirmation modal for projects.
+  // - open: whether the modal is visible
+  // - projectId: the _id of the project to leave
+  // - projectTitle: the title of the project to show in the modal
+  const [leaveModal, setLeaveModal] = useState({ open: false, projectId: null, projectTitle: "" });
   console.log("reached");
   // Using useMemo for calculations to improve performance
   const filteredProjects = useMemo(() => {
@@ -319,6 +376,26 @@ export default function Projects() {
 
   const handleDeleteCancel = () => {
     setDeleteModal({ open: false, projectId: null, projectTitle: "" });
+  };
+
+  const handleLeaveClick = (projectId, projectTitle) => {
+    setLeaveModal({ open: true, projectId, projectTitle });
+    setMenuOpenId(null);
+  };
+
+  const handleLeaveConfirm = async () => {
+    try {
+      console.log("Leaving project with ID:", leaveModal.projectId);
+      await serverRequest.delete(`/projects/leave/${leaveModal.projectId}/${user?.data?._id}`);
+      setProjects(prev => prev.filter(p => p._id !== leaveModal.projectId));
+    } catch (error) {
+      console.error('Failed to leave project:', error);
+    }
+    setLeaveModal({ open: false, projectId: null, projectTitle: "" });
+  };
+
+  const handleLeaveCancel = () => {
+    setLeaveModal({ open: false, projectId: null, projectTitle: "" });
   };
 
   useEffect(() => {
@@ -504,29 +581,31 @@ export default function Projects() {
                           <div className="flex justify-between items-start">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-purple-100">{project.title}</h3>
 
-                            {/* Menu Button - Only for owner */}
-                            {project.createdBy === user?.data?._id && (
-                              <div className="relative z-10">
-                                <button
-                                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white p-1"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleMenuOpen(project._id);
-                                  }}
-                                  disabled={loading}
+                            {/* Menu Button - Show for both owner and collaborator */}
+                            <div className="relative z-10">
+                              <button
+                                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white p-1"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleMenuOpen(project._id);
+                                }}
+                                disabled={loading}
+                              >
+                                <FaEllipsisV />
+                              </button>
+                              {menuOpenId === project._id && (
+                                <div
+                                  className="absolute right-0 mt-1 w-36 bg-white dark:bg-[#13111d] border border-gray-200 dark:border-[#2a283a] rounded shadow-lg z-20"
+                                  onClick={e => e.stopPropagation()}
                                 >
-                                  <FaEllipsisV />
-                                </button>
-                                {menuOpenId === project._id && (
-                                  <div
-                                    className="absolute right-0 mt-1 w-36 bg-white dark:bg-[#13111d] border border-gray-200 dark:border-[#2a283a] rounded shadow-lg z-20"
-                                    onClick={e => e.stopPropagation()}
-                                  >
+                                  {/* Show Delete for owner */}
+                                  {project.createdBy === user?.data?._id && (
                                     <button
-                                      className={`w-full flex items-center px-4 py-2 text-sm rounded ${loading
-                                        ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
-                                        : "text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#2a283a]"
-                                        }`}
+                                      className={`w-full flex items-center px-4 py-2 text-sm rounded ${
+                                        loading
+                                          ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
+                                          : "text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#2a283a]"
+                                      }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteClick(project._id, project.title);
@@ -536,10 +615,29 @@ export default function Projects() {
                                     >
                                       <FaTrashAlt className="mr-2" /> Delete
                                     </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                                  )}
+                                  
+                                  {/* Show Leave for collaborator */}
+                                  {project.createdBy !== user?.data?._id && (
+                                    <button
+                                      className={`w-full flex items-center px-4 py-2 text-sm rounded ${
+                                        loading
+                                          ? "bg-gray-200 dark:bg-[#232136] text-gray-400 cursor-not-allowed"
+                                          : "text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#2a283a]"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleLeaveClick(project._id, project.title);
+                                        handleMenuClose();
+                                      }}
+                                      disabled={loading}
+                                    >
+                                      <FaTimes className="mr-2" /> Leave
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Status Badge */}
@@ -593,6 +691,15 @@ export default function Projects() {
                     onClose={handleDeleteCancel}
                     onConfirm={handleDeleteConfirm}
                     projectTitle={deleteModal.projectTitle}
+                    loading={loading}
+                  />
+
+                  {/* Confirm Leave Modal */}
+                  <ConfirmLeaveModal
+                    isOpen={leaveModal.open}
+                    onClose={handleLeaveCancel}
+                    onConfirm={handleLeaveConfirm}
+                    projectTitle={leaveModal.projectTitle}
                     loading={loading}
                   />
                 </div>

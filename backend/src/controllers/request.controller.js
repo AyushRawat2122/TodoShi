@@ -50,6 +50,7 @@ export const sendRequest = asyncHandler(async (req, res, next) => {
     senderId: sender._id,
     receiverId: receiver._id,
     projectId: project._id,
+    status: "pending",
   });
   if (existingRequest) {
     return next(new ApiError(409, "Collaboration request already exists"));

@@ -14,7 +14,7 @@ import { FiExternalLink } from 'react-icons/fi';
 import Loader from '../components/Loader.jsx';
 import useConnections from '../hooks/useConnections.js';
 import { linkGitHub, linkGoogle } from "../firebase/auth.js"
-
+import { GoProject } from "react-icons/go";
 
 const Popup = ({ isOpen, onClose, children }) => {
   // Always call hooks; guard the effect body with isOpen
@@ -103,6 +103,8 @@ const Dashboard = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [projectLoading, setProjectLoading] = useState(false);
+
   const isLarge = useIsLargeScreen();
 
 
@@ -169,6 +171,23 @@ const Dashboard = () => {
     });
   }, [connections]);
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setProjectLoading(true);
+      try {
+        const response = await serverRequest.get(`/projects/displayProjects/${user._id}`);
+        setProjects(response?.data?.data || []);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setProjectLoading(false);
+      }
+    };
+
+    if (user?._id) {
+      fetchProjects();
+    }
+  }, [user]);
 
   return (
     <motion.div
@@ -421,20 +440,28 @@ const Dashboard = () => {
               </div>
 
               <div className="space-y-5">
-
-                {projects.map(project => (
-                  <div key={project.id} className="border-b border-gray-200 dark:border-[#c2a7fb]/20 pb-4 last:border-0 last:pb-0 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 p-3 rounded-lg transition-colors">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium text-gray-800 dark:text-purple-100">{project.name}</h3>
-                        <p className="text-xs text-gray-500 dark:text-purple-300/60 mt-1">Updated {project.lastUpdated}</p>
+                {projectLoading && <div className="flex justify-center"><Loader className="w-5 h-5" /></div>}
+                {!projectLoading && <div>
+                  {projects.map(project => (
+                    <div key={project.id} className="border-b border-gray-200 dark:border-[#c2a7fb]/20 pb-4 last:border-0 last:pb-0 hover:bg-gray-50 dark:hover:bg-[#c2a7fb]/10 p-3 rounded-lg transition-colors">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className='flex items-center justify-center'>
+                            {project?.ProjectImage?.url !== "" && <img src={project.ProjectImage?.url || 'https://via.placeholder.com/40'} alt={project.title} className="w-10 h-10 rounded-full flex items-center justify-center object-cover mb-2" />}
+                            {project?.ProjectImage?.url === "" && <div className="w-10 h-10 flex justify-center items-center text-2xl font-extrabold text-white rounded-full border bg-purple-300 border-gray-200 dark:border-[#c2a7fb]/20"><GoProject /></div>}
+                          </div>
+                          <div className='flex flex-col justify-center'>
+                            <h3 className="font-medium text-gray-800 dark:text-purple-100">{project.title}</h3>
+                            <p className="text-xs text-gray-500 dark:text-purple-300/60 mt-1">created {new Date(project.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(project.activeStatus ? 'active' : 'inactive')}`}>
+                          {project.activeStatus ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(project.status)}`}>
-                        {project.status}
-                      </span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>}
               </div>
             </div>
 

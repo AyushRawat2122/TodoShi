@@ -3,6 +3,7 @@ import ApiError from "../utils/apiError.js";
 import ApiResponse from "../utils/apiResponse.js";
 import { Project, User, Request } from "../models/index.js";
 import { Types } from "mongoose";
+import { getSocketServer } from "../config/socket.js";
 //get all collaborators of a project
 export const getAllCollaborators = asyncHandler(async (req, res, next) => {
   const { projectID } = req.params;
@@ -42,9 +43,21 @@ export const removeCollaborator = asyncHandler(async (req, res, next) => {
   if (!project.collaborators.some((id) => id.toString() === collaboratorID)) {
     return next(new ApiError(404, "Collaborator not found in project"));
   }
+  const collaborator = await User.findById(collaboratorID);
+  if (!collaborator) {
+    return next(new ApiError(404, "Collaborator user not found"));
+  }
 
   project.collaborators.pull(collaboratorID);
   await project.save();
+  // Emit socket event to notify other collaborators
+  const io = getSocketServer();
+  const roomID = project.title.trim().slice(0, 2) + projectID.trim();
+  io.to(roomID).emit("collaborator-left", {
+    userId: collaborator._id,
+    userName: collaborator.username,
+    projectId: projectID,
+  });
 
   return res.status(200).json(new ApiResponse(200, "Collaborator removed successfully", {}));
 });
