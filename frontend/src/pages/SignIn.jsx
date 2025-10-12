@@ -45,8 +45,8 @@ const SignIn = () => {
             >
                 {isLargeScreen && (
                     <div className="relative overflow-hidden">
-                        <div className="absolute inset-0 dark:bg-black/15 z-10"></div>
-                        <img src="/Todoshi.png" alt="todoshi" className='w-full h-full object-cover relative z-0' />
+                        <div className="absolute inset-0 z-10"></div>
+                        <img src="/goodbyeChaos.png" alt="todoshi" className='w-full h-full object-cover relative z-0' />
                     </div>
                 )}
                 <div className={`p-10 ${isLargeScreen ? 'w-[40%]' : 'w-full'} dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent`}>

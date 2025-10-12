@@ -19,7 +19,7 @@ function App() {
   const { updateUser, updateLoading, updateSignInStatus } = useUser();
   const isLarge = useIsLargeScreen();
   const { setGithubConnection, setGoogleConnection, resetConnectionDetails } = useConnections();
-  const isglobalNavDisabled = location.pathname.startsWith('/workspace') || location.pathname.startsWith('/projects');
+  const isglobalNavDisabled = location.pathname.startsWith('/workspace') || location.pathname.startsWith('/projects') || location.pathname.startsWith('/user');
   const contentXPadding = !isglobalNavDisabled && isLarge ? 'px-10' : '';
   const { isSignedIn } = useAuthStatus();
   const isErrorPage = location.pathname === '/unauthorized' || location.pathname === '/not-found';
@@ -99,7 +99,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if(isAuthPage && isSignedIn){
+    if (isAuthPage && isSignedIn) {
       navigate('/', { replace: true });
     }
   }, [isSignedIn]);

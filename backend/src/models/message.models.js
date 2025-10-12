@@ -1,10 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 const messageSchema = new Schema(
   {
-    room_id: { type: Schema.Types.ObjectId, ref: "Chat", required: true },
+    project_id: { type: Schema.Types.ObjectId, ref: "Project", required: true },
     sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
     content: { type: String, required: true },
-    attachments: [{ type: String }],
+    attachment: { type: { public_id: String, url: String }, default: null },
   },
   { timestamps: true }
 );

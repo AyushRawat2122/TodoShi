@@ -10,6 +10,8 @@ import serverRequest from '../utils/axios.js';
 import { useProject } from '../store/project.js';
 import { useSocketOn } from '../hooks/useSocket.js';
 import useUser from '../hooks/useUser.js';
+import GlobalImageViewer from '../components/GlobalImageViewer.jsx';
+
 export default function Workspace() {
   const { projectId, projectName } = useParams();
   const { isDark } = useTheme();
@@ -17,7 +19,27 @@ export default function Workspace() {
   const [loading, setLoading] = useState(true);
   const [isValid, setIsValid] = useState(false);
   const { isSignedIn } = useAuthStatus();
-  const { setInfo, info, setIsOwner, setOwner, setRoomID, logs, addLog, setLogs, setTodos, addTodo, updateTodo, removeTodo, currentTodosDate, removeCollaborator } = useProject();
+  const {
+    setInfo,
+    info,
+    setIsOwner,
+    setOwner,
+    setRoomID,
+    logs,
+    addLog,
+    setLogs,
+    setTodos,
+    addTodo,
+    updateTodo,
+    removeTodo,
+    currentTodosDate,
+    removeCollaborator,
+    setOnlineUsers,
+    clearOnlineUsers,
+    addChat,
+    removeChat,
+    setChats,
+  } = useProject();
   const navigate = useNavigate();
   const { user } = useUser();
 
@@ -93,22 +115,47 @@ export default function Workspace() {
 
   useEffect(() => {
     let socket;
+    const roomID = projectName.trim().slice(0, 2) + projectId.trim();
     if (isSignedIn && !loading && isValid) {
       connectSocket().then(() => {
         socket = getSocket();
         if (!socket) return;
-        const roomID = projectName.trim().slice(0, 2) + projectId.trim();
         console.log("Joining room:", roomID);
-        const onConnect = () => console.log("🔌 Connected:", socket.id);
-        socket.on("connect", onConnect);
-        socket.emit("joinProjectRoom", { roomID: roomID })
-        socket.on("room-connection-error", (error) => { console.error("Room connection error:", error); })
-        socket.on("room-connection-success", (roomID) => { console.log("User Joined room Successfully:", roomID); setRoomID(roomID); })
+        
+        socket.on("connect", () => {
+          console.log("🔌 Connected:", socket.id);
+        });
+        
+        socket.emit("joinProjectRoom", { roomID: roomID, userId: user.data._id });
+        
+        socket.on("room-connection-error", (error) => { 
+          console.error("Room connection error:", error); 
+        });
+        
+        socket.on("room-connection-success", async (roomID) => {
+          console.log("User Joined room Successfully:", roomID);
+          setRoomID(roomID);
+          
+          // Fetch initial messages when room is joined successfully
+          try {
+            const { data } = await serverRequest.get(`/chats/getPreviousMessages/${projectId}`);
+            const messages = data?.data || [];
+            if (messages.length > 0) {
+              setChats(messages);
+            } else {
+              setChats([]);
+            }
+          } catch (error) {
+            console.error('Error fetching initial messages:', error);
+            setChats([]);
+          }
+        });
       });
     }
     return () => {
       if (socket) {
         socket.off("connect");
+        clearOnlineUsers();
         disconnectSocket();
       }
     };
@@ -186,16 +233,32 @@ export default function Workspace() {
     }
   });
 
-  // ========== SOCKETS - Collaborator left event ==========
+  // ========== SOCKETS - Online Users Update ==========
+  useSocketOn("online-users-update", ({ onlineUsers, totalCount }) => {
+    console.log("👥 Online users updated:", { onlineUsers, totalCount });
+    setOnlineUsers(onlineUsers);
+  });
 
+  // ========== SOCKETS - Collaborator left event ==========
   useSocketOn("collaborator-left", (collaborator) => {
     console.log("👤 Collaborator left:", collaborator.userName);
     removeCollaborator(collaborator.userId);
     if (collaborator.userId === user.data._id) {
+      clearOnlineUsers();
       disconnectSocket();
       navigate("/", { replace: true });
     }
-    // Handle collaborator left event (e.g., update UI)
+  });
+
+  // ========== SOCKETS - Chat Events ==========
+  useSocketOn("new-message", (newMessage) => {
+    console.log("📨 New message received:", newMessage);
+    addChat(newMessage);
+  });
+
+  useSocketOn("message-deleted", ({ messageId }) => {
+    console.log("🗑️ Message deleted:", messageId);
+    removeChat(messageId);
   });
 
   // =======================================================================
@@ -228,35 +291,13 @@ export default function Workspace() {
             </button>
           </div>
         </div>
-        <Outlet />
+        <Outlet className="flex-1" />
       </main>
-      {/* Framer Motion Popup Modal for whole page */}
-      <AnimatePresence>
-        {showModal && (
-          <motion.div
-            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg min-w-[300px]"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-            >
-              <h3 className="text-lg font-semibold mb-2">Popup Modal</h3>
-              <p className="mb-4">This is a simple popup modal.</p>
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded"
-                onClick={() => setShowModal(false)}
-              >
-                Close
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+      {/* Global Image Viewer */}
+      <GlobalImageViewer />
+
+
     </div>
   );
 }

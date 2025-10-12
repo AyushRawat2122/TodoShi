@@ -68,9 +68,13 @@ const About = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="bg-gray-100 dark:bg-[#0c0a1a]/30 dark:border dark:border-[#c2a7fb]/10 rounded-lg h-[300px] flex items-center justify-center"
+            className="dark:bg-[#0c0a1a]/30 dark:border dark:border-[#c2a7fb]/10 rounded-lg h-[00px] flex items-center justify-center"
           >
-            <div className="text-gray-400 dark:text-purple-300/60 text-2xl">Platform Preview</div>
+            <img
+              src="/teamwork.png"
+              alt="Info Page"
+              className="w-full rounded-md shadow-2xl object-cover"
+            />
           </motion.div>
         </div>
       </section>

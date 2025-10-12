@@ -50,7 +50,7 @@ export default function ProjectInfo() {
     const base = Array.isArray(info.links) ? info.links : [];
     return base.map(l => ({
       key: l._id || l.key || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      label: (l.name || l.label || "").trim(), 
+      label: (l.name || l.label || "").trim(),
       url: (l.url || "").trim(),
     }));
   });
@@ -97,7 +97,7 @@ export default function ProjectInfo() {
       setShowUpdateDesc(false);
     }
   };
-  
+
   const handleManageLinks = async (data) => {
     try {
       setManageLinksLoading(true);
@@ -109,7 +109,7 @@ export default function ProjectInfo() {
       setShowManageLinks(false);
     }
   };
-  
+
   const handleUploadSrs = async (formData) => {
     try {
       setUploadSrsLoading(true);
@@ -536,10 +536,10 @@ const EditProjectModalContent = ({ info, onClose, onSubmit, loading }) => {
           {...register('activeStatus', {
             setValueAs: v => v === 'true',
           })}
-          className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13111d] text-gray-800 dark:text-purple-100 border-gray-300 dark:border-[#c2a7fb]/30 ${loading ? 'opacity-60' : ''}`}
+          className={`w-[40%] px-3 py-2 border rounded-md bg-white dark:bg-[#13111d] text-gray-800 dark:text-purple-100 border-gray-300 dark:border-[#c2a7fb]/30 ${loading ? 'opacity-60' : ''}`}
         >
-          <option value="true">Active</option>
-          <option value="false">Completed</option>
+          <option value="true" className='hover:scale-[.6]' >Active</option>
+          <option value="false" className='hover:scale-[.6]' >Completed</option>
         </select>
       </div>
 

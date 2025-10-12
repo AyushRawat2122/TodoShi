@@ -143,6 +143,292 @@ button {
   background: transparent;
 }
 
+/* Custom Emoji Picker Styling - Google Style */
+.emoji-picker-dark,
+.emoji-picker-light {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.emoji-picker-dark .epr-emoji-category-label,
+.emoji-picker-light .epr-emoji-category-label {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  padding: 0.5rem 0.75rem;
+}
+
+.emoji-picker-dark .epr-search-container input,
+.emoji-picker-light .epr-search-container input {
+  font-size: 0.875rem;
+  padding: 0.625rem 1rem;
+  border-radius: 24px;
+}
+
+.emoji-picker-dark .epr-emoji-category-label {
+  color: #c2a7fb;
+  text-transform: uppercase;
+}
+
+.emoji-picker-light .epr-emoji-category-label {
+  color: #5f6368;
+  text-transform: uppercase;
+}
+
+/* Google-style emoji buttons */
+.emoji-picker-dark .epr-emoji,
+.emoji-picker-light .epr-emoji {
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.emoji-picker-dark .epr-emoji:hover {
+  background-color: #c2a7fb1a !important;
+}
+
+.emoji-picker-light .epr-emoji:hover {
+  background-color: #f1f3f4 !important;
+}
+
+/* Category navigation buttons - Google style */
+.emoji-picker-dark .epr-category-nav button,
+.emoji-picker-light .epr-category-nav button {
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.emoji-picker-dark .epr-category-nav button:hover {
+  background-color: #c2a7fb1a;
+}
+
+.emoji-picker-light .epr-category-nav button:hover {
+  background-color: #f1f3f4;
+}
+
+/* Search input styling */
+.emoji-picker-dark .epr-search input {
+  background-color: #0c0a1a;
+  border: 1px solid #2a283a;
+  color: #e9d5ff;
+}
+
+.emoji-picker-light .epr-search input {
+  background-color: #f1f3f4;
+  border: 1px solid #e8eaed;
+  color: #202124;
+}
+
+.emoji-picker-dark .epr-search input::placeholder {
+  color: #c2a7fb80;
+}
+
+.emoji-picker-light .epr-search input::placeholder {
+  color: #5f6368;
+}
+
+/* Custom Scrollbar for Emoji Picker */
+.emoji-picker-dark .epr-body::-webkit-scrollbar,
+.emoji-picker-light .epr-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.emoji-picker-dark .epr-body::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.emoji-picker-light .epr-body::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.emoji-picker-dark .epr-body::-webkit-scrollbar-thumb {
+  background: #2a283a;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.emoji-picker-light .epr-body::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.emoji-picker-dark .epr-body::-webkit-scrollbar-thumb:hover {
+  background: #c2a7fb;
+  background-clip: content-box;
+}
+
+.emoji-picker-light .epr-body::-webkit-scrollbar-thumb:hover {
+  background: #80868b;
+  background-clip: content-box;
+}
+
+/* Style the main emoji list scrollbar */
+.emoji-picker-dark .epr-emoji-list::-webkit-scrollbar,
+.emoji-picker-light .epr-emoji-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.emoji-picker-dark .epr-emoji-list::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.emoji-picker-light .epr-emoji-list::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.emoji-picker-dark .epr-emoji-list::-webkit-scrollbar-thumb {
+  background: #2a283a;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.emoji-picker-light .epr-emoji-list::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.emoji-picker-dark .epr-emoji-list::-webkit-scrollbar-thumb:hover {
+  background: #c2a7fb;
+  background-clip: content-box;
+}
+
+.emoji-picker-light .epr-emoji-list::-webkit-scrollbar-thumb:hover {
+  background: #80868b;
+  background-clip: content-box;
+}
+
+/* Custom Scrollbar for Chat Message List */
+.hiddenScroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.hiddenScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hiddenScroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.dark .hiddenScroll::-webkit-scrollbar-thumb {
+  background: #2a283a;
+}
+
+.hiddenScroll::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.dark .hiddenScroll::-webkit-scrollbar-thumb:hover {
+  background: #c2a7fb;
+}
+
+/* General app scrollbar styling */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.dark *::-webkit-scrollbar-track {
+  background: #0c0a1a;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: #2a283a;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: #c2a7fb;
+}
+
+/* WhatsApp-Style Emoji Sizing */
+.emoji-jumbo {
+  font-size: 4rem; /* 64px - Very large single emoji */
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.emoji-large {
+  font-size: 3rem; /* 48px - Large for 2-3 emojis */
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.emoji-medium {
+  font-size: 2rem; /* 32px - Medium for 4-6 emojis */
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.emoji-small {
+  font-size: 1.5rem; /* 24px - Smaller for many emojis */
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Emoji-only message container adjustments */
+.message-content-emoji-only {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+}
+
+/* For right-aligned (own) messages */
+.message-content-emoji-only.own-message {
+  justify-content: flex-end;
+}
+
+/* Responsive emoji sizing for mobile */
+@media (max-width: 640px) {
+  .emoji-jumbo {
+    font-size: 3.5rem; /* 56px on mobile */
+  }
+  
+  .emoji-large {
+    font-size: 2.5rem; /* 40px on mobile */
+  }
+  
+  .emoji-medium {
+    font-size: 1.75rem; /* 28px on mobile */
+  }
+  
+  .emoji-small {
+    font-size: 1.25rem; /* 20px on mobile */
+  }
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

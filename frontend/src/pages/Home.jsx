@@ -12,14 +12,14 @@ const Home = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const routeToProjects = () => {
-    if(!user.data){
+    if (!user.data) {
       console.log("User data not available yet. Server Busy");
       return;
     }
 
     if (isSignedIn && user?.data?._id) {
       navigate(`/projects/${user.data._id}`);
-    }else{
+    } else {
       navigate('/sign-up');
     }
   };
@@ -60,9 +60,13 @@ const Home = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="bg-gray-100 dark:bg-[#0c0a1a]/30 dark:border dark:border-[#c2a7fb]/10 rounded-lg h-[300px] md:h-[400px] flex items-center justify-center"
+            className="dark:bg-[#0c0a1a]/30 dark:border dark:border-[#c2a7fb]/10 rounded-lg h-[300px] md:h-[400px] flex items-center justify-center"
           >
-            <div className="text-gray-400 dark:text-purple-300/60 text-2xl">Dashboard Preview</div>
+            <img
+              src="/onboard.png"
+              alt="Onboarding Page"
+              className="h-full rounded-md shadow-2xl object-left object-cover"
+            />
           </motion.div>
         </div>
       </section>

@@ -17,6 +17,7 @@ import UnauthorizedPage from "./UnauthorizedPage.jsx";
 import ProtectedPage from "./ProtectedPage.jsx";
 import NotFound from "./4O4.jsx";
 import MyInvites from "./MyInvites.jsx";
+import User from "./User.jsx";
 
 export {
   SignIn,
@@ -38,4 +39,5 @@ export {
   UnauthorizedPage,
   ProtectedPage,
   NotFound,
+  User,
 };

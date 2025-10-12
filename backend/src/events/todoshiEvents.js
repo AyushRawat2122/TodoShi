@@ -1,6 +1,9 @@
 import { getSocketServer } from "../config/socket.js";
 import admin from "firebase-admin";
-import { Project, Log, Todo } from "../models/index.js";
+import { Project, Log, Todo, User } from "../models/index.js";
+
+const Rooms = new Map(); // roomID -> Set of users
+
 export default function registerSocketEvents() {
   const io = getSocketServer();
 
@@ -21,11 +24,41 @@ export default function registerSocketEvents() {
     console.log("⚡ User connected:", socket.id, socket.user);
 
     //events
-    socket.on("joinProjectRoom", ({ roomID }) => {
+    socket.on("joinProjectRoom", async ({ roomID, userId }) => {
       try {
         if (roomID) {
+          const user = await User.findById(userId).populate("avatar username _id").lean();
+          user.socketId = socket.id;
+          if (!user) {
+            throw new Error("User not found");
+          }
+
           socket.join(roomID);
+          if (Rooms.has(roomID)) {
+            const prev = Rooms.get(roomID);
+            if (prev.some((u) => u._id.toString() === userId)) {
+              throw new Error("User session in the workspace already exists");
+            }
+            Rooms.set(roomID, [...prev, user]);
+          } else {
+            Rooms.set(roomID, [user]);
+          }
+
           console.log(`➡️ User ${socket.id} joined room: ${roomID}`);
+          
+          // Get current online users in this room
+          const onlineUsers = Rooms.get(roomID) || [];
+          
+          // Emit to all users in the room about the updated online users list
+          io.to(roomID).emit("online-users-update", {
+            onlineUsers: onlineUsers.map(u => ({
+              userId: u._id,
+              username: u.username,
+              avatar: u.avatar
+            })),
+            totalCount: onlineUsers.length
+          });
+          
           socket.emit("room-connection-success", roomID);
         }
       } catch (error) {
@@ -283,9 +316,31 @@ export default function registerSocketEvents() {
       }
     });
 
-    //disconnect
     socket.on("disconnect", () => {
       console.log("❌ User disconnected:", socket.id);
+      
+      // Clean up user from all rooms
+      for (const [roomID, users] of Rooms.entries()) {
+        const filtered = users.filter((u) => u.socketId !== socket.id);
+
+        if (filtered.length === 0) {
+          Rooms.delete(roomID);
+          console.log(`🗑️ Room ${roomID} deleted (empty after disconnect)`);
+        } else if (filtered.length !== users.length) {
+          Rooms.set(roomID, filtered);
+          console.log(`🧹 Cleaned up disconnected user from room: ${roomID}`);
+          
+          // Emit updated online users list to remaining room members
+          io.to(roomID).emit("online-users-update", {
+            onlineUsers: filtered.map(u => ({
+              userId: u._id,
+              username: u.username,
+              avatar: u.avatar
+            })),
+            totalCount: filtered.length
+          });
+        }
+      }
     });
   });
 }

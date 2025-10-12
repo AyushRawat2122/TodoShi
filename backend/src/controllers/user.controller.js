@@ -203,3 +203,12 @@ export const updateBanner = asyncHandller(async (req, res, next) => {
     data: updatedUser,
   });
 });
+
+export const previewUser = asyncHandller(async (req, res, next) => {
+  const { userId } = req.params;
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ApiError(404, "No user is associated with this id."));
+  }
+  return res.status(200).json(new ApiResponse(200, "User fetched Successfully", user));
+});

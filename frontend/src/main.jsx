@@ -7,7 +7,7 @@ import { store } from './store/store.js';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import {
   SignIn, Workspace, SignUp, Dashboard, Home, About, Contact, Guide, Verify,
-  Projects, ProjectInfo, Chat, MyInvites, Collaborators, Todos, Logs, UnauthorizedPage, ProtectedPage, NotFound
+  Projects, ProjectInfo, Chat, MyInvites, Collaborators, Todos, Logs, UnauthorizedPage, ProtectedPage, NotFound, User
 } from './pages/index.js';
 
 const route = createBrowserRouter([
@@ -49,7 +49,13 @@ const route = createBrowserRouter([
           },
           { path: "dashboard", element: <Dashboard /> },
           { path: "contact", element: <Contact /> },
-          { path: "my-invites", element: <MyInvites /> }
+          { path: "my-invites", element: <MyInvites /> },
+          {
+            path: "user", children: [
+              { index: true, element: <Navigate to={"/"} replace={true} /> },
+              { path: ":userId", element: <User /> }
+            ]
+          }
         ]
       },
       // --- protected block end ---
