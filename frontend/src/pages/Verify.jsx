@@ -6,6 +6,7 @@ import TimedButton from '../components/TimedButton';
 import { getAuth, sendEmailVerification } from 'firebase/auth';
 import { app } from '../firebase/config';
 import { signOutUser } from '../firebase/auth';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 
 
 const Verify = () => {
@@ -14,24 +15,22 @@ const Verify = () => {
   const user = auth.currentUser;
 
   const handleSendVerification = async () => {
-    console.log(user);
     if (!user) {
-      console.log("No user found in local storage");
+      showErrorToast("No active user found. Please sign in again.");
       return;
     }
+    
     try {
       await sendEmailVerification(user);
-      console.log("Verification email sent");
+      showSuccessToast("Verification email sent successfully!");
     } catch (error) {
-      console.log('Error sending verification email:', error);
+      showErrorToast("Failed to send verification email. Please try again.");
     };
-    // Handle error appropriately, e.g., show a notification
   }
 
   useEffect(() => {
     return async () => {
-      console.log("signing out user");
-      await signOutUser(); // Sign out the user when the component unmounts so user can't trick us :)
+      await signOutUser(); // Sign out the user when the component unmounts
     };
   }, []);
 

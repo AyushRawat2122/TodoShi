@@ -7,6 +7,8 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import useIsLargeScreen from '../hooks/useIsLargeScreen';
 import { loginWithEmail } from "../firebase/auth.js"
 import useTheme from '../hooks/useTheme';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
+import Loader from '../components/Loader';
 
 const SignIn = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
@@ -24,12 +26,26 @@ const SignIn = () => {
         if (loading) return;
         try {
             localStorage.setItem("lastSignInMethod", "password");
-            console.log("Attempting to log in with email:", email);
             setLoading(true);
             await loginWithEmail(email, password);
-            console.log("logging in user");
+            showSuccessToast("Signed in successfully");
         } catch (error) {
-            console.log("Error logging in user:", error);
+            let errorMessage = "Failed to sign in. Please check your credentials.";
+            
+            // Handle specific Firebase auth errors
+            if (error.code === 'auth/user-not-found') {
+                errorMessage = "No account found with this email.";
+            } else if (error.code === 'auth/wrong-password') {
+                errorMessage = "Incorrect password.";
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = "Invalid email format.";
+            } else if (error.code === 'auth/user-disabled') {
+                errorMessage = "This account has been disabled.";
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = "Too many failed attempts. Try again later.";
+            }
+            
+            showErrorToast(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -109,9 +125,15 @@ const SignIn = () => {
                             className='w-full max-w-96 text-white py-2 rounded transition-all
                                 bg-[#8236ec] hover:bg-[#6229b3] 
                                 dark:bg-[#6229b3]/40 dark:hover:bg-[#6229b3]/70
-                                focus:outline-none focus:ring-2 focus:ring-[#6229b3]/50'
+                                focus:outline-none focus:ring-2 focus:ring-[#6229b3]/50
+                                flex items-center justify-center'
                         >
-                            {loading ? 'Signing in...' : 'Sign In'}
+                            {loading ? (
+                                <>
+                                    <Loader className="mr-2 text-white" /> 
+                                    Signing in...
+                                </>
+                            ) : 'Sign In'}
                         </button>
                     </form>
                     <p className='text-center text-sm text-gray-500 dark:text-gray-400 mt-4'>

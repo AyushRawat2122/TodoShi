@@ -10,6 +10,7 @@ import Loader from '../components/Loader';
 import UserAvatar from '../components/UserAvatar';
 import SearchInvitePanel from '../components/SearchInvitePanel';
 import serverRequest from '../utils/axios';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 
 // Memoized components to prevent unnecessary re-renders
 const TabNavigation = memo(({ activeTab, setActiveTab, tabs }) => {
@@ -60,18 +61,13 @@ const RequestsTab = memo(({ projectId, status, searchQuery, onCountUpdate, onRef
   // Fetch requests for this specific tab
   const fetchRequests = useCallback(async () => {
     setIsLoading(true);
-    console.log('RequestsTab - Fetching requests for project:', projectId, 'status:', status);
     
     try {
       const response = await serverRequest.get(
         `/collaborators/get-outgoing-requests/${projectId}`
       );
 
-      console.log('RequestsTab - Fetch Response:', response.data);
-
       if (response.data.success) {
-        console.log('RequestsTab - All Requests:', response.data.data);
-        
         // Filter by status
         const filteredRequests = response.data.data.filter(req => {
           if (status === 'pending') return req.status === 'pending';
@@ -79,7 +75,6 @@ const RequestsTab = memo(({ projectId, status, searchQuery, onCountUpdate, onRef
           return true;
         });
         
-        console.log('RequestsTab - Filtered Requests:', filteredRequests);
         setRequests(filteredRequests);
         
         // Update count for this tab
@@ -88,7 +83,7 @@ const RequestsTab = memo(({ projectId, status, searchQuery, onCountUpdate, onRef
         }
       }
     } catch (error) {
-      console.log('Error fetching requests:', error);
+      showErrorToast('Failed to load collaboration requests');
       setRequests([]);
       if (onCountUpdate) {
         onCountUpdate(status, 0);
@@ -333,17 +328,12 @@ export default function Collaborators() {
   const fetchCollaborators = useCallback(async () => {
     try {
       setIsLoadingCollaborators(true);
-      console.log('Collaborators - Fetching for project:', projectId);
       
       const response = await serverRequest.get(
         `/collaborators/get-collaborators/${projectId}`
       );
       
-      console.log('Collaborators - Fetch Response:', response.data);
-      
       if (response.data.success) {
-        console.log('Collaborators - Data:', response.data.data);
-        
         // Set project owner
         if (response.data.data.createdBy) {
           setProjectOwner(response.data.data.createdBy);
@@ -353,7 +343,7 @@ export default function Collaborators() {
         setCollaborators(response.data.data.collaborators || []);
       }
     } catch (error) {
-      console.log('Error fetching collaborators:', error);
+      showErrorToast('Failed to load collaborators');
     } finally {
       setIsLoadingCollaborators(false);
     }
@@ -386,7 +376,7 @@ export default function Collaborators() {
           });
         }
       } catch (error) {
-        console.log('Error fetching request counts:', error);
+        // Silently fail - this is just for counts
       }
     };
 
@@ -464,22 +454,20 @@ export default function Collaborators() {
   const handleConfirmRemove = useCallback(async () => {
     if (!isOwner || !selectedCollaborator) return;
 
-    console.log('Collaborators - Removing collaborator:', selectedCollaborator, 'from project:', projectId);
     setLoading(true);
     try {
       const response = await serverRequest.delete(
         `/collaborators/remove-collaborator/${selectedCollaborator._id}/${projectId}`
       );
 
-      console.log('Collaborators - Remove Response:', response.data);
-
       if (response.data.success) {
         setCollaborators(prev => prev.filter(c => c._id !== selectedCollaborator._id));
         setIsConfirmModalOpen(false);
         setSelectedCollaborator(null);
+        showSuccessToast(`Removed ${selectedCollaborator?.username || 'collaborator'} successfully`);
       }
     } catch (error) {
-      console.log('Error removing collaborator:', error);
+      showErrorToast('Failed to remove collaborator');
     } finally {
       setLoading(false);
     }
@@ -513,7 +501,7 @@ export default function Collaborators() {
         await requestsTabRefreshRef.current();
       }
     } catch (error) {
-      console.log('Error refreshing:', error);
+      showErrorToast('Failed to refresh data');
     } finally {
       setTimeout(() => setIsRefreshing(false), 500);
     }

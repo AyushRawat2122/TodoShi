@@ -4,13 +4,13 @@ import WorkspaceNav from '../components/WorkspaceNav.jsx';
 import useTheme from '../hooks/useTheme';
 import { ThemeSwitch, Loader } from '../components/index.js';
 import { connectSocket, getSocket, disconnectSocket } from "../utils/socket.js"
-import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStatus } from '../hooks/useAuthStatus.js';
 import serverRequest from '../utils/axios.js';
 import { useProject } from '../store/project.js';
 import { useSocketOn } from '../hooks/useSocket.js';
 import useUser from '../hooks/useUser.js';
 import GlobalImageViewer from '../components/GlobalImageViewer.jsx';
+import { showErrorToast, showInfoToast } from '../utils/toastMethods';
 
 export default function Workspace() {
   const { projectId, projectName } = useParams();
@@ -57,7 +57,6 @@ export default function Workspace() {
       try {
         const { data } = await serverRequest.get(`/projects/get/${projectId}`, { headers: { "Content-Type": "application/json" } });
         const projectData = data?.data;
-        console.log("data :", projectData);
 
         const newInfo = {
           activeStatus: true,
@@ -86,17 +85,13 @@ export default function Workspace() {
 
         // Fetch current date todos
         const currentDateString = formatDateToLocal(new Date());
-        console.log("📅 Fetching todos for current date:", currentDateString);
         try {
           const { data: todoData } = await serverRequest.get(`/todos/${projectId}?date=${currentDateString}`);
-          console.log("✅ Current date todos fetched:", todoData?.data);
           setTodos(todoData?.data || [], currentDateString);
         } catch (todoError) {
-          console.error("❌ Error fetching current date todos:", todoError);
           setTodos([], currentDateString);
         }
 
-        console.log("Project access verified and data populated.");
         setIsValid(true);
       } catch (error) {
         if (error.status === 403) {
@@ -120,22 +115,20 @@ export default function Workspace() {
       connectSocket().then(() => {
         socket = getSocket();
         if (!socket) return;
-        console.log("Joining room:", roomID);
-        
+
         socket.on("connect", () => {
-          console.log("🔌 Connected:", socket.id);
+          // Connection established - debug only
         });
-        
+
         socket.emit("joinProjectRoom", { roomID: roomID, userId: user.data._id });
-        
-        socket.on("room-connection-error", (error) => { 
-          console.error("Room connection error:", error); 
+
+        socket.on("room-connection-error", (message, error) => {
+          showErrorToast(`Connection error: ${message || "room connection failed"}`);
         });
-        
+
         socket.on("room-connection-success", async (roomID) => {
-          console.log("User Joined room Successfully:", roomID);
           setRoomID(roomID);
-          
+
           // Fetch initial messages when room is joined successfully
           try {
             const { data } = await serverRequest.get(`/chats/getPreviousMessages/${projectId}`);
@@ -146,7 +139,6 @@ export default function Workspace() {
               setChats([]);
             }
           } catch (error) {
-            console.error('Error fetching initial messages:', error);
             setChats([]);
           }
         });
@@ -161,88 +153,70 @@ export default function Workspace() {
     };
   }, [isSignedIn, loading, isValid]);
 
-  useEffect(() => {
-    console.log("Project Info updated:", info);
-    console.log("Project Logs updated:", logs);
-  }, [info, logs]);
-
-  // ========== SOCKETS - Server Errors ==========
+  // ========== SOCKETS - Server Errors (KEEP TOAST) =========
   useSocketOn("server-error", (errorMsg) => {
-    console.log(errorMsg);
+    showErrorToast(errorMsg);
   });
 
-  // ========== SOCKETS - Logs page ==========
+  // ========== SOCKETS - Logs page (KEEP TOAST) =========
   useSocketOn("new-project-log", (newLog) => {
     addLog(newLog);
-    console.log("New log received:", { newLog });
+    showInfoToast(`New log: ${newLog.description || 'Log added'}`);
   });
 
-  // ========== SOCKETS - Info page ==========
+  // ========== SOCKETS - Info page (KEEP TOAST) =========
   useSocketOn("project-details-update", (updatedInfo) => {
     setInfo(updatedInfo);
+    showInfoToast('Project details updated');
   });
+
   useSocketOn("project-links-update", (updatedLinks) => {
     setInfo(updatedLinks);
   });
+
   useSocketOn("project-srs-update", (updatedSrs) => {
     setInfo(updatedSrs);
   });
+
   useSocketOn("project-description-update", (updatedDesc) => {
     setInfo(updatedDesc);
   });
 
-  // ========== SOCKETS - Todo Page Events ==========
+  // ========== SOCKETS - Todo Page Events (REMOVE TOASTS) =========
   useSocketOn("new-todo", (newTodo) => {
-    console.log("🔔 Socket received new-todo:", newTodo);
-    console.log("📅 Todo date field:", newTodo.date);
-    console.log("📅 Current todos date:", currentTodosDate);
-
-    // Now we use the date field directly - no timezone conversion needed!
     if (currentTodosDate === newTodo.date) {
-      console.log("✅ Adding new todo to state");
       addTodo(newTodo);
-    } else {
-      console.log("⏭️ Ignoring new-todo event - viewing different date");
+      showInfoToast('New task added');
     }
   });
 
   useSocketOn("todo-completed", (updatedTodo) => {
     if (currentTodosDate === updatedTodo.date) {
-      console.log("✅ Todo completed via socket:", updatedTodo);
       updateTodo(updatedTodo._id, { status: true });
-    } else {
-      console.log("⏭️ Ignoring todo-completed event - viewing different date");
     }
   });
 
   useSocketOn("todo-pending", (updatedTodo) => {
     if (currentTodosDate === updatedTodo.date) {
-      console.log("⏳ Todo marked pending via socket:", updatedTodo);
       updateTodo(updatedTodo._id, { status: false });
-    } else {
-      console.log("⏭️ Ignoring todo-pending event - viewing different date");
     }
   });
 
   useSocketOn("todo-deleted", (deletedTodo) => {
     if (currentTodosDate === deletedTodo.date) {
-      console.log("🗑️ Todo deleted via socket:", deletedTodo);
       removeTodo(deletedTodo._id);
-    } else {
-      console.log("⏭️ Ignoring todo-deleted event - viewing different date");
     }
   });
 
-  // ========== SOCKETS - Online Users Update ==========
+  // ========== SOCKETS - Online Users Update (NO TOAST) =========
   useSocketOn("online-users-update", ({ onlineUsers, totalCount }) => {
-    console.log("👥 Online users updated:", { onlineUsers, totalCount });
     setOnlineUsers(onlineUsers);
   });
 
-  // ========== SOCKETS - Collaborator left event ==========
+  // ========== SOCKETS - Collaborator left event (REMOVE TOAST) =========
   useSocketOn("collaborator-left", (collaborator) => {
-    console.log("👤 Collaborator left:", collaborator.userName);
     removeCollaborator(collaborator.userId);
+
     if (collaborator.userId === user.data._id) {
       clearOnlineUsers();
       disconnectSocket();
@@ -250,14 +224,12 @@ export default function Workspace() {
     }
   });
 
-  // ========== SOCKETS - Chat Events ==========
+  // ========== SOCKETS - Chat Events  =========
   useSocketOn("new-message", (newMessage) => {
-    console.log("📨 New message received:", newMessage);
     addChat(newMessage);
   });
 
   useSocketOn("message-deleted", ({ messageId }) => {
-    console.log("🗑️ Message deleted:", messageId);
     removeChat(messageId);
   });
 
@@ -296,8 +268,6 @@ export default function Workspace() {
 
       {/* Global Image Viewer */}
       <GlobalImageViewer />
-
-
     </div>
   );
 }

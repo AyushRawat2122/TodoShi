@@ -9,6 +9,7 @@ import { useProject } from '../store/project';
 import Loader from '../components/Loader';
 import useUser from '../hooks/useUser';
 import serverRequest from '../utils/axios';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 
 export default function Todos() {
   const { projectId } = useParams();
@@ -23,7 +24,6 @@ export default function Todos() {
 
   // Get project creation date and current date for date range
   const projectCreatedDate = useMemo(() => {
-    console.log("Project info:", info);
     const date = info?.createdAt ? new Date(info.createdAt) : new Date();
     date.setHours(0, 0, 0, 0);
     return date;
@@ -75,29 +75,15 @@ export default function Todos() {
       
       // Check if we already have this date's todos loaded
       if (currentTodosDate === dateString) {
-        console.log('📅 Todos for', dateString, 'already loaded in global state');
         return;
       }
-
-      console.log('📡 Fetching todos for date:', dateString);
-      console.log('📅 Selected date object:', selectedDate);
-      console.log('📅 Formatted date string:', dateString);
       
       setLoading(true);
       try {
         const { data } = await serverRequest.get(`/todos/${projectId}?date=${dateString}`);
-        console.log('📥 API Response for', dateString, ':', data?.data);
-        
-        // Log each todo's createdAt for debugging
-        if (data?.data) {
-          data.data.forEach(todo => {
-            console.log('📋 Todo:', todo.title, 'createdAt:', todo.createdAt);
-          });
-        }
-        
         setTodos(data?.data || [], dateString);
       } catch (error) {
-        console.error('❌ Error fetching todos:', error);
+        showErrorToast('Failed to load tasks for the selected date');
         setTodos([], dateString);
       } finally {
         setLoading(false);
@@ -133,12 +119,12 @@ export default function Todos() {
   // Handle adding a new todo
   const onSubmit = async (data) => {
     if (!isCurrentDate) {
-      alert('⚠️ You can only add todos for today');
+      showErrorToast('You can only add tasks for today');
       return;
     }
 
     if (!userId || !projectId || !roomID) {
-      alert('❌ Missing required data. Please refresh the page.');
+      showErrorToast('Missing required data. Please refresh the page.');
       return;
     }
 
@@ -158,12 +144,10 @@ export default function Todos() {
         date: currentDateString // Send the local date string
       });
 
-      console.log('✅ Emitted new-todo with date:', currentDateString);
-
+      showSuccessToast('Task added successfully');
       reset({ title: '', description: '', priority: 'medium' });
     } catch (error) {
-      console.error('❌ Error adding todo:', error);
-      alert('❌ Failed to add todo');
+      showErrorToast('Failed to add task');
     } finally {
       setSubmitting(false);
     }
@@ -175,7 +159,7 @@ export default function Todos() {
     
     // Check if user is the creator
     if (!isCreator(todo)) {
-      console.log('⚠️ User is not the creator of this todo');
+      showErrorToast('You can only update your own tasks');
       return;
     }
 
@@ -188,13 +172,13 @@ export default function Todos() {
     e.stopPropagation();
 
     if (!isCurrentDate) {
-      alert('⚠️ You can only delete todos from today');
+      showErrorToast('You can only delete tasks from today');
       return;
     }
 
     // Check if user is the creator
     if (!isCreator(todo)) {
-      alert('⚠️ You can only delete your own todos');
+      showErrorToast('You can only delete your own tasks');
       return;
     }
 

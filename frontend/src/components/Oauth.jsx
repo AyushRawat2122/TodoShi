@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { signInWithGitHub, signInWithGoogle } from "../firebase/auth.js";
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
+import { showErrorToast } from '../utils/toastMethods';
 
 const Oauth = () => {
     const [loading, setLoading] = useState(false);
@@ -12,10 +13,9 @@ const Oauth = () => {
             localStorage.setItem("lastSignInMethod", "oauth");
             await signInWithGitHub();
         } catch (error) {
-            const errorCode = error.code;
             const errorMessage = error.message;
             localStorage.removeItem("lastSignInMethod");
-            console.error("GitHub Sign-In Error:", errorCode, errorMessage);
+            showErrorToast(`GitHub Sign-In Error: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -28,10 +28,9 @@ const Oauth = () => {
             localStorage.setItem("lastSignInMethod", "oauth");
             await signInWithGoogle();
         } catch (error) {
-            const errorCode = error.code;
             const errorMessage = error.message;
-            localStorage.removeItemItem("lastSignInMethod");
-            console.error("Google Sign-In Error:", errorCode, errorMessage);
+            localStorage.removeItem("lastSignInMethod"); // Fixed typo here
+            showErrorToast(`Google Sign-In Error: ${errorMessage}`);
         } finally {
             setLoading(false);
         }

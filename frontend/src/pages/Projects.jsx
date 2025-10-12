@@ -9,6 +9,8 @@ import DatePickerField from '../components/DatePickerField';
 import serverRequest from "../utils/axios.js"
 import { Loader } from '../components/index.js';
 import { IoMdNotifications } from "react-icons/io";
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
+
 const EmptyState = ({ icon: Icon, title, message, actionText, onAction }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -288,28 +290,18 @@ const ConfirmLeaveModal = ({ isOpen, onClose, onConfirm, projectTitle, loading }
 export default function Projects() {
   const { userId } = useParams();
   const [activeTab, setActiveTab] = useState('All');
-  const { user, isLoading } = useUser(); // <-- get isLoading from useUser
+  const { user, isLoading } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Projects state instead of constant
   const [projects, setProjects] = useState([]);
   const [menuOpenId, setMenuOpenId] = useState(null);
-  // This state manages the delete confirmation modal for projects.
-  // - open: whether the modal is visible
-  // - projectId: the _id of the project to delete
-  // - projectTitle: the title of the project to show in the modal
   const [deleteModal, setDeleteModal] = useState({ open: false, projectId: null, projectTitle: "" });
-  // This state manages the leave confirmation modal for projects.
-  // - open: whether the modal is visible
-  // - projectId: the _id of the project to leave
-  // - projectTitle: the title of the project to show in the modal
   const [leaveModal, setLeaveModal] = useState({ open: false, projectId: null, projectTitle: "" });
-  console.log("reached");
+  
   // Using useMemo for calculations to improve performance
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
       if (activeTab === 'All') return true;
-      // Use activeStatus boolean for filtering
       if (activeTab === 'Active') return project.activeStatus === true;
       if (activeTab === 'Completed') return project.activeStatus === false;
       return true;
@@ -339,11 +331,11 @@ export default function Projects() {
     if (!userId && loading) return;
     setLoading(true);
     try {
-      console.log("Creating project for user:", userId, projectData);
       const response = await serverRequest.post(`/projects/create/${userId}`, projectData, { headers: { 'Content-Type': 'application/json' } });
       setProjects(prev => [response.data.data, ...prev]);
+      showSuccessToast(`Project "${projectData.title}" created successfully!`);
     } catch (error) {
-      console.error('Failed to create project:', error);
+      showErrorToast('Failed to create project. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -364,12 +356,11 @@ export default function Projects() {
 
   const handleDeleteConfirm = async () => {
     try {
-      // API call to delete project
-      console.log("Deleting project with ID:", deleteModal.projectId);
       await serverRequest.delete(`/projects/delete/${deleteModal.projectId}/${user?.data?._id}`);
       setProjects(prev => prev.filter(p => p._id !== deleteModal.projectId));
+      showSuccessToast(`Project "${deleteModal.projectTitle}" deleted successfully`);
     } catch (error) {
-      console.error('Failed to delete project:', error);
+      showErrorToast('Failed to delete project. Please try again.');
     }
     setDeleteModal({ open: false, projectId: null, projectTitle: "" });
   };
@@ -385,11 +376,11 @@ export default function Projects() {
 
   const handleLeaveConfirm = async () => {
     try {
-      console.log("Leaving project with ID:", leaveModal.projectId);
       await serverRequest.delete(`/projects/leave/${leaveModal.projectId}/${user?.data?._id}`);
       setProjects(prev => prev.filter(p => p._id !== leaveModal.projectId));
+      showSuccessToast(`You have left project "${leaveModal.projectTitle}"`);
     } catch (error) {
-      console.error('Failed to leave project:', error);
+      showErrorToast('Failed to leave project. Please try again.');
     }
     setLeaveModal({ open: false, projectId: null, projectTitle: "" });
   };
@@ -403,12 +394,10 @@ export default function Projects() {
       if (loading) return;
       setLoading(true);
       try {
-        console.log("Fetching projects for user:", userId);
         const response = await serverRequest.get(`/projects/search/${userId}`);
-        console.log('Fetched projects:', response.data.data);
         setProjects(response?.data.data || []);
       } catch (error) {
-        console.log(error);
+        showErrorToast('Failed to load projects. Please refresh the page.');
       } finally {
         setLoading(false);
       }
@@ -416,7 +405,6 @@ export default function Projects() {
     if (userId && userId === user?.data?._id) {
       getProjects();
     }
-
   }, [userId, user]);
 
   if (!isLoading && userId !== user?.data?._id) {

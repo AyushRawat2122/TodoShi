@@ -439,3 +439,55 @@ button {
     scrollbar-width: none;  /* Firefox */
   }
 }
+
+/* Emoji Picker Popup Styling */
+.emoji-picker-container {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  z-index: 99;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.06));
+}
+
+/* Dark mode emoji picker */
+html.dark .emoji-picker-react {
+  border: 1px solid #2a283a !important;
+  background-color: #13111d !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Light mode emoji picker */
+html:not(.dark) .emoji-picker-react {
+  border: 1px solid #e5e7eb !important;
+  background-color: white !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.emoji-picker-react {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.emoji-picker-react:before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 20px;
+  width: 16px;
+  height: 16px;
+  transform: rotate(45deg);
+  z-index: -1;
+}
+
+html.dark .emoji-picker-react:before {
+  background-color: #13111d;
+  border-bottom: 1px solid #2a283a;
+  border-right: 1px solid #2a283a;
+}
+
+html:not(.dark) .emoji-picker-react:before {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+}

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import InviteListItem from './InviteListItem';
 import Loader from './Loader';
 import serverRequest from '../utils/axios';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 
 const SearchInvitePanel = ({ projectId, onInviteUser }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,21 +22,16 @@ const SearchInvitePanel = ({ projectId, onInviteUser }) => {
     const timeoutId = setTimeout(async () => {
       setIsSearching(true);
       
-      console.log('SearchInvitePanel - Searching for:', searchQuery);
-      
       try {
         const response = await serverRequest.get(
           `/collaborators/search-users?query=${encodeURIComponent(searchQuery)}`
         );
 
-        console.log('SearchInvitePanel - Search Response:', response.data);
-
         if (response.data.success) {
-          console.log('SearchInvitePanel - Search Results:', response.data.data);
           setSearchResults(response.data.data || []);
         }
       } catch (error) {
-        console.log('Error searching users:', error);
+        showErrorToast('Failed to search users');
         setSearchResults([]);
       } finally {
         setIsSearching(false);
@@ -47,7 +43,6 @@ const SearchInvitePanel = ({ projectId, onInviteUser }) => {
 
   // Handle inviting a user
   const handleInviteUser = async (selectedUser) => {
-    console.log('SearchInvitePanel - Inviting user:', selectedUser, 'to project:', projectId);
     setInvitingUserIds(prev => [...prev, selectedUser._id]);
     
     try {
@@ -55,15 +50,13 @@ const SearchInvitePanel = ({ projectId, onInviteUser }) => {
         `/requests/send-request/${projectId}/${selectedUser._id}`
       );
 
-      console.log('SearchInvitePanel - Invite Response:', response.data);
-
       if (response.data.success) {
-        console.log('Collaboration request sent successfully');
+        showSuccessToast(`Invitation sent to ${selectedUser.username}`);
         // Remove from search results after successful invite
         setSearchResults(prev => prev.filter(u => u._id !== selectedUser._id));
       }
     } catch (error) {
-      console.log('Error sending request:', error.response?.data?.message || error.message);
+      showErrorToast(error.response?.data?.message || 'Failed to send invitation');
     } finally {
       setInvitingUserIds(prev => prev.filter(id => id !== selectedUser._id));
     }

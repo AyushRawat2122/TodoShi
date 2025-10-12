@@ -6,7 +6,6 @@ import { Outlet } from 'react-router-dom';
 
 const ProtectedPage = () => {
     const { isSignedIn, isLoading, isServerReady } = useAuthStatus();
-    console.log("Mounted ProtectedPage");
     if (isLoading) {
         return <LoadingPage />;
     }

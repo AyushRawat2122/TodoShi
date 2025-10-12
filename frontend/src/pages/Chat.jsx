@@ -10,6 +10,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { useForm } from 'react-hook-form';
 import serverRequest from '../utils/axios';
 import UserAvatar from '../components/UserAvatar';
+import { showErrorToast } from '../utils/toastMethods';
 
 export default function Chat() {
   const { projectId } = useParams();
@@ -75,7 +76,7 @@ export default function Chat() {
         setHasMoreMessages(false);
       }
     } catch (error) {
-      console.error('Error loading more messages:', error);
+      showErrorToast('Failed to load older messages');
     } finally {
       setIsLoadingMessages(false);
     }
@@ -105,36 +106,33 @@ export default function Chat() {
       reset();
       removeImage();
     } catch (error) {
-      console.error('Error sending message:', error);
+      showErrorToast('Failed to send message');
     } finally {
       setSending(false);
     }
   };
 
-  // Handle message deletion
   const handleDeleteMessage = async (messageId) => {
     try {
-      // Return the promise so the Message component can handle loading state
       return await serverRequest.delete(`/chats/deleteMessage/${roomID}`, {
         data: { messageId, userId: currentUserId }
       });
     } catch (error) {
-      console.error('Error deleting message:', error);
-      throw error; // Re-throw so the Message component can handle error state
+      showErrorToast('Failed to delete message');
+      return { success: false };
     }
   };
 
-  // Handle emoji selection
   const onEmojiClick = (emojiData) => {
     setValue('content', (messageContent || '') + emojiData.emoji);
+    setShowEmojiPicker(false);
   };
 
-  // Validate and handle image selection
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file type and size
+
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     const maxSize = 1048576; // 1MB
 
@@ -245,39 +243,17 @@ export default function Chat() {
                 </button>
 
                 {showEmojiPicker && (
-                  <div className="absolute bottom-full left-0 mb-2 z-50">
-                    <div className={`${isDark ? 'emoji-picker-dark' : 'emoji-picker-light'}`}>
-                      <EmojiPicker
-                        onEmojiClick={onEmojiClick}
-                        theme={isDark ? 'dark' : 'light'}
-                        height={400}
-                        emojiStyle="google"
-                        width={320}
-                        searchDisabled={false}
-                        skinTonesDisabled={false}
-                        previewConfig={{ showPreview: false }}
-                        style={{
-                          '--epr-bg-color': isDark ? '#13111d' : '#ffffff',
-                          '--epr-category-label-bg-color': isDark ? '#13111d' : '#f9fafb',
-                          '--epr-search-input-bg-color': isDark ? '#0c0a1a' : '#f3f4f6',
-                          '--epr-text-color': isDark ? '#e9d5ff' : '#1f2937',
-                          '--epr-emoji-hover-color': isDark ? '#c2a7fb1a' : '#e5e7eb',
-                          '--epr-highlight-color': isDark ? '#6229b3' : '#6229b3',
-                          '--epr-hover-bg-color': isDark ? '#c2a7fb1a' : '#f3f4f6',
-                          '--epr-focus-bg-color': isDark ? '#c2a7fb33' : '#e5e7eb',
-                          '--epr-search-border-color': isDark ? '#2a283a' : '#d1d5db',
-                          '--epr-category-icon-active-color': isDark ? '#c2a7fb' : '#6229b3',
-                          '--epr-skin-tone-picker-menu-color': isDark ? '#13111d' : '#ffffff',
-                          '--epr-header-overlay-color': isDark ? 'transparent' : 'transparent',
-                          '--epr-category-navigation-button-size': '30px',
-                          borderRadius: '12px',
-                          border: isDark ? '1px solid #2a283a' : '1px solid #e5e7eb',
-                          boxShadow: isDark
-                            ? '0 10px 15px -3px rgba(98, 41, 179, 0.1), 0 4px 6px -2px rgba(98, 41, 179, 0.05)'
-                            : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                        }}
-                      />
-                    </div>
+                  <div className="emoji-picker-container">
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      theme={isDark ? 'dark' : 'light'}
+                      height={350}
+                      width={300}
+                      emojiStyle="google"
+                      searchDisabled={false}
+                      previewConfig={{ showPreview: false }}
+                      lazyLoadEmojis={true}
+                    />
                   </div>
                 )}
               </div>

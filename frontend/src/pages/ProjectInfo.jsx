@@ -6,11 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useProject } from '../store/project.js';
 import DatePickerField from '../components/DatePickerField.jsx';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { useSocketOn, useSocketEmit } from '../hooks/useSocket.js';
+import { useSocketEmit } from '../hooks/useSocket.js';
 import serverRequest from '../utils/axios.js';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Loader from '../components/Loader.jsx';
-
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 export default function ProjectInfo() {
   // Modal visibility states
   const [showEditProject, setShowEditProject] = useState(false);
@@ -44,7 +44,7 @@ export default function ProjectInfo() {
   const createdDate = info.createdAt ? new Date(info.createdAt).toLocaleDateString() : "N/A";
   const srsUrl = info?.srs?.url || "";
   const srsFileName = srsUrl ? decodeURIComponent(srsUrl.split('/').pop()) : "No SRS uploaded";
-
+  const navigate = useNavigate();
   // links local state for display - transform server's "name" field to our UI's "label" field
   const [linksState, setLinksState] = useState(() => {
     const base = Array.isArray(info.links) ? info.links : [];
@@ -78,8 +78,9 @@ export default function ProjectInfo() {
     try {
       setEditProjectLoading(true);
       await serverRequest.post(`/projects/update-details/${projectId}`, formData);
+      showSuccessToast("Project details updated successfully");
     } catch (error) {
-      console.error("Error updating project details:", error);
+      showErrorToast("Failed to update project details");
     } finally {
       setEditProjectLoading(false);
       setShowEditProject(false);
@@ -90,8 +91,9 @@ export default function ProjectInfo() {
     try {
       setUpdateDescLoading(true);
       socketEmit("update-project-description", { roomID, projectId, description: data.description });
+      showSuccessToast("Project description updated successfully");
     } catch (error) {
-      console.error("Error updating description:", error);
+      showErrorToast("Failed to update project description");
     } finally {
       setUpdateDescLoading(false);
       setShowUpdateDesc(false);
@@ -102,8 +104,9 @@ export default function ProjectInfo() {
     try {
       setManageLinksLoading(true);
       socketEmit("update-project-links", { roomID, projectId, links: data.links });
+      showSuccessToast("Project links updated successfully");
     } catch (error) {
-      console.error("Error updating links:", error);
+      showErrorToast("Failed to update project links");
     } finally {
       setManageLinksLoading(false);
       setShowManageLinks(false);
@@ -114,8 +117,9 @@ export default function ProjectInfo() {
     try {
       setUploadSrsLoading(true);
       await serverRequest.post(`/projects/upload-srs/${projectId}`, formData);
+      showSuccessToast("SRS document uploaded successfully");
     } catch (error) {
-      console.error("Error uploading SRS:", error);
+      showErrorToast("Failed to upload SRS document");
     } finally {
       setUploadSrsLoading(false);
       setShowUploadVersion(false);
@@ -209,7 +213,7 @@ export default function ProjectInfo() {
             </div>}
           <div className="font-bold text-gray-800 dark:text-purple-100 text-xl sm:text-lg mt-2">{owner?.username || "Unknown"}</div>
           <div className="text-sm text-gray-500 dark:text-purple-200/50 mt-0.5">ID: {owner?.userId || "—"}</div>
-          <button className="px-4 py-2 mt-4 bg-white font-semibold dark:bg-[#13111d] border border-gray-200 dark:border-[#c2a7fb]/20 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a283a] text-gray-700 dark:text-purple-100 text-base sm:text-sm">
+          <button onClick={() => { navigate(`/user/${owner?.userId}`) }} className="px-4 py-2 mt-4 bg-white font-semibold dark:bg-[#13111d] border border-gray-200 dark:border-[#c2a7fb]/20 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a283a] text-gray-700 dark:text-purple-100 text-base sm:text-sm">
             View Profile
           </button>
         </div>

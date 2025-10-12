@@ -8,6 +8,7 @@ import useIsLargeScreen from '../hooks/useIsLargeScreen';
 import { registerWithEmail } from '../firebase/auth.js';
 import Loader from '../components/Loader';
 import useTheme from '../hooks/useTheme';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 
 const SignUp = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
@@ -26,10 +27,21 @@ const SignUp = () => {
         try {
             // Creating user
             localStorage.setItem("lastSignInMethod", "password");
-            const userCredential = await registerWithEmail(data.email, data.password);
-            console.log("User registered:", userCredential.user);
+            await registerWithEmail(data.email, data.password);
+            showSuccessToast("Account created successfully! Please verify your email.");
         } catch (error) {
-            console.error("Error registering user:", error);
+            // Handle different Firebase error codes with user-friendly messages
+            let errorMessage = "Failed to create account. Please try again.";
+
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = "This email is already in use.";
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = "Invalid email address.";
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = "Password is too weak. Please use a stronger password.";
+            }
+
+            showErrorToast(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -49,13 +61,13 @@ const SignUp = () => {
                         <img src="/Todoshi.png" alt="todoshi" className='w-full h-full object-cover relative z-0' />
                     </div>
                 )}
-                
+
                 <div className={`p-10 ${isLargeScreen ? 'w-[60%]' : 'w-full'} bg-white dark:bg-transparent dark:bg-gradient-to-br dark:from-[#c2a7fb]/10 dark:to-transparent`}>
                     <div className={`flex flex-col ${!isLargeScreen ? 'items-center' : ''}`}>
-                        <img 
+                        <img
                             src={isDark ? "/todoshi-branding-light.png" : "/todoshi-branding-dark.png"}
-                            alt="todoshi-name" 
-                            className='h-[80px] max-w-[200px]' 
+                            alt="todoshi-name"
+                            className='h-[80px] max-w-[200px]'
                         />
                         <h2 className='text-3xl mt-4 font-bold mb-2 text-center md:text-left text-[#4c1f8e] dark:text-purple-100'>
                             Join Us Today!
@@ -64,7 +76,7 @@ const SignUp = () => {
                             Create your free account in just a few steps.
                         </p>
                     </div>
-                    
+
                     <form onSubmit={handleSubmit(onSubmit)} className='space-y-4 flex w-full flex-col items-center'>
                         <div className={`w-full ${isLargeScreen ? '' : 'max-w-96'}`}>
                             <label className='block text-sm font-medium mb-1 dark:text-purple-200'>Email</label>
@@ -81,7 +93,7 @@ const SignUp = () => {
                             />
                             {errors.email && <p className='text-red-500 dark:text-red-400 text-sm'>{errors.email.message}</p>}
                         </div>
-                        
+
                         <div className={`w-full ${isLargeScreen ? '' : 'max-w-96'}`}>
                             <label className='block text-sm font-medium mb-1 dark:text-purple-200'>Password</label>
                             <div className='relative'>
@@ -103,7 +115,7 @@ const SignUp = () => {
                             </div>
                             {errors.password && <p className='text-red-500 dark:text-red-400 text-sm mt-1'>{errors.password.message}</p>}
                         </div>
-                        
+
                         <div className={`w-full ${isLargeScreen ? '' : 'max-w-96'} flex items-start`}>
                             <input
                                 type='checkbox'
@@ -115,7 +127,7 @@ const SignUp = () => {
                             </label>
                         </div>
                         {errors.terms && <p className='text-red-500 dark:text-red-400 text-sm'>{errors.terms.message}</p>}
-                        
+
                         <button
                             type='submit'
                             className='w-full max-w-96 text-white py-2 rounded transition-colors flex justify-center items-center gap-1
@@ -124,11 +136,11 @@ const SignUp = () => {
                                 focus:outline-none focus:ring-2 focus:ring-[#6229b3]/50'
                             disabled={loading}
                         >
-                            {loading && <Loader className='mr-2 text-white'/>}
+                            {loading && <Loader className='mr-2 text-white' />}
                             Sign Up
                         </button>
                     </form>
-                    
+
                     <hr className='my-4 border-gray-300 dark:border-[#2a283a]' />
                     <div className='mt-4 text-center text-sm text-gray-500 dark:text-gray-400'>
                         <Oauth />

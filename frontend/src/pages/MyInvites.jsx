@@ -5,6 +5,7 @@ import InviteRow from '../components/InviteRow';
 import Loader from '../components/Loader';
 import useUser from '../hooks/useUser';
 import serverRequest from '../utils/axios';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 
 const MyInvites = () => {
   const [activeTab, setActiveTab] = useState('pending');
@@ -23,14 +24,11 @@ const MyInvites = () => {
       try {
         const response = await serverRequest.get(`/requests/get-requests/${user.data._id}`);
         
-        console.log('MyInvites - Fetch Response:', response.data);
-        
         if (response.data.success) {
-          console.log('MyInvites - Invites Data:', response.data.data);
           setInvites(response.data.data || []);
         }
       } catch (error) {
-        console.log('Error fetching invites:', error);
+        showErrorToast('Failed to load invites. Please try again.');
         setInvites([]);
       } finally {
         setIsLoading(false);
@@ -52,7 +50,7 @@ const MyInvites = () => {
         setInvites(response.data.data || []);
       }
     } catch (error) {
-      console.log('Error refreshing invites:', error);
+      showErrorToast('Failed to refresh invites');
     } finally {
       setTimeout(() => setIsRefreshing(false), 500);
     }
@@ -67,7 +65,6 @@ const MyInvites = () => {
   const handleAccept = useCallback(async (invite) => {
     if (!user?.data?._id) return;
     
-    console.log('MyInvites - Accepting invite:', invite);
     setActionLoading(invite._id);
     
     try {
@@ -75,16 +72,14 @@ const MyInvites = () => {
         `/requests/accept-request/${invite._id}/${user.data._id}`
       );
 
-      console.log('MyInvites - Accept Response:', response.data);
-
       if (response.data.success) {
         setInvites(prev => prev.map(inv => 
           inv._id === invite._id ? { ...inv, status: 'accepted' } : inv
         ));
-        console.log('Invitation accepted successfully');
+        showSuccessToast('Invitation accepted successfully');
       }
     } catch (error) {
-      console.log('Error accepting invite:', error.response?.data?.message || error.message);
+      showErrorToast(error.response?.data?.message || 'Failed to accept invitation');
     } finally {
       setActionLoading(null);
     }
@@ -94,7 +89,6 @@ const MyInvites = () => {
   const handleReject = useCallback(async (invite) => {
     if (!user?.data?._id) return;
     
-    console.log('MyInvites - Rejecting invite:', invite);
     setActionLoading(invite._id);
     
     try {
@@ -102,16 +96,14 @@ const MyInvites = () => {
         `/requests/reject-request/${invite._id}/${user.data._id}`
       );
 
-      console.log('MyInvites - Reject Response:', response.data);
-
       if (response.data.success) {
         setInvites(prev => prev.map(inv => 
           inv._id === invite._id ? { ...inv, status: 'rejected' } : inv
         ));
-        console.log('Invitation rejected');
+        showSuccessToast('Invitation rejected');
       }
     } catch (error) {
-      console.log('Error rejecting invite:', error.response?.data?.message || error.message);
+      showErrorToast(error.response?.data?.message || 'Failed to reject invitation');
     } finally {
       setActionLoading(null);
     }

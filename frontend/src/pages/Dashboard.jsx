@@ -15,6 +15,7 @@ import Loader from '../components/Loader.jsx';
 import useConnections from '../hooks/useConnections.js';
 import { linkGitHub, linkGoogle } from "../firebase/auth.js"
 import { GoProject } from "react-icons/go";
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods.js';
 
 const Popup = ({ isOpen, onClose, children }) => {
   // Always call hooks; guard the effect body with isOpen
@@ -130,7 +131,7 @@ const Dashboard = () => {
     try {
       await signOutUser();
     } catch (error) {
-      console.log(error);
+      showErrorToast("Error signing out. Please try again.");
     } finally {
       setIsExecuting(false);
     }
@@ -178,7 +179,7 @@ const Dashboard = () => {
         const response = await serverRequest.get(`/projects/displayProjects/${user._id}`);
         setProjects(response?.data?.data || []);
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        showErrorToast("Failed to load projects. Please try again.");
       } finally {
         setProjectLoading(false);
       }
@@ -572,8 +573,9 @@ const EditProfileImage = ({ initialValues, onClose, user }) => {
       updateUser(data?.data);
       onClose?.();
       console.log("Avatar updated successfully:", data);
-
+      showSuccessToast("Avatar updated successfully.");
     } catch (error) {
+      showErrorToast("Error updating avatar. Please try again.");
       console.error("Error updating avatar:", error);
     }
   };
@@ -639,9 +641,11 @@ const EditBanner = ({ initialValues, onClose, user }) => {
       });
       updateUser(data?.data);
       onClose?.();
+      showSuccessToast("Banner updated successfully.");
       console.log("Banner updated successfully:", data);
     } catch (error) {
-      console.error("Error updating banner:", error);
+      showErrorToast("Error updating banner. Please try again.");
+      console.log("Error updating banner:", error);
     }
   };
 
@@ -704,7 +708,9 @@ const EditProfile = ({ initialValues, onClose, user }) => {
       updateUser(data?.data);
       onClose?.();
       console.log("Profile updated successfully:", data);
+      showSuccessToast("Profile updated successfully.");
     } catch (error) {
+      showErrorToast("Error updating profile. Please try again.");
       console.log("Error updating profile:", error);
     }
   };
@@ -772,8 +778,10 @@ const EditSkills = ({ initialValues, onClose, user }) => {
       );
       updateUser(data?.data);
       console.log("Skills updated successfully:", data);
+      showSuccessToast("Skills updated successfully.");
       onClose?.();
     } catch (error) {
+      showErrorToast("Error saving skills. Please try again.");
       console.log("Error saving skills:", error);
     }
   };
@@ -853,8 +861,10 @@ const EditAbout = ({ initialValues, onClose, user }) => {
       );
       updateUser(data?.data);
       console.log(data?.data);
+      showSuccessToast("About section updated successfully.");
     } catch (error) {
       console.log("Error updating the about section:", error);
+      showErrorToast("Error updating About section. Please try again.");
     }
     onClose?.();
   };
@@ -985,9 +995,11 @@ const ManageAccounts = ({ initialValues, onClose, user }) => {
       } else if (provider === 'github') {
         await linkWithGithub();
       }
+      showSuccessToast(`${provider} account linked successfully!`);
       onClose?.(); // close after successful link
     } catch (e) {
-      console.error(`Failed to link ${provider}:`, e);
+      showErrorToast(`Failed to link ${provider} account. Please try again.`);
+      console.log(`Failed to link ${provider}:`, e);
     } finally {
       setLinking(false);
     }

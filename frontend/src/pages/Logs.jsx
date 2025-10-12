@@ -6,6 +6,7 @@ import { FaCalendarAlt, FaClipboardList, FaPlus } from 'react-icons/fa';
 import { useSocketEmit, useSocketOn } from '../hooks/useSocket';
 import { useForm } from 'react-hook-form';
 import Loader from '../components/Loader';
+import { showSuccessToast, showErrorToast } from '../utils/toastMethods';
 
 export default function Logs() {
   const { projectId } = useParams();
@@ -21,9 +22,10 @@ export default function Logs() {
     try {
       setLoading(true);
       socketEmit("add-project-log", { roomID, projectId, description: data.description });
+      showSuccessToast("Log entry added successfully");
       reset(); // Reset form after submission
     } catch (error) {
-      console.log(error);
+      showErrorToast("Failed to add log entry");
     } finally {
       setLoading(false);
     }
