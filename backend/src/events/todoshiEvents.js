@@ -33,7 +33,7 @@ export default function registerSocketEvents() {
             throw new Error("User not found");
           }
 
-          socket.join(roomID);
+          await socket.join(roomID);
           if (Rooms.has(roomID)) {
             const prev = Rooms.get(roomID);
             if (prev.some((u) => u._id.toString() === userId)) {
@@ -45,20 +45,20 @@ export default function registerSocketEvents() {
           }
 
           console.log(`➡️ User ${socket.id} joined room: ${roomID}`);
-          
+
           // Get current online users in this room
           const onlineUsers = Rooms.get(roomID) || [];
-          
+
           // Emit to all users in the room about the updated online users list
           io.to(roomID).emit("online-users-update", {
-            onlineUsers: onlineUsers.map(u => ({
+            onlineUsers: onlineUsers.map((u) => ({
               userId: u._id,
               username: u.username,
-              avatar: u.avatar
+              avatar: u.avatar,
             })),
-            totalCount: onlineUsers.length
+            totalCount: onlineUsers.length,
           });
-          
+
           socket.emit("room-connection-success", roomID);
         }
       } catch (error) {
@@ -318,7 +318,7 @@ export default function registerSocketEvents() {
 
     socket.on("disconnect", () => {
       console.log("❌ User disconnected:", socket.id);
-      
+
       // Clean up user from all rooms
       for (const [roomID, users] of Rooms.entries()) {
         const filtered = users.filter((u) => u.socketId !== socket.id);
@@ -329,15 +329,15 @@ export default function registerSocketEvents() {
         } else if (filtered.length !== users.length) {
           Rooms.set(roomID, filtered);
           console.log(`🧹 Cleaned up disconnected user from room: ${roomID}`);
-          
+
           // Emit updated online users list to remaining room members
           io.to(roomID).emit("online-users-update", {
-            onlineUsers: filtered.map(u => ({
+            onlineUsers: filtered.map((u) => ({
               userId: u._id,
               username: u.username,
-              avatar: u.avatar
+              avatar: u.avatar,
             })),
-            totalCount: filtered.length
+            totalCount: filtered.length,
           });
         }
       }
