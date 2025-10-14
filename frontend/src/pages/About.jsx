@@ -295,7 +295,7 @@ const About = () => {
             Discover how Todoshi can streamline your projects and boost your team's efficiency.
           </p>
           <Link
-            to="/features"
+            to="/guide"
             className="inline-block px-8 py-3 bg-gradient-to-r from-[#8236ec] to-[#6229b3] dark:from-[#c2a7fb]/40 dark:to-[#6229b3]/40 text-white rounded-md hover:opacity-90 transition-opacity font-medium shadow-lg"
           >
             Explore Features
