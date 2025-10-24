@@ -221,6 +221,6 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 **Ayush Rawat**
 
 * GitHub: [ayushrawat2122](https://github.com/ayushrawat2122)
-* Project Repository: [WorkGrid](https://github.com/ayushrawat2122/workgrid/WorkGrid-61983357e5d186ed21775084d31b5aed1f7794f2)
+* Project Repository: [Todoshi]
 
 Feel free to reach out with any questions or feedback!
